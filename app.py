@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for
 from flask_cors import CORS
 from database import SessionLocal, init_db
 from models import User, Doctor, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly
@@ -31,15 +31,42 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Aqui você processará as credenciais de login no futuro
-        return redirect(url_for('home'))
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        print("LOGIN RECEBIDO:", email)
+
+        user = db_session.query(User).filter_by(email=email).first()
+
+        if user and user.password == password:
+            print("LOGIN CORRETO - ID:", user.id)
+            return render_template('home.html')
+
+        print("LOGIN INCORRETO")
+
+        return render_template('login.html', error='Email ou senha incorretos.')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Aqui você salvará o novo usuário
-        return redirect(url_for('login'))
+        name = request.form.get("name")
+        phone = request.form.get("phone")
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        user = User(
+            name=name,
+            phone=phone,
+            email=email,
+            password=password
+        )        
+
+        db_session.add(user)
+        db_session.commit()
+
+        return render_template('login.html')
+
     return render_template('register.html')
 
 @app.route('/forgot', methods=['GET', 'POST'])
@@ -94,32 +121,54 @@ def report():
     return render_template('report.html')
 
 # USUÁRIOS
-@app.route('/api/users', methods=["POST"])
-def create_user():
-    data = request.get_json()
+# @app.route('/api/users/<int:id>/delete', methods=['GET'])
+# def delete_user(id):
+#     user = db_session.query(User).filter_by(id=id).first()
 
-    user = User(
-        name=data.get("name"),
-        phone=data.get("phone"),
-        email=data.get("email"),
-        password=data.get("password"),
-        photo=data.get("photo")
-    )
+#     if not user:
+#         return "Usuário não encontrado", 404
 
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+#     db_session.delete(user)
+#     db_session.commit()
 
-    return jsonify({
-        "message": "Usuário criado com sucesso",
-        "user": {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "phone": user.phone,
-            "photo": user.photo
-        }
-    }), 201
+#     return f"Usuário {id} deletado com sucesso!"
+
+@app.route('/api/users', methods=["GET", "POST"])
+def users():
+    if request.method == "GET":
+        users = db_session.query(User).all()
+
+        return jsonify([
+            {
+                "id": user.id,
+                "name": user.name,
+                "phone": user.phone,
+                "email": user.email,
+                "photo": user.photo,
+                "created_at": user.created_at
+            }
+            for user in users
+        ])
+
+    if request.method == "POST":
+        data = request.get_json()
+
+        user = User(
+            name=data.get("name"),
+            phone=data.get("phone"),
+            email=data.get("email"),
+            password=data.get("password"),
+            photo=data.get("photo")
+        )
+
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+
+        return jsonify({
+            "message": "Usuário criado com sucesso",
+            "id": user.id
+        }), 201 
 
 @app.route('/api/users/<int:id>', methods=["GET"])
 def get_user(id):
@@ -390,7 +439,7 @@ def get_weekly_goals():
     if user_id:
         query = query.filter(Goal_weekly.user_id == user_id)
     
-    goals_weekly = query.order_by(Goal_weekly.date.desc()).all()
+    goals = query.order_by(Goal_weekly.date.desc()).all()
 
     return jsonify([
         {
@@ -412,7 +461,7 @@ def get_weekly_goals():
 def create_weekly_goals():
     data = request.get_json()
 
-    goal_weekly = Goal_weekly(
+    goal = Goal_weekly(
         user_id=data.get("user_id"),
         beggining_week=data.get("beggining_week"),
         end_week=data.get("end_week"),
@@ -609,15 +658,15 @@ def anxiety_trend():
 def get_pressure():
     user_id = request.args.get("user_id", type=int)
 
-    query = db_session.query(Measurement_preassure)
+    query = db_session.query(Measurement_pressure)
 
     if user_id:
         query = query.filter(
-            Measurement_preassure.user_id == user_id
+            Measurement_pressure.user_id == user_id
         )
 
     measurements = query.order_by(
-        Measurement_preassure.date_time.desc()
+        Measurement_pressure.date_time.desc()
     ).all()
 
     return jsonify([
@@ -638,7 +687,7 @@ def get_pressure():
 def create_pressure():
     data = request.get_json()
 
-    measurement = Measurement_preassure(
+    measurement = Measurement_pressure(
         user_id=data.get("user_id"),
         sistolica=data.get("sistolica"),
         diastolica=data.get("diastolica"),
@@ -675,9 +724,9 @@ def pressure_summary():
         }), 400
 
     measurements = db_session.query(
-        Measurement_preassure
+        Measurement_pressure
     ).filter(
-        Measurement_preassure.user_id == user_id
+        Measurement_pressure.user_id == user_id
     ).all()
 
     if not measurements:
@@ -738,11 +787,11 @@ def pressure_history():
         }), 400
 
     measurements = db_session.query(
-        Measurement_preassure
+        Measurement_pressure
     ).filter(
-        Measurement_preassure.user_id == user_id
+        Measurement_pressure.user_id == user_id
     ).order_by(
-        Measurement_preassure.date_time.asc()
+        Measurement_pressure.date_time.asc()
     ).all()
 
     return jsonify([
@@ -766,10 +815,10 @@ def get_latest_ppg():
             "error": "user_id é obrigatório"
         }), 400
 
-    ppg = db_session.query(Data_ppg).filter(
-        Data_ppg.user_id == user_id
+    ppg = db_session.query(Measurement_ppg).filter(
+        Measurement_ppg.user_id == user_id
     ).order_by(
-        Data_ppg.date_time.desc()
+        Measurement_ppg.date_time.desc()
     ).first()
 
     if not ppg:
@@ -791,15 +840,15 @@ def get_latest_ppg():
 def get_pressure_warnings():
     user_id = request.args.get("user_id", type=int)
 
-    query = db_session.query(Warning_preassure)
+    query = db_session.query(Warning_pressure)
 
     if user_id:
         query = query.filter(
-            Warning_preassure.user_id == user_id
+            Warning_pressure.user_id == user_id
         )
 
     warnings = query.order_by(
-        Warning_preassure.data.desc()
+        Warning_pressure.data.desc()
     ).all()
 
     return jsonify([
@@ -819,7 +868,7 @@ def get_pressure_warnings():
 def create_pressure_warning():
     data = request.get_json()
 
-    warning = Warning_preassure(
+    warning = Warning_pressure(
         user_id=data.get("user_id"),
         data=data.get("data"),
         title=data.get("title"),
@@ -882,11 +931,11 @@ def get_weekly_report():
 
     # PRESSÃO
     pressure_measurements = db_session.query(
-        Measurement_preassure
+        Measurement_pressure
     ).filter(
-        Measurement_preassure.user_id == user_id,
-        Measurement_preassure.date_time >= report.beggining_date,
-        Measurement_preassure.date_time <= report.end_date
+        Measurement_pressure.user_id == user_id,
+        Measurement_pressure.date_time >= report.beggining_date,
+        Measurement_pressure.date_time <= report.end_date
     ).all()
 
     # CÁLCULOS
@@ -938,6 +987,7 @@ def get_weekly_report():
     })
 
 if __name__ == "__main__":
+    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
     print("Sucesso!")

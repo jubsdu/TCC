@@ -5,30 +5,31 @@
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Cadastre-se — VitaPulse</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
     </head>
     <body>
         <div class="app">
             <div class="mobile auth-bg">
                 <div class="status">
                     <span>9:41</span>
-                    <span class="status-icons">▮▮ WiFi ▰</span>
+                    <span class="status-icons"> WiFi </span>
                 </div>
                 <div class="auth-content">
                     <h1 class="auth-title">Cadastre-se</h1>
                     <p class="auth-sub">Crie sua conta aqui</p>
                     <form class="form" data-form="register" action="{{ url_for('register') }}" method="POST">
-                        <label class="field">♙
+                        <label class="field"><i class="ri-user-fill"></i>
                             <input name="name" required placeholder="Nome e Sobrenome">
                         </label>
-                        <label class="field">▣
+                        <label class="field"><i class="ri-phone-fill"></i>
                             <input name="phone" required placeholder="ex: XX+ (XX) YYYYY-YYYY">
                         </label>
-                        <label class="field">✉
+                        <label class="field"><i class="ri-mail-fill"></i>
                             <input name="email" type="email" required placeholder="Email">
                         </label>
-                        <label class="field">♙
+                        <label class="field"><i class="ri-rotate-lock-fill"></i>
                             <input id="pw" name="password" type="password" required placeholder="Senha">
-                            <button type="button" class="eye">◉</button>
+                            <button type="button" class="eye"><i class="ri-eye-fill"></i></button>
                         </label>
                         <div class="terms">Ao cadastrar-se, você concorda com os <a href="#">termos de uso</a></div>
                         <button type="submit" class="primary">

@@ -7,7 +7,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     phone = Column(String(20))
-    email = Column(String(100))
+    email = Column(String(100), unique=True, nullable=False)
     password = Column(Text)
     photo = Column(String(255))
     created_at = Column(
@@ -186,7 +186,7 @@ class Measurement_ppg(Base):
     __tablename__ = "measurements_ppg"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    measurement_pressure_id =  Column(Integer, ForeignKey("measurements_preassure.id"), nullable=False)
+    measurement_pressure_id =  Column(Integer, ForeignKey("measurements_pressure.id"), nullable=False)
     cardiac_rate = Column(Integer)
     hrv = Column(Numeric(6, 2))
     quality_sign = Column(Numeric(5, 2))
