@@ -1,0 +1,2683 @@
+
+:root{
+  --wine:#98002D;
+  --wine-dark:#98002D;
+  --wine-soft:#ffe0ea;
+
+  --wine-light:#f05472;
+  --wine-line:#e42c56;
+  --wine-grid:#e72b58;
+
+  --ink:#171b2b;
+  --muted:#8f9099;
+  --line:#e6e7ec;
+  --white:#fff;
+
+  --shadow:0 9px 24px rgba(30,36,55,.12);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+    color: var(--ink);
+    background: #fff;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+}
+
+.app {
+    min-height: 100vh;
+}
+
+.mobile {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    margin: auto;
+    position: relative;
+    background: var(--wine);
+
+    /* Evita corte horizontal */
+    overflow-x: hidden;
+
+    /* Permite visualizar o conteúdo vertical */
+    overflow-y: visible;
+}
+
+.status {
+    height: 44px;
+    padding: 18px 29px 0;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.status-icons {
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.onboard {
+    min-height: 100vh;
+    background: var(--wine);
+    color: #fff;
+    padding: 0 30px 36px;
+    display: flex;
+    flex-direction: column;
+}
+
+.onboard .status {
+    margin: 0 -30px;
+}
+
+.logo-image-full {
+  width: 260px;
+  max-width: 85%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.logo-wrap {
+    height: 430px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding-top: 35px;
+}
+
+.logo-mark {
+    font-size: 94px;
+    line-height: 1;
+    color: #eee;
+}
+
+.logo-text {
+    font-size: 57px;
+    font-weight: 900;
+    letter-spacing: -3px;
+    color: #eee;
+}
+
+.logo-sub {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: #eee;
+}
+
+.bola-icon {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+.onboard h1 {
+    text-align: center;
+    font-size: 25px;
+    margin: 14px 0 18px;
+}
+
+.onboard p {
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.35;
+    margin: 0 auto;
+    max-width: 320px;
+}
+
+.dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0 0 18px;
+}
+
+.dot {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.dot.active {
+    width: 28px;
+    height: 8px;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.choice-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.choice-btn {
+    width: 100%;
+    padding: 15px 18px;
+    border: 2px solid #ffffff;
+    border-radius: 14px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.choice-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.choice-btn.selected {
+    background: #ffffff;
+    color: #98002D;
+}
+
+.choice-message {
+    display: none;
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    font-size: 13px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.choice-message.show {
+    display: block;
+}
+
+.onboard-list {
+    margin: 48px 0 0;
+    display: grid;
+    gap: 24px;
+}
+
+.choice {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 16px;
+}
+
+.choice input {
+    appearance: none;
+    width: 29px;
+    height: 29px;
+    border-radius: 50%;
+    background: var(--wine-dark);
+    border: 0;
+    margin: 0;
+}
+
+.choice input:checked {
+    background: #fff;
+    box-shadow: inset 0 0 0 8px var(--wine-dark);
+    outline: 2px solid #fff;
+}
+
+.onboard-spacer {
+    flex: 1;
+}
+
+.primary-light,
+.primary {
+    border: 0;
+    border-radius: 36px;
+    height: 60px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.primary-light {
+    background: #fff;
+    color: #111;
+    box-shadow: 0 10px 22px rgba(255, 255, 255, 0.18);
+}
+
+.primary {
+    background: var(--wine);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(152, 0, 45, 0.18);
+}
+
+.auth-bg {
+    min-height: 100vh;
+    background: #fff;
+    position: relative;
+    padding: 0 30px 20px;
+}
+
+.auth-bg:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -15%;
+    width: 135%;
+    height: 190px;
+    background: var(--wine);
+    border-radius: 0 0 65% 45% / 0 0 55% 35%;
+    z-index: 0;
+}
+
+.auth-content {
+    position: relative;
+    z-index: 1;
+    padding-top: 72px;
+}
+
+.back {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--wine);
+    font-size: 25px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 18px;
+}
+
+.auth-title {
+    font-family: "Poppins", sans-serif;
+    font-size: 30px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 5px 26px;
+}
+
+.auth-sub {
+    color: #aaa;
+    font-size: 15px;
+    margin: 0 0 0 26px;
+}
+
+.form {
+    margin-top: 62px;
+}
+
+.form .primary {
+    width: 100%;
+    display: block;
+    box-sizing: border-box;
+}
+
+.field {
+    height: 66px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #dfe0e5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #072342;
+}
+
+.social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.social-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.field .icon {
+    width: 26px;
+    text-align: center;
+}
+
+.field input {
+    border: 0;
+    outline: 0;
+    flex: 1;
+    min-width: 0;
+    color: var(--ink);
+    background: transparent;
+    font-size: 14px;
+}
+
+.field input::placeholder {
+    color: #c2c4cb;
+}
+
+.eye {
+    border: 0;
+    background: transparent;
+    color: #072342;
+}
+
+.terms {
+    font-size: 13px;
+    color: #243951;
+    text-align: center;
+    margin: 26px 0 20px;
+}
+
+.terms a {
+    color: var(--wine);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    margin: 19px 0;
+}
+
+.divider:before,
+.divider:after {
+    content: "";
+    height: 2px;
+    background: var(--wine);
+    flex: 1;
+}
+
+.ou {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--wine);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--wine);
+    font-weight: 800;
+}
+
+.social {
+    height: 56px;
+    border: 0;
+    background: #fff;
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    margin: 8px 0;
+    font-size: 15px;
+    color: #10213a;
+}
+
+.social .brand {
+    font-weight: 900;
+    font-size: 25px;
+    margin-right: 45px;
+}
+
+.bottom-link {
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+    margin-top: 30px;
+}
+
+.bottom-link a {
+    color: var(--wine);
+    text-decoration: none;
+}
+
+.forgot-copy {
+    margin: 0 26px 60px;
+    color: #555;
+    line-height: 1.7;
+    font-size: 15px;
+}
+
+.code-area {
+    text-align: center;
+    margin-top: 44px;
+}
+
+.code-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin: 38px 0 42px;
+}
+
+.code-inputs input {
+    width: 46px;
+    height: 46px;
+    border: 1px solid var(--wine);
+    text-align: center;
+    font-size: 20px;
+    outline: 0;
+}
+
+.resend {
+    text-align: center;
+    color: var(--wine);
+    margin-top: 16px;
+    font-size: 14px;
+    background: none;
+    border: 0;
+    width: 100%;
+}
+
+.dashboard {
+    min-height: 100vh;
+    background: var(--wine);
+    color: #111;
+}
+
+.topbar {
+    height: 78px;
+    background: var(--wine);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 14px;
+    position: relative;
+}
+
+.menu {
+    font-size: 29px;
+    background: none;
+    border: 0;
+    color: #fff;
+}
+
+.topbar h1 {
+    font-size: 24px;
+    margin-left: -4px;
+}
+
+.avatar {
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    background: #fff;
+    border: 0;
+
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.zone-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.page-body {
+    padding: 14px 20px 28px;
+}
+
+.greeting {
+    color: #fff;
+    font-size: 19px;
+    margin: 0 7px 15px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 13px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    padding: 14px;
+    margin-bottom: 13px;
+}
+
+.section-title {
+    color: #fff;
+    font-size: 19px;
+    margin: 16px 7px 10px;
+}
+
+.section-title2 {
+    color: #fff;
+    font-size: 25px;
+    margin: -10px 7px 10px;
+}
+
+.heart-gauge {
+    height: 255px;
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+.gauge {
+    width: 205px;
+    height: 205px;
+}
+
+.gauge text {
+    font-family: inherit;
+}
+
+.gauge-value {
+    font-size: 42px !important;
+    font-weight: 900;
+    fill: var(--wine);
+}
+
+.gauge-label {
+    font-size: 17px;
+    font-weight: 900;
+    fill: #ff2457;
+}
+
+.gauge-minmax {
+    font-size: 14px;
+    font-weight: 800;
+    fill: #ff2457;
+}
+
+.categories {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.category {
+    background: #fff;
+    border: 0;
+    border-radius: 16px;
+    padding: 13px 5px 10px;
+    min-height: 110px;
+    font-size: 13px;
+}
+
+.category .cat-icon img {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.category .cat-icon {
+    font-size: 38px;
+    display: block;
+    margin-bottom: 7px;
+}
+
+.recent {
+    position: relative;
+}
+
+.recent .mini {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.25;
+}
+
+.mini{
+    font-size: 11px;
+    color: #666;
+}
+
+.recent .mean {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--wine);
+    color: #fff;
+    border-radius: 22px;
+    padding: 7px 14px;
+    margin-top: 8px;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.mean {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mean img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.techniques-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.techniques-list li img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.info-link {
+    float: right;
+    border: 0;
+    background: none;
+    font-size: 11px;
+    color: #666;
+    position: relative;
+    top: 27px;
+}
+
+.recovery-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+}
+
+.summary-table td:first-child {
+    white-space: nowrap;
+}
+
+.coracaoBola-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.coracaoVazio-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+}
+
+.simple-list li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.pulse-btn {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--wine);
+    color: #fff;
+}
+
+.pulse-btn img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.metric-card {
+    min-height: 235px;
+}
+
+.metric-card h2 {
+    color: var(--wine);
+    font-size: 19px;
+    margin: 0 0 10px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+.summary-table td {
+    padding: 9px 3px;
+    border-bottom: 1px solid var(--wine);
+}
+
+.summary-table td:first-child {
+    font-weight: 800;
+    color: var(--wine);
+    border-right: 1px solid var(--wine);
+}
+
+.data-card {
+    padding: 12px 12px;
+}
+
+.zones th {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--wine);
+    padding: 8px 3px;
+}
+
+.zones td {
+    text-align: center;
+    font-size: 13px;
+    padding: 12px 3px;
+}
+
+/* Linha vertical entre Zona e Intensidade */
+.zones th:first-child,
+.zones td:first-child {
+    border-right: 1px solid var(--wine);
+}
+
+/* Linha vertical entre Intensidade e Tempo */
+.zones th:nth-child(2),
+.zones td:nth-child(2) {
+    border-right: 1px solid var(--wine);
+}
+
+/* Retira a linha horizontal inferior da tabela */
+.zones tr:last-child td {
+    border-bottom: none;
+}
+
+.zones .z {
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.z1 {
+    color: #0ab83b;
+}
+
+.z2 {
+    color: #0655ba;
+}
+
+.z3 {
+    color: #d7b600;
+}
+
+.z4 {
+    color: #c98600;
+}
+
+.z5 {
+    color: #c70000;
+}
+
+/* Tabela Evolução */
+
+/* Linha vertical entre a primeira e segunda coluna */
+.evolution-table td:first-child {
+    border-right: 1px solid var(--wine);
+}
+
+/* Linha vertical entre a segunda e terceira coluna */
+.evolution-table td:nth-child(2) {
+    border-right: 1px solid var(--wine);
+}
+
+/* Remove somente a linha horizontal inferior */
+.evolution-table tr:last-child td {
+    border-bottom: none;
+}
+
+.evolution-table td:first-child {
+    padding-right: 20px;
+}
+
+.evolution-table td:nth-child(2) {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.evolution-table td:nth-child(3) {
+    padding-left: 20px;
+}
+
+/* Metas da Semana */
+
+.weekly-goals-card {
+    min-height: 150px;
+    padding: 20px;
+    position: relative;
+}
+
+/* Títulos das metas */
+.weekly-goals-card > b {
+    display: block;
+    font-size: 15px;
+    margin-top: 15px;
+}
+
+/* Primeiro título */
+.weekly-goals-card > .mini + .pulse-btn + b {
+    margin-top: 15px;
+}
+
+/* Espaçamento das barras */
+.weekly-goals-card .progress {
+    height: 16px;
+    margin: 10px 0 18px;
+}
+
+/* Espaçamento entre barra e valores */
+.weekly-goals-card .progress-row {
+    gap: 12px;
+}
+
+.simple-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.simple-list li {
+    padding: 8px 5px;
+    border-bottom: 1px solid var(--wine);
+    font-size: 13px;
+}
+
+.simple-list li:last-child {
+    border-bottom: 0;
+}
+
+.bar span {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.progress {
+    height: 16px;
+    border: 3px solid var(--wine);
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 7px 0;
+}
+
+.progress i {
+    display: block;
+    height: 100%;
+    background: var(--wine);
+    border-radius: 20px;
+}
+
+.progress-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.progress-row small {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.alert {
+    border-left: 5px solid var(--wine);
+}
+
+.insight li {
+    display: flex;
+    gap: 8px;
+    margin: 11px 0;
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.insight li:before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--wine);
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.history-chart {
+    height: 280px;
+}
+
+.history-chart .bar {
+    width: 26px;
+}
+
+.history-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.history-controls label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.nav-drawer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 20;
+    display: none;
+}
+
+.nav-drawer.open {
+    display: block;
+}
+
+.drawer {
+    width: 290px;
+    height: 100%;
+    background: #fff;
+    padding: 35px 25px;
+}
+
+.drawer-logo {
+    width: 220px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 25px;
+    object-fit: contain;
+}
+
+.drawer h2 {
+    color: var(--wine);
+}
+
+.drawer button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: none;
+    padding: 15px 5px;
+    font-weight: 700;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #171b2b;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 20px;
+    display: none;
+    z-index: 99;
+}
+
+@media (min-width: 700px) {
+    .mobile {
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* =========================================
+   MEDIDOR DE FREQUÊNCIA CARDÍACA
+   CONFIGURAÇÃO ÚNICA E COMPARTILHADA
+========================================= */
+
+/* Card que contém o medidor */
+.heart-rate-card {
+    padding: 14px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Título do card */
+.heart-rate-card h2 {
+    color: var(--wine);
+    font-size: 19px;
+    line-height: 1.2;
+    margin: 0 0 4px;
+}
+
+/* Área que centraliza o medidor */
+.gauge-container {
+    width: 100%;
+    height: 190px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+/* SVG do medidor */
+.heart-rate-card .gauge {
+    display: block;
+    width: 100%;
+    max-width: 205px;
+    height: auto;
+
+    overflow: visible;
+}
+
+/* Fonte padrão dos textos do SVG */
+.gauge text {
+    font-family: inherit;
+}
+
+/* Número principal: 82 */
+.gauge-value {
+    font-size: 62px;
+    font-weight: 900;
+    fill: var(--wine);
+}
+
+/* Texto BPM */
+.gauge-label {
+    font-size: 17px;
+    font-weight: 900;
+    fill: #ff2457;
+}
+
+/* Números mínimo e máximo */
+.gauge-minmax {
+    font-size: 14px;
+    font-weight: 800;
+    fill: #ff2457;
+}
+
+/* Arco que mostra o progresso */
+.gauge-progress {
+    transition: stroke-dasharray 0.8s ease;
+}
+
+/* Linha em formato de cobrinha */
+.gauge-wave {
+    transition: d 0.8s ease;
+}
+
+/* =========================================
+   AJUSTE PARA TELAS PEQUENAS
+========================================= */
+
+@media (max-width: 380px) {
+
+    .heart-rate-card {
+        padding: 10px;
+    }
+
+    .heart-rate-card h2 {
+        font-size: 17px;
+    }
+
+    .gauge-container {
+        height: 180px;
+    }
+
+    .heart-rate-card .gauge {
+        max-width: 195px;
+    }
+
+    .gauge-value {
+    font-size: 42px !important;
+    }
+
+    .gauge-label {
+        font-size: 16px;
+    }
+
+    .gauge-minmax {
+        font-size: 13px;
+    }
+}
+
+
+/* ===================================
+   ESCALA LATERAL
+=================================== */
+
+.chart-scale {
+    height: 180px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+
+    padding-right: 3px;
+
+    font-size: 10px;
+    color: var(--wine);
+}
+
+
+/* ===================================
+   ÁREA PRINCIPAL DO GRÁFICO
+=================================== */
+
+.chart-main {
+    min-width: 0;
+    width: 100%;
+}
+
+.chart-scale span {
+    transform: translateY(6px);
+}
+
+/* ===================================
+   ÁREA DAS LINHAS E DAS COLUNAS
+=================================== */
+
+.chart-plot {
+    height: 180px;
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid var(--wine);
+
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 29px,
+        rgba(173, 0, 55, 0.35) 30px
+    );
+}
+
+
+/* ===================================
+   COLUNAS DO GRÁFICO
+=================================== */
+
+.chart-bars {
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+
+    gap: 8px;
+}
+
+
+/* ===================================
+   CADA COLUNA
+=================================== */
+
+.chart-column {
+    height: 100%;
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-direction: column;
+}
+
+
+/* ===================================
+   BARRAS
+=================================== */
+
+.chart-bar {
+    width: 100%;
+    max-width: 28px;
+
+    min-height: 0;
+
+    background: var(--wine);
+    border-radius: 2px 2px 0 0;
+}
+
+
+/* ===================================
+   DIAS DA SEMANA
+=================================== */
+
+.chart-days {
+    width: 100%;
+    height: 38px;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+
+    gap: 8px;
+    padding-top: 8px;
+}
+
+
+/* Cada dia fica alinhado com sua barra */
+
+.chart-days span {
+    flex: 1;
+
+    text-align: center;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    color: var(--wine);
+}
+
+
+/* ===================================
+   MÉDIAS DE ANSIEDADE
+=================================== */
+
+.anxiety-averages {
+    font-size: 12px;
+    line-height: 1.4;
+
+    margin: 5px 0 0;
+}
+
+.anxiety-averages span {
+    color: #98002D;
+}
+
+.anxiety-averages strong {
+    color: #000;
+}
+
+.triggers-card {
+    padding: 8px 10px;
+}
+
+.triggers-card .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.triggers-card .summary-table td {
+    padding: 7px 3px;
+    font-size: 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--wine);
+}
+
+/* Primeira coluna: ícone e nome */
+.triggers-card .summary-table td:first-child {
+    width: 55%;
+    color: var(--wine);
+    font-weight: 800;
+    border-right: 1px solid var(--wine);
+    white-space: nowrap;
+}
+
+/* Ícones */
+.triggers-card .coracaoVazio-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+/* Segunda coluna: registros */
+.triggers-card .summary-table td:nth-child(2) {
+    width: 45%;
+    text-align: left;
+    padding-left: 10px;
+    white-space: nowrap;
+    color: var(--ink);
+    border-right: none;
+}
+
+/* Remove apenas a linha horizontal do último item */
+.triggers-card .summary-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================
+   AJUSTE FINAL DO MEDIDOR DA PÁGINA INICIAL
+========================================= */
+
+.heart-rate-card {
+    height: 265px;
+    min-height: 0;
+    padding: 10px;
+    overflow: hidden;
+}
+
+/* Título */
+.heart-rate-card h2 {
+    position: relative;
+    z-index: 2;
+    margin: 0 0 -18px;
+}
+
+/* Área do medidor */
+.heart-rate-card .heart-gauge {
+    height: 235px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: relative;
+    top: -12px;
+}
+
+/* Medidor */
+.heart-rate-card .heart-gauge .gauge {
+    display: block;
+    width: 220px;
+    height: 220px;
+    max-width: 220px;
+    transform: none;
+}
+
+/* =========================================
+   MEDIDOR DA PÁGINA DE PRESSÃO ARTERIAL
+========================================= */
+
+.pressure-main-card {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.pressure-gauge-wrap {
+    width: 100%;
+    height: 235px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pressure-gauge-wrap .heart-gauge {
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.pressure-gauge-wrap .gauge {
+    display: block;
+    width: 220px;
+    height: 220px;
+    max-width: 220px;
+}
+
+.pressure-gauge-wrap .gauge-value {
+    font-size: 42px !important;
+}
+
+.heart-rate-card {
+    height: 240px;
+    padding: 4px 10px;
+    margin-top: -10px;
+    overflow: hidden;
+}
+
+.heart-rate-card h2 {
+    font-size: 15px;
+    margin-top: -5px;
+    margin-bottom: 2px;
+}
+
+.heart-rate-card > div[style*="font-size:20px"] {
+    font-size: 16px !important;
+    margin-top: -4px;
+}
+
+.heart-rate-card > div[style*="margin:10px"] {
+    font-size: 12px;
+    margin: 3px !important;
+}
+
+.heart-rate-card .heart-gauge {
+    margin-top: -20px;
+    transform: scale(0.88);
+}
+
+.heart-rate-card .gauge-value {
+    font-size: 36px !important;
+}
+
+.pressure-history-card {
+  padding: 12px 15px;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.pressure-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.pressure-table th {
+  padding: 8px 4px 10px;
+  color: var(--wine);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+  border-bottom: 1px solid var(--wine);
+}
+
+.pressure-table td {
+  height: 30px;
+  padding: 7px 4px;
+  text-align: center;
+  font-size: 13px;
+  color: #333;
+  border-bottom: 1px solid var(--wine);
+}
+
+.pressure-table th:first-child,
+.pressure-table td:first-child {
+  width: 29%;
+  text-align: left;
+  color: var(--wine);
+  font-weight: 800;
+}
+
+.pressure-table th:nth-child(2),
+.pressure-table td:nth-child(2) {
+  width: 31%;
+  border-left: 1px solid var(--wine);
+  border-right: 1px solid var(--wine);
+}
+
+.pressure-table th:nth-child(3),
+.pressure-table td:nth-child(3) {
+  width: 40%;
+}
+
+.pressure-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================================
+   HISTÓRICO DA PRESSÃO ARTERIAL
+========================================= */
+
+.pressure-history {
+    height: auto;
+    min-height: 330px;
+    padding: 14px;
+    overflow: hidden;
+}
+
+/* Área geral do gráfico */
+
+.pressure-chart {
+    width: 100%;
+    height: 205px;
+
+    display: grid;
+    grid-template-columns: 73px minmax(0, 1fr);
+    gap: 7px;
+}
+
+/* Categorias laterais */
+
+.chart-y-labels {
+    height: 145px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding-top: 1px;
+    padding-right: 3px;
+}
+
+.chart-y-labels span {
+    color: var(--wine);
+    font-size: 9px;
+    font-weight: 800;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Área do gráfico */
+
+.chart-area {
+    position: relative;
+    width: 100%;
+    height: 205px;
+    min-width: 0;
+}
+
+/* Linhas horizontais */
+
+.chart-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 145px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    z-index: 1;
+}
+
+.chart-grid span {
+    display: block;
+    width: 100%;
+    height: 1px;
+
+    background: var(--wine);
+    opacity: 0.45;
+}
+
+/* Área das barras */
+
+.chart-bars {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 145px;
+    width: 100%;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 5px;
+
+    padding: 0 5px;
+
+    z-index: 2;
+}
+
+/* Barras individuais */
+
+.pressure-bar {
+    width: 25px;
+    max-width: 25px;
+    min-height: 3px;
+
+    background: var(--wine);
+    border-radius: 2px 2px 0 0;
+
+    transition: height 0.3s ease;
+}
+
+/* Horários */
+
+.chart-x-labels {
+    position: absolute;
+    top: 151px;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: space-around;
+    gap: 5px;
+}
+
+.chart-x-labels span {
+    flex: 1;
+
+    color: var(--wine);
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* =========================================
+   BOTÕES DE PERÍODO
+========================================= */
+
+.pressure-history .history-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+
+    margin-top: 2px;
+    padding-left: 3px;
+
+    font-size: 12px;
+}
+
+/* Botões */
+
+.pressure-history .history-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    width: auto;
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    color: var(--wine);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+/* Bolinha */
+
+.pressure-history .history-radio {
+    display: inline-block;
+
+    width: 13px;
+    height: 13px;
+
+    border: 2px solid var(--wine);
+    border-radius: 50%;
+
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Período selecionado */
+
+.pressure-history .history-btn.active .history-radio::after {
+    content: "";
+
+    position: absolute;
+    top: 1px;
+    left: 1px;
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+    background: var(--wine);
+}
+
+/* Efeito de clique */
+
+.pressure-history .history-btn:active {
+    transform: scale(0.97);
+}
+
+/* Ajuste para telas pequenas */
+
+@media (max-width: 380px) {
+
+    .pressure-history {
+        padding: 12px;
+    }
+
+    .pressure-chart {
+        grid-template-columns: 68px minmax(0, 1fr);
+        gap: 5px;
+    }
+
+    .chart-y-labels span {
+        font-size: 8px;
+    }
+
+    .pressure-bar {
+        width: 20px;
+        max-width: 20px;
+    }
+
+    .chart-x-labels span {
+        font-size: 9px;
+    }
+
+}
+/* AJUSTE FINAL DO GRÁFICO DE PRESSÃO */
+.pressure-history {
+    min-height: 340px;
+    padding: 16px 14px;
+}
+
+/* Centraliza o gráfico */
+.pressure-history .pressure-chart {
+    width: 100%;
+    height: 225px;
+    display: grid;
+    grid-template-columns: 65px minmax(0, 1fr);
+    gap: 4px;
+    margin: 0 auto;
+}
+
+/* Textos laterais em preto */
+.pressure-history .chart-y-labels {
+    height: 175px;
+    color: #000;
+    font-size: 10px;
+    justify-content: space-between;
+}
+
+/* Área do gráfico */
+.pressure-history .chart-area {
+    height: 225px;
+    width: 100%;
+    position: relative;
+}
+
+/* Linhas do gráfico */
+.pressure-history .chart-grid {
+    height: 175px;
+    width: 100%;
+}
+
+/* Barras centralizadas e menores */
+.pressure-history .chart-bars {
+    height: 175px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    padding: 0;
+}
+
+/* Barras vinho */
+.pressure-history .pressure-bar {
+    flex: 0 1 28px;
+    max-width: 28px;
+    background: var(--wine);
+    border-radius: 5px 5px 0 0;
+}
+
+/* Textos inferiores em preto */
+.pressure-history .chart-x-labels {
+    position: absolute;
+    top: 188px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    color: #000;
+    font-size: 10px;
+}
+
+/* Botões de período */
+.pressure-history .history-controls {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.pressure-history .history-btn {
+    display: flex;
+    gap: 5px;
+    color: #000;
+    font-size: 13px;
+    background: transparent;
+}
+
+/* Bolinhas continuam vinho */
+.pressure-history .history-radio {
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--wine);
+    border-radius: 50%;
+    background: transparent;
+    display: inline-block;
+}
+
+/* Bolinha selecionada */
+.pressure-history .history-btn.active .history-radio {
+    background: var(--wine);
+    border-color: var(--wine);
+}
+
+/* Texto ativo também permanece preto */
+.pressure-history .history-btn.active {
+    color: #000;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 430px) {
+    .pressure-history .pressure-chart {
+        grid-template-columns: 60px minmax(0, 1fr);
+        gap: 3px;
+    }
+
+    .pressure-history .chart-bars {
+        gap: 7px;
+    }
+
+    .pressure-history .pressure-bar {
+        max-width: 23px;
+    }
+
+    .pressure-history .history-controls {
+        gap: 9px;
+    }
+
+    .pressure-history .history-btn {
+        font-size: 11px;
+    }
+}
+
+/* =========================================
+   GRÁFICO DE ANSIEDADE — AJUSTE CORRETO
+========================================= */
+
+.anxiety-trend-card {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Container principal */
+.anxiety-chart {
+    width: 100%;
+    height: 230px;
+    min-height: 230px;
+    padding: 10px 0 0;
+    overflow: hidden;
+}
+
+/* Área que contém escala e gráfico */
+.anxiety-chart-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+/* Escala lateral */
+.anxiety-chart-scale {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 0 0 25px;
+    width: 25px;
+    height: 175px;
+    padding-right: 3px;
+
+    color: var(--wine) !important;
+    font-size: 9px;
+    text-align: right;
+}
+
+/* Conteúdo do gráfico */
+.anxiety-chart-content {
+    flex: 1;
+    min-width: 0;
+    height: 215px;
+}
+
+/* Área onde ficam as linhas e barras */
+.anxiety-chart-plot {
+    position: relative;
+    width: 100%;
+    height: 175px;
+
+    border: 0;
+    border-bottom: 1px solid var(--wine);
+
+    background: transparent;
+    overflow: hidden;
+}
+
+/* Linhas horizontais */
+.anxiety-chart-grid-lines {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    z-index: 1;
+    pointer-events: none;
+}
+
+.anxiety-chart-grid-lines span {
+    display: block;
+    width: 100%;
+    height: 1px;
+    flex-shrink: 0;
+
+    border: 0;
+    background: var(--wine);
+    opacity: 0.35;
+}
+
+/* Área das barras */
+.anxiety-chart-bars {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+
+    width: 100%;
+    height: 175px;
+    gap: 6px;
+    padding: 0 5px;
+
+    z-index: 2;
+}
+
+/* Colunas */
+.anxiety-chart-column {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Barras */
+.anxiety-chart-bar {
+    display: block;
+    width: 70%;
+    max-width: 24px;
+    min-height: 0;
+
+    background: var(--wine) !important;
+    border-radius: 4px 4px 0 0;
+
+    transition: height 0.3s ease;
+}
+
+/* Dias da semana */
+.anxiety-chart-days {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+
+    width: 100%;
+    height: 35px;
+    gap: 6px;
+    padding: 7px 5px 0;
+}
+
+/* Letras dos dias */
+.anxiety-chart-days span {
+    flex: 1;
+    min-width: 0;
+
+    color: var(--wine) !important;
+    font-size: 10px !important;
+    font-weight: 700;
+
+    text-align: center;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 380px) {
+
+    .anxiety-chart {
+        height: 210px;
+        min-height: 210px;
+    }
+
+    .anxiety-chart-scale {
+        flex-basis: 22px;
+        width: 22px;
+        height: 160px;
+        font-size: 8px;
+    }
+
+    .anxiety-chart-content {
+        height: 200px;
+    }
+
+    .anxiety-chart-plot,
+    .anxiety-chart-bars {
+        height: 160px;
+    }
+
+    .anxiety-chart-bars {
+        gap: 4px;
+        padding: 0 3px;
+    }
+
+    .anxiety-chart-days {
+        gap: 4px;
+        padding: 7px 3px 0;
+    }
+
+    .anxiety-chart-days span {
+        font-size: 9px !important;
+    }
+}
+
+/* =========================================
+   TABELA DE CRISES DA ANSIEDADE
+========================================= */
+
+.anxiety-week-grid {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 12px 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.anxiety-week-grid .day {
+    display: block;
+    font-weight: 700;
+    color: var(--ink, #171b2b);
+}
+
+.anxiety-day-result {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-align: left;
+}
+
+.anxiety-day-result img {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.anxiety-day-result strong {
+    font-weight: 700;
+}
+
+
+/* =========================================
+   GRÁFICO DE TENDÊNCIA DA ANSIEDADE
+========================================= */
+
+.anxiety-trend-card {
+    width: 100%;
+    overflow: hidden;
+}
+
+.anxiety-chart {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 230px;
+    min-height: 230px;
+    padding: 10px 0 0;
+    overflow: hidden;
+}
+
+.anxiety-chart-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+.anxiety-chart-scale {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25px;
+    height: 180px;
+    padding: 0 3px 0 0;
+    flex-shrink: 0;
+    color: var(--wine);
+    font-size: 10px;
+    text-align: right;
+}
+
+.anxiety-chart-content {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    height: 220px;
+}
+
+.anxiety-chart-plot {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    border-bottom: 1px solid var(--wine);
+    border-left: 1px solid var(--wine);
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 29px,
+        rgba(173, 0, 55, 0.25) 30px
+    );
+    overflow: hidden;
+}
+
+.anxiety-chart-grid-lines {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.anxiety-chart-grid-lines span {
+    display: block;
+    width: 100%;
+    border-top: 1px dashed rgba(173, 0, 55, 0.25);
+}
+
+.anxiety-chart-bars {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 0 8px;
+}
+
+.anxiety-chart-column {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+}
+
+.anxiety-chart-bar {
+    display: block;
+    width: 100%;
+    max-width: 28px;
+    min-height: 0;
+    background: var(--wine);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+}
+
+.anxiety-chart-days {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    gap: 8px;
+    width: 100%;
+    height: 35px;
+    padding: 8px 8px 0;
+}
+
+.anxiety-chart-days span {
+    flex: 1;
+    min-width: 0;
+    color: var(--wine);
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.anxiety-averages {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.anxiety-averages span {
+    color: var(--wine);
+}
+
+.anxiety-averages strong {
+    color: #000;
+}
+
+
+/* =========================================
+   TABELA DE CRISES DA ANSIEDADE
+========================================= */
+
+.anxiety-week-grid {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 12px 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.anxiety-week-grid .day {
+    display: block;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.anxiety-day-result {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.anxiety-day-result img {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.anxiety-day-result strong {
+    font-weight: 700;
+}
+
+
+/* =========================================
+   AJUSTE PARA TELAS PEQUENAS
+========================================= */
+
+@media (max-width: 380px) {
+
+    .anxiety-chart {
+        height: 210px;
+        min-height: 210px;
+    }
+
+    .anxiety-chart-scale {
+        width: 22px;
+        height: 160px;
+        font-size: 9px;
+    }
+
+    .anxiety-chart-content {
+        height: 200px;
+    }
+
+    .anxiety-chart-plot {
+        height: 160px;
+    }
+
+    .anxiety-chart-bars {
+        gap: 5px;
+        padding: 0 5px;
+    }
+
+    .anxiety-chart-bar {
+        max-width: 22px;
+    }
+
+    .anxiety-chart-days {
+        gap: 5px;
+        padding: 8px 5px 0;
+    }
+
+    .anxiety-week-grid {
+        grid-template-columns: 70px minmax(0, 1fr);
+        gap: 10px 8px;
+        font-size: 13px;
+    }
+
+    .anxiety-day-result img {
+        width: 20px;
+        height: 20px;
+    }
+
+}
+
+/* =========================================
+   CRISES POR SEMANA — ESTILO DOS GRÁFICOS
+========================================= */
+
+.anxiety-week-grid {
+    display: grid !important;
+    grid-template-columns: 80px minmax(0, 1fr) !important;
+    gap: 0 !important;
+    align-items: stretch !important;
+    width: 100%;
+    border: none;
+}
+
+/* Todas as células */
+.anxiety-week-grid > div {
+    min-width: 0;
+    padding: 10px 8px;
+    border: none;
+    border-bottom: 1px solid var(--wine);
+    box-sizing: border-box;
+}
+
+/* Linha vertical entre as colunas */
+.anxiety-week-grid > .anxiety-day-result {
+    border-left: 1px solid var(--wine);
+}
+
+/* Nomes dos dias */
+.anxiety-week-grid > .day {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    color: var(--wine);
+    background: transparent;
+}
+
+/* Resultados */
+.anxiety-week-grid > .anxiety-day-result {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    background: transparent;
+    overflow-wrap: anywhere;
+}
+
+/* Remove a linha inferior da última linha */
+.anxiety-week-grid > div:nth-last-child(-n + 2) {
+    border-bottom: none;
+}
+
+/* Ícones */
+.anxiety-week-grid .bola-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* Total */
+.anxiety-week-grid > .day:last-of-type {
+    font-weight: 800;
+}
+
+/* Diminui a fonte da tabela de crises */
+.anxiety-week-grid > div {
+    font-size: 13px;
+}
+
+.anxiety-week-grid > .day {
+    font-size: 12px;
+}
+
+.anxiety-week-grid > .anxiety-day-result {
+    font-size: 13px;
+}
+
+/* AJUSTE — FREQUÊNCIA MÉDIA (PERFORMANCE FÍSICA) */
+
+.two-col > .heart-rate-card {
+    margin-top: 1px;
+    transform: none;
+}
+
+.two-col > .heart-rate-card h2 {
+    font-size: 14px;
+}
+
+/* AJUSTE INTERNO — FREQUÊNCIA MÉDIA */
+
+.two-col > .heart-rate-card {
+    margin-top: 0;
+}
+
+/* Corrige o texto */
+.two-col > .heart-rate-card h2 {
+    font-size: 19px;
+    line-height: 1.4;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    white-space: nowrap;
+}
+
+/* Abaixa apenas o medidor */
+.two-col > .heart-rate-card .gauge-container {
+    transform: translateY(-5px);
+}
+
+/* =========================================
+   SELETOR DE SEMANAS — RELATÓRIO
+========================================= */
+
+.week-card {
+    position: relative;
+    overflow: visible !important;
+    background: #fff;
+}
+
+.week-selector {
+    position: relative;
+    display: inline-block;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.week-button {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    width: auto !important;
+    height: auto !important;
+
+    padding: 10px 14px !important;
+
+    background: #fff !important;
+    color: var(--wine) !important;
+
+    border: 2px solid var(--wine) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+}
+
+.week-button span {
+    display: inline-block !important;
+    color: var(--wine) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#weekArrow {
+    font-size: 11px !important;
+}
+
+.week-menu {
+    display: none;
+
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+
+    width: 190px;
+    padding: 6px !important;
+
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 10px !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+
+    z-index: 9999;
+}
+
+.week-menu.active {
+    display: block !important;
+}
+
+.week-menu button {
+    display: block !important;
+    width: 100% !important;
+
+    padding: 10px !important;
+
+    background: #fff !important;
+    color: var(--wine) !important;
+
+    border: none !important;
+    border-radius: 6px !important;
+
+    text-align: left;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.week-menu button:hover {
+    background: var(--wine-soft) !important;
+}
+
+.summary-label {
+    color: var(--wine);
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.summary-table td {
+    font-size: 12px;
+    color: #000;
+}
+
+/* Ajuste da altura do card de Performance Física */
+.performance-card {
+    padding: 8px 12px !important;
+    margin-bottom: 12px;
+}
+
+.performance-card p {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.performance-card .summary-table td {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+/* Ajuste da altura do card de Performance Física */
+.performance-card {
+    padding: 8px 12px !important;
+    margin-bottom: 12px;
+}
+
+.ansiedade-card p {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.ansiedade-card .summary-table td {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.performance-card .summary-table tr:last-child td {
+    border-bottom: none !important;
+}
+
+.ansiedade-card .summary-table tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* Diminui a altura do card de Pressão Estimada */
+.pressure-card {
+    padding: 8px 12px !important;
+    margin-bottom: 12px;
+}
+
+.pressure-card p {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.pressure-card .summary-table td {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+/* Formatação do Insight Semanal */
+.insight li {
+    color: #000;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.insight .summary-label {
+    color: var(--wine);
+    font-weight: 700;
+}
+
+/* Corrige o alinhamento do texto do Insight */
+.insight ul {
+    margin: 0;
+    padding: 0 !important;
+    list-style: none;
+}
+
+.insight li {
+    display: block;
+    padding: 0 !important;
+    margin-bottom: 12px;
+    text-indent: 0 !important;
+    text-align: left;
+    line-height: 1.5;
+}
+
+.insight .summary-label {
+    display: inline;
+    color: var(--wine);
+    font-weight: 700;
+}
+
+/* Diminui um pouco a altura do card de Insight */
+.insight {
+    padding-top: 10px !important;
+    padding-bottom: 4px !important;
+}
+
+.insight li {
+    margin-bottom: 8px;
+}

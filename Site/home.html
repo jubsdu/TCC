@@ -1,0 +1,412 @@
+
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Página Inicial — VitaPulse</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="mobile dashboard">
+
+            <!-- CABEÇALHO -->
+            <header class="topbar">
+
+                <button class="menu" data-menu>
+                    ☰
+                </button>
+
+                <h1>Página Inicial</h1>
+
+                <button
+                    class="avatar"
+                    onclick="toast('Perfil demonstrativo')"
+                ></button>
+
+            </header>
+
+
+            <!-- CONTEÚDO PRINCIPAL -->
+            <main class="page-body">
+
+                <h2 class="greeting">
+                    Olá, Louis
+                </h2>
+
+
+                <!-- CARTÃO DE BATIMENTOS -->
+                <section class="card">
+
+                    <div
+                        style="display:flex;justify-content:space-between;align-items:center"
+                    >
+
+                        <h2 style="color:#ad0037;margin:0">
+                            Batimentos
+                        </h2>
+
+                        <button
+                            style="border:0;background:none;color:#ad0037;font-size:22px"
+                            onclick="toast('Configurações demonstrativas')"
+                        >
+                            ⚙
+                        </button>
+
+                    </div>
+
+
+                    <!-- ÚNICO MEDIDOR DE BATIMENTOS -->
+                   <div class="heart-gauge" data-heart-rate-gauge>
+                        <svg
+                            class="gauge"
+                            viewBox="0 0 220 220"
+                            aria-label="Frequência cardíaca"
+                        >
+
+                            <!-- Fundo do medidor -->
+                            <circle
+                                class="gauge-background"
+                                cx="110"
+                                cy="110"
+                                r="78"
+                                fill="none"
+                                stroke="#ffe1eb"
+                                stroke-width="24"
+                                stroke-linecap="round"
+                                pathLength="100"
+                                stroke-dasharray="75 25"
+                                transform="rotate(135 110 110)"
+                            />
+
+                            <!-- Arco dinâmico -->
+                            <circle
+                                class="gauge-progress"
+                                cx="110"
+                                cy="110"
+                                r="78"
+                                fill="none"
+                                stroke="#ad0037"
+                                stroke-width="24"
+                                stroke-linecap="round"
+                                pathLength="100"
+                                stroke-dasharray="22 78"
+                                transform="rotate(135 110 110)"
+                            />
+
+                            <!-- Onda cardíaca -->
+                            <path
+                                class="gauge-wave"
+                                d="M35 112 H65 L87 76 L112 139 L134 100 L154 112 H185"
+                                fill="none"
+                                stroke="#f6bfd0"
+                                stroke-width="3"
+                            />
+
+                            <!-- Valor atual -->
+                            <text
+                                class="gauge-value"
+                                x="110"
+                                y="126"
+                                text-anchor="middle"
+                            >
+                                82
+                            </text>
+
+                            <!-- Unidade -->
+                            <text
+                                class="gauge-label"
+                                x="110"
+                                y="160"
+                                text-anchor="middle"
+                            >
+                                BPM
+                            </text>
+
+                            <!-- Valor mínimo -->
+                            <text
+                                class="gauge-minmax gauge-min"
+                                x="78"
+                                y="177"
+                                text-anchor="middle"
+                            >
+                                62
+                            </text>
+
+                            <!-- Valor máximo -->
+                            <text
+                                class="gauge-minmax gauge-max"
+                                x="142"
+                                y="177"
+                                text-anchor="middle"
+                            >
+                                124
+                            </text>
+
+                        </svg>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CATEGORIAS -->
+                <h2 class="section-title">
+                    Categorias
+                </h2>
+
+
+                <div class="categories">
+
+                    <!-- PERFORMANCE FÍSICA -->
+                    <button
+                        class="category"
+                        onclick="window.location.href='performance.html'"
+                    >
+
+                        <span class="cat-icon">
+
+                            <img
+                                src="assets/performance-icon.png"
+                                alt="Performance Física"
+                            >
+
+                        </span>
+
+                        Performance Física
+
+                    </button>
+
+
+                    <!-- ANSIEDADE -->
+                    <button
+                        class="category"
+                        onclick="window.location.href='anxiety.html'"
+                    >
+
+                        <span class="cat-icon">
+
+                            <img
+                                src="assets/anxiety-icon.png"
+                                alt="Ansiedade"
+                            >
+
+                        </span>
+
+                        Ansiedade
+
+                    </button>
+
+
+                    <!-- PRESSÃO ARTERIAL -->
+                    <button
+                        class="category"
+                        onclick="window.location.href='pressure.html'"
+                    >
+
+                        <span class="cat-icon">
+
+                            <img
+                                src="assets/pressure-icon.png"
+                                alt="Pressão Arterial"
+                            >
+
+                        </span>
+
+                        Pressão Arterial
+
+                    </button>
+
+
+                    <!-- RELATÓRIO -->
+                    <button
+                        class="category"
+                        onclick="window.location.href='report.html'"
+                    >
+
+                        <span class="cat-icon">
+
+                            <img
+                                src="assets/report-icon.png"
+                                alt="Relatório"
+                            >
+
+                        </span>
+
+                        Relatório
+
+                    </button>
+
+                </div>
+
+
+                <!-- REGISTROS RECENTES -->
+                <h2 class="section-title">
+
+                    Recentes
+
+                    <small
+                        style="background:#f16b86;border-radius:50%;padding:2px 6px;font-size:11px"
+                    >
+                        1
+                    </small>
+
+                </h2>
+
+
+                <!-- PRIMEIRO REGISTRO -->
+                <div class="card recent">
+
+                    <button
+                        class="pulse-btn"
+                        onclick="toast('Dados cardíacos atualizados')"
+                    >
+
+                        <img
+                            src="./assets/pulse-icon.png"
+                            alt="Batimentos"
+                        >
+
+                    </button>
+
+
+                    <div class="mini">
+
+                        11/09/2026<br>
+                        Sexta-feira
+
+                    </div>
+
+
+                    <div>
+                        Checkup geral
+                    </div>
+
+
+                    <div class="mean">
+                        ♡ Média: 78 BPM
+                    </div>
+
+
+                    <button
+                        class="info-link"
+                        onclick="toast('Detalhes do checkup de 11/09/2026')"
+                    >
+                        Mais informações ↗
+                    </button>
+
+                </div>
+
+
+                <!-- SEGUNDO REGISTRO -->
+                <div class="card recent">
+
+                    <button
+                        class="pulse-btn"
+                        onclick="toast('Dados cardíacos atualizados')"
+                    >
+
+                        <img
+                            src="./assets/pulse-icon.png"
+                            alt="Batimentos"
+                        >
+
+                    </button>
+
+
+                    <div class="mini">
+
+                        10/09/2026<br>
+                        Quinta-feira
+
+                    </div>
+
+
+                    <div>
+                        Checkup geral
+                    </div>
+
+
+                    <div class="mean">
+                        ♡ Média: 83 BPM
+                    </div>
+
+
+                    <button
+                        class="info-link"
+                        onclick="toast('Detalhes do checkup de 10/09/2026')"
+                    >
+                        Mais informações ↗
+                    </button>
+
+                </div>
+
+            </main>
+
+
+            <!-- MENU LATERAL -->
+            <div class="nav-drawer">
+
+                <nav class="drawer">
+
+                    <img
+                        class="drawer-logo"
+                        src="assets/vitapulse-logo-full.png"
+                        alt="VitaPulse — seu bem-estar, saúde em tempo real"
+                    >
+
+
+                    <button
+                        onclick="window.location.href='home.html'"
+                    >
+                        Página Inicial
+                    </button>
+
+
+                    <button
+                        onclick="window.location.href='performance.html'"
+                    >
+                        Performance Física
+                    </button>
+
+
+                    <button
+                        onclick="window.location.href='anxiety.html'"
+                    >
+                        Ansiedade
+                    </button>
+
+
+                    <button
+                        onclick="window.location.href='pressure.html'"
+                    >
+                        Pressão Arterial
+                    </button>
+
+
+                    <button
+                        onclick="window.location.href='report.html'"
+                    >
+                        Relatório
+                    </button>
+
+                </nav>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>

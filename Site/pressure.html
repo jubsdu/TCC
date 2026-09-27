@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Pressão arterial — VitaPulse</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+<body>
+    <div class="app">
+        <div class="mobile dashboard">
+            <header class="topbar">
+                <button class="menu" data-menu>☰</button>
+                <h1>Pressão Arterial</h1>
+            
+                <button
+                    class="avatar"
+                    onclick="toast('Perfil demonstrativo')"
+                ></button>
+            </header>
+            <main class="page-body">
+                
+<section class="card pressure-main-card" style="text-align:center">
+
+    <h2 style="color:#ad0037">
+        Pressão arterial estimada
+    </h2>
+
+    <div style="font-size:20px">
+        118/76 mmHg
+    </div>
+
+    <div style="margin:10px">
+        🟢 Estimativa estável
+    </div>
+
+    <hr style="border:0;border-top:1px solid #e22a55">
+
+    <h2 style="color:#ad0037">
+    Frequência cardíaca
+</h2>
+
+<div class="pressure-gauge-wrap">
+    <div class="heart-gauge" data-heart-rate-gauge>
+
+        <svg
+            class="gauge"
+            viewBox="0 0 220 220"
+            aria-label="Frequência cardíaca"
+        >
+            <circle
+                cx="110"
+                cy="110"
+                r="78"
+                fill="none"
+                stroke="#ffe1eb"
+                stroke-width="24"
+                stroke-linecap="round"
+                pathLength="100"
+                stroke-dasharray="73 27"
+                transform="rotate(135 110 110)"
+            />
+
+            <circle
+                class="gauge-progress"
+                cx="110"
+                cy="110"
+                r="78"
+                fill="none"
+                stroke="#ad0037"
+                stroke-width="24"
+                stroke-linecap="round"
+                pathLength="100"
+                stroke-dasharray="52 100"
+                transform="rotate(135 110 110)"
+            />
+
+            <path
+                class="gauge-wave"
+                d="M35 112 H65 L87 76 L112 139 L134 100 L154 112 H185"
+                fill="none"
+                stroke="#f6bfd0"
+                stroke-width="3"
+            />
+
+            <text
+                x="110"
+                y="126"
+                text-anchor="middle"
+                class="gauge-value"
+            >82</text>
+
+            <text
+                x="110"
+                y="160"
+                text-anchor="middle"
+                class="gauge-label"
+            >BPM</text>
+
+            <text
+                x="78"
+                y="177"
+                text-anchor="middle"
+                class="gauge-minmax"
+            >62</text>
+
+            <text
+                x="142"
+                y="177"
+                text-anchor="middle"
+                class="gauge-minmax"
+            >124</text>
+        </svg>
+
+    </div>
+    </div>
+
+</section>
+<h2 class="section-title">
+    Pressão estimada - Últimos 7 dias
+</h2>
+
+<section class="card pressure-history-card">
+    <table class="pressure-table">
+
+        <tbody>
+            <tr>
+                <td>Segunda</td>
+                <td>116/74</td>
+                <td>Normal</td>
+            </tr>
+
+            <tr>
+                <td>Terça</td>
+                <td>120/78</td>
+                <td>Elevada</td>
+            </tr>
+
+            <tr>
+                <td>Quarta</td>
+                <td>118/76</td>
+                <td>Normal</td>
+            </tr>
+
+            <tr>
+                <td>Quinta</td>
+                <td>122/79</td>
+                <td>Elevada</td>
+            </tr>
+
+            <tr>
+                <td>Sexta</td>
+                <td>117/75</td>
+                <td>Normal</td>
+            </tr>
+
+            <tr>
+                <td>Sábado</td>
+                <td>119/77</td>
+                <td>Normal</td>
+            </tr>
+
+            <tr>
+                <td>Domingo</td>
+                <td>118/76</td>
+                <td>Normal</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+<h2 class="section-title">Histórico</h2>
+
+<section class="card pressure-history">
+
+    <div class="pressure-chart">
+
+        <div class="chart-y-labels">
+            <span>Altíssima</span>
+            <span>Alta</span>
+            <span>Normal</span>
+            <span>Baixa</span>
+            <span>Baixíssima</span>
+        </div>
+
+        <div class="chart-area">
+
+            <div class="chart-grid">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div
+                class="chart-bars"
+                data-pressure-chart
+            ></div>
+
+            <div
+                class="chart-x-labels"
+                data-chart-labels
+            ></div>
+
+        </div>
+
+    </div>
+
+    <div class="history-controls">
+
+        <button
+            type="button"
+            class="history-btn active"
+            data-period="24h"
+        >
+            <span class="history-radio"></span>
+            24h
+        </button>
+
+        <button
+            type="button"
+            class="history-btn"
+            data-period="7d"
+        >
+            <span class="history-radio"></span>
+            7 dias
+        </button>
+
+        <button
+            type="button"
+            class="history-btn"
+            data-period="30d"
+        >
+            <span class="history-radio"></span>
+            30 dias
+        </button>
+
+        <button
+            type="button"
+            class="history-btn"
+            data-period="3m"
+        >
+            <span class="history-radio"></span>
+            3 meses
+        </button>
+
+    </div>
+
+</section>
+<h2 class="section-title">Dados do PPG</h2>
+<section class="card">
+    <ul class="simple-list">
+        <li>
+             <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+             Frequência cardíaca: <b>72 BPM</b></li>
+        <li>
+             <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+             HRV: <b>58 ms</b> ↓</li>
+        <li>
+             <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+             Qualidade do sinal: <b>92%</b></li>
+    </ul>
+</section>
+<h2 class="section-title">Tendência</h2>
+<section class="card">
+    <ul class="simple-list">
+        <li>
+             <img class="coracaoVazio-icon" img src="./assets/coracaoVazio-icon.png" alt="">
+             Média: <b>119/76 mmHg</b></li>
+        <li>
+             <img class="coracaoVazio-icon" img src="./assets/coracaoVazio-icon.png" alt="">
+             Variação: <b>-2/-2 mmHg</b></li>
+    </ul>
+</section>
+<h2 class="section-title">Durante atividade</h2>
+<section class="card">
+    <b>Estimativa temporariamente indisponível durante movimento intenso.</b>
+</section>
+<h2 class="section-title">ALERTAS</h2>
+<section class="card alert">
+    <b>Cuidado com a pressão durante 13-15h.</b>
+</section>
+</main>
+<div class="nav-drawer">
+    <nav class="drawer">
+        <img
+        class="drawer-logo"
+        src="assets/vitapulse-logo-full.png"
+        alt="VitaPulse"
+        >
+        <button data-drawer-go="home.html">⌂ Página Inicial</button>
+        <button data-drawer-go="performance.html">♡ Performance Física</button>
+        <button data-drawer-go="anxiety.html">◉ Ansiedade</button>
+        <button data-drawer-go="pressure.html">♥ Pressão arterial</button>
+        <button data-drawer-go="report.html">▤ Relatório Semanal</button>
+    </nav>
+</div>
+</div>
+</div>
+    <script src="app.js">
+
+    </script>
+</body>
+</html>

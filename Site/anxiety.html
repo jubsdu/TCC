@@ -1,0 +1,589 @@
+
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Ansiedade — VitaPulse</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="mobile dashboard">
+
+            <!-- =========================
+                 CABEÇALHO
+            ========================== -->
+
+            <header class="topbar">
+
+                <button class="menu" data-menu>☰</button>
+
+                <h1>Ansiedade</h1>
+
+                <button
+                    class="avatar"
+                    onclick="toast('Perfil demonstrativo')"
+                ></button>
+
+            </header>
+
+
+            <!-- =========================
+                 CONTEÚDO PRINCIPAL
+            ========================== -->
+
+            <main class="page-body">
+
+
+                <!-- =========================
+                     NÍVEL DE ANSIEDADE
+                ========================== -->
+
+                <section
+                    class="card anxiety-summary-card"
+                    style="text-align:center;padding:12px 14px 10px"
+                    data-heart-rate-gauge
+                >
+
+                    <h2
+                        style="color:#ad0037;margin:0;font-size:17px"
+                    >
+                        Nível médio - Hoje
+                    </h2>
+
+                    <div
+                        style="font-size:22px;font-weight:800;margin:5px"
+                    >
+                        5,8/10
+                    </div>
+
+                    <hr
+                        style="border:0;border-top:1px solid #e22a55;margin:8px 0"
+                    >
+
+                    <h2
+                        style="color:#ad0037;font-size:17px;margin:8px 0 0"
+                    >
+                        Frequência média associada
+                    </h2>
+
+
+                    <!-- =========================
+                         MEDIDOR CARDÍACO
+                    ========================== -->
+
+                    <div
+                        class="gauge-container"
+                        style="height:155px"
+                    >
+
+                        <svg
+                            class="gauge"
+                            viewBox="0 0 220 220"
+                            aria-label="Frequência cardíaca"
+                            style="width:165px;height:165px"
+                        >
+
+                            <!-- Fundo do medidor -->
+
+                            <circle
+                                class="gauge-background"
+                                cx="110"
+                                cy="110"
+                                r="78"
+                                fill="none"
+                                stroke="#ffe1eb"
+                                stroke-width="24"
+                                stroke-linecap="round"
+                                pathLength="100"
+                                stroke-dasharray="75 25"
+                                transform="rotate(135 110 110)"
+                            />
+
+
+                            <!-- Arco dinâmico -->
+
+                            <circle
+                                class="gauge-progress"
+                                cx="110"
+                                cy="110"
+                                r="78"
+                                fill="none"
+                                stroke="#ad0037"
+                                stroke-width="24"
+                                stroke-linecap="round"
+                                pathLength="100"
+                                stroke-dasharray="22 78"
+                                transform="rotate(135 110 110)"
+                            />
+
+
+                            <!-- Cobrinha dinâmica -->
+
+                            <path
+                                class="gauge-wave"
+                                d="M35 112 H65 L87 76 L112 139 L134 100 L154 112 H185"
+                                fill="none"
+                                stroke="#f6bfd0"
+                                stroke-width="3"
+                            />
+
+
+                            <!-- Valor atual -->
+
+                            <text
+                                class="gauge-value"
+                                x="110"
+                                y="126"
+                                text-anchor="middle"
+                            >
+                                82
+                            </text>
+
+
+                            <!-- Unidade -->
+
+                            <text
+                                class="gauge-label"
+                                x="110"
+                                y="160"
+                                text-anchor="middle"
+                            >
+                                BPM
+                            </text>
+
+
+                            <!-- Valor mínimo -->
+
+                            <text
+                                class="gauge-minmax gauge-min"
+                                x="78"
+                                y="177"
+                                text-anchor="middle"
+                            >
+                                62
+                            </text>
+
+
+                            <!-- Valor máximo -->
+
+                            <text
+                                class="gauge-minmax gauge-max"
+                                x="142"
+                                y="177"
+                                text-anchor="middle"
+                            >
+                                124
+                            </text>
+
+                        </svg>
+
+                    </div>
+
+
+                    <small>
+                        ↓0,7% comparado à semana anterior
+                    </small>
+
+                </section>
+
+
+
+                <!-- =========================
+                     CRISES POR SEMANA
+                ========================== -->
+
+                <h2 class="section-title">
+                    Crises/Semana
+                </h2>
+
+                <section class="card">
+
+                    <div class="anxiety-week-grid">
+
+                        <div class="day">Segunda</div>
+                        <div class="anxiety-day-result">
+                            <img
+                                class="bola-icon"
+                                src="./assets/bola-icon.png"
+                                alt=""
+                            >
+                            2 episódios registrados
+                        </div>
+
+                        <div class="day">Terça</div>
+                        <div class="anxiety-day-result">
+                            <img
+                                class="bola-icon"
+                                src="./assets/bola-icon.png"
+                                alt=""
+                            >
+                            1 episódio registrado
+                        </div>
+
+                        <div class="day">Quarta</div>
+                        <div class="anxiety-day-result">
+                            <img
+                                class="bola-icon"
+                                src="./assets/bola-icon.png"
+                                alt=""
+                            >
+                            1 episódio registrado
+                        </div>
+
+                        <div class="day">Quinta</div>
+                        <div class="anxiety-day-result">
+                            0 episódios registrados
+                        </div>
+
+                        <div class="day">Sexta</div>
+                        <div class="anxiety-day-result">
+                            0 episódios registrados
+                        </div>
+
+                        <div class="day">Sábado</div>
+                        <div class="anxiety-day-result">
+                            <img
+                                class="bola-icon"
+                                src="./assets/bola-icon.png"
+                                alt=""
+                            >
+                            1 episódio registrado
+                        </div>
+
+                        <div class="day">Domingo</div>
+                        <div class="anxiety-day-result">
+                            <img
+                                class="bola-icon"
+                                src="./assets/bola-icon.png"
+                                alt=""
+                            >
+                            2 episódios registrados
+                        </div>
+
+                        <div class="day">Total</div>
+                        <div class="anxiety-day-result">
+                            <strong>7 episódios registrados ↓</strong>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =========================
+                     DETALHAMENTO DOS EPISÓDIOS
+                ========================== -->
+
+                <h2 class="section-title">
+                    Detalhamento episódios
+                </h2>
+
+                <section class="card">
+
+                    <ul class="simple-list">
+
+                        <li>
+                            <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+                            Crises esta semana:
+                            <b>7↓</b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+                            Semana anterior:
+                            <b>11</b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+                            Duração média:
+                            <b>18 min</b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+                            Horário mais frequente:
+                            <b>14h-18h</b>
+                        </li>
+
+                    </ul>
+
+                </section>
+
+
+
+                <!-- =========================
+                     ANSIEDADE X FREQUÊNCIA
+                ========================== -->
+
+                <h2 class="section-title">
+                    Ansiedade x Frequência cardíaca
+                </h2>
+
+                <section class="card">
+
+                    <ul class="simple-list">
+
+                        <li>
+                            <img class="coracaoBola-icon" img src="./assets/coracaoBola-icon.png" alt="">
+                            FC média:
+                            <b>94 BPM</b>
+                        </li>
+
+                        <li>
+                            <img class="coracaoBola-icon" img src="./assets/coracaoBola-icon.png" alt="">
+                            FC máxima:
+                            <b>112 BPM</b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" img src="./assets/recovery-icon.png" alt="">
+                            Ansiedade percebida:
+                            <b>7,2/10</b>
+                        </li>
+
+                    </ul>
+
+                </section>
+
+
+
+                <!-- =========================
+                     TENDÊNCIA DE ANSIEDADE
+                ========================== -->
+                
+                <h2 class="section-title">
+                    Tendência de ansiedade
+                </h2>
+
+                <section class="card anxiety-trend-card">
+
+                    <div
+                        class="anxiety-chart"
+                        data-anxiety-chart
+                    ></div>
+
+                    <p class="anxiety-averages">
+
+                        <b>
+                            <span>Média desta semana:</span>
+                            <strong>5,8/10</strong>
+                        </b>
+
+                        <br>
+
+                        <b>
+                            <span>Média anterior:</span>
+                            <strong>6,5/10</strong>
+                        </b>
+
+                    </p>
+
+</section>
+
+
+
+                <!-- =========================
+                     TÉCNICAS E ACOMPANHAMENTO
+                ========================== -->
+
+                <div class="two-col">
+
+
+                    <!-- Técnicas usadas -->
+
+                    <section>
+
+                        <h2 class="section-title">
+                            Técnicas usadas
+                        </h2>
+
+                        <div class="card">
+
+                            <ul class="simple-list techniques-list">
+
+                                <li>
+                                    <img src="./assets/respiracao-icon.png" alt="">
+                                    Respiração
+                                </li>
+
+                                <li>
+                                    <img src="./assets/relaxamento-icon.png" alt="">
+                                    Relaxamento
+                                </li>
+
+                                <li>
+                                    <img src="./assets/aterramento-icon.png" alt="">
+                                    Aterramento
+                                </li>
+
+                                <li>
+                                    <img src="./assets/registrar-icon.png" alt="">
+                                    Registrar sentimentos
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- Acompanhamento -->
+
+                    <section>
+
+                        <h2 class="section-title">
+                            Acompanhamento
+                        </h2>
+
+                        <div class="card">
+
+                            <label>☑ Psicoterapia</label>
+
+                            <br>
+
+                            <label>□ Consulta médica</label>
+
+                            <br>
+
+                            <label>□ Medicação prescrita</label>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+
+
+                <!-- =========================
+                     GATILHOS REGISTRADOS
+                ========================== -->
+
+                <h2 class="section-title">
+                    Gatilhos registrados
+                </h2>
+
+                <section class="card triggers-card">
+
+                    <table class="summary-table">
+
+                        <tr>
+                            <td>
+                                <img class="coracaoVazio-icon" img src="./assets/coracaoVazio-icon.png" alt="">
+                                Estudos
+                            </td>
+                            <td>5 registros</td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <img class="coracaoVazio-icon" img src="./assets/coracaoVazio-icon.png" alt="">
+                                Sono
+                            </td>
+                            <td>3 registros</td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <img class="coracaoVazio-icon" img src="./assets/coracaoVazio-icon.png" alt="">
+                                Social
+                            </td>
+                            <td>2 registros</td>
+                        </tr>
+
+                    </table>
+
+                </section>
+
+
+
+                <!-- =========================
+                     ÚLTIMOS EPISÓDIOS
+                ========================== -->
+
+                <h2 class="section-title">
+                    Últimos episódios
+                </h2>
+
+                <section class="card">
+
+                    <ul class="simple-list">
+
+                        <li>
+                            <img class="bola-icon" img src="./assets/bola-icon.png" alt="">
+                            15:42 &nbsp;&nbsp; 8/10 &nbsp;&nbsp; 104 BPM
+                        </li>
+
+                        <li>
+                            <img class="bola-icon" img src="./assets/bola-icon.png" alt="">
+                            09:15 &nbsp;&nbsp; 6/10 &nbsp;&nbsp; 91 BPM
+                        </li>
+
+                    </ul>
+
+                </section>
+
+
+            </main>
+
+
+
+            <!-- =========================
+                 MENU LATERAL
+            ========================== -->
+
+            <div class="nav-drawer">
+
+                <nav class="drawer">
+
+                    <img
+                        class="drawer-logo"
+                        src="assets/vitapulse-logo-full.png"
+                        alt="VitaPulse"
+                    >
+
+                    <button data-drawer-go="home.html">
+                        ⌂ Página Inicial
+                    </button>
+
+                    <button data-drawer-go="performance.html">
+                        ♡ Performance Física
+                    </button>
+
+                    <button data-drawer-go="anxiety.html">
+                        ◉ Ansiedade
+                    </button>
+
+                    <button data-drawer-go="pressure.html">
+                        ♥ Pressão arterial
+                    </button>
+
+                    <button data-drawer-go="report.html">
+                        ▤ Relatório Semanal
+                    </button>
+
+                </nav>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Cadastre-se — VitaPulse</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+<body>
+    <div class="app">
+        <div class="mobile auth-bg">
+            <div class="status">
+                <span>9:41</span>
+                <span class="status-icons">▮▮ WiFi ▰</span>
+            </div>
+            <div class="auth-content">
+<h1 class="auth-title">Cadastre-se</h1>
+<p class="auth-sub">Crie sua conta aqui</p>
+<form class="form" data-form="register">
+<label class="field">♙
+    <input required placeholder="Nome e Sobrenome">
+</label>
+<label class="field">▣<input required placeholder="ex: XX+ (XX) YYYYY-YYYY"></label>
+<label class="field">✉<input type="email" required placeholder="Email"></label>
+<label class="field">♙<input id="pw" type="password" required placeholder="Senha">
+    <button type="button" class="eye">◉</button>
+</label>
+<div class="terms">Ao cadastrar-se, você concorda com os <a href="#">termos de uso</a></div>
+<button
+    class="primary"
+    onclick="window.location.href='login.html'"
+>
+    Cadastre-se
+</button>
+</form>
+<div class="divider">
+    <span class="ou">OU</span>
+</div>
+<button class="social" onclick="toast('Login social demonstrativo')">
+    <img class="social-icon" src="assets/google-icon.png" alt="Google">
+    Login com Gmail
+</button>
+<button class="social" onclick="toast('Login social demonstrativo')">
+    <img class="social-icon" src="assets/samsung-icon.png" alt="Samsung Account">
+    Login com Samsung Account
+</button>
+        <div class="bottom-link">Já possui uma conta? 
+            <a href="login.html">Entrar</a>
+        </div>
+    </div>
+</div>
+</div>
+    <script src="app.js">
+
+    </script>
+</body>
+</html>
