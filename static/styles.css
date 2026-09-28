@@ -1,4 +1,3 @@
-
 :root{
   --wine:#98002D;
   --wine-dark:#98002D;
@@ -41,6 +40,12 @@ button {
 
 a {
     color: inherit;
+}
+
+.choice-btn.selected {
+    background: var(--wine-soft);
+    color: #fff;
+    border-color: var(--white);
 }
 
 .app {
@@ -1653,197 +1658,127 @@ a {
     font-size: 36px !important;
 }
 
-.pressure-history-card {
-  padding: 12px 15px;
-  border-radius: 14px;
-  background: #fff;
-  overflow: hidden;
-}
-
-.pressure-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.pressure-table th {
-  padding: 8px 4px 10px;
-  color: var(--wine);
-  font-size: 13px;
-  font-weight: 900;
-  text-align: center;
-  border-bottom: 1px solid var(--wine);
-}
-
-.pressure-table td {
-  height: 30px;
-  padding: 7px 4px;
-  text-align: center;
-  font-size: 13px;
-  color: #333;
-  border-bottom: 1px solid var(--wine);
-}
-
-.pressure-table th:first-child,
-.pressure-table td:first-child {
-  width: 29%;
-  text-align: left;
-  color: var(--wine);
-  font-weight: 800;
-}
-
-.pressure-table th:nth-child(2),
-.pressure-table td:nth-child(2) {
-  width: 31%;
-  border-left: 1px solid var(--wine);
-  border-right: 1px solid var(--wine);
-}
-
-.pressure-table th:nth-child(3),
-.pressure-table td:nth-child(3) {
-  width: 40%;
-}
-
-.pressure-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
 /* =========================================
-   HISTÓRICO DA PRESSÃO ARTERIAL
+   GRÁFICO DE PRESSÃO
 ========================================= */
-
-.pressure-history {
-    height: auto;
-    min-height: 330px;
-    padding: 14px;
-    overflow: hidden;
-}
-
-/* Área geral do gráfico */
 
 .pressure-chart {
     width: 100%;
-    height: 205px;
+    height: 250px;
 
     display: grid;
     grid-template-columns: 73px minmax(0, 1fr);
     gap: 7px;
 }
 
-/* Categorias laterais */
+/* -------------------------
+   LEGENDAS LATERAIS
+------------------------- */
+
+.chart-bars,
+.chart-x-labels {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    column-gap: 10px;
+    padding: 0 8px;
+}
 
 .chart-y-labels {
-    height: 145px;
+    height: 205px;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
 
-    padding-top: 1px;
-    padding-right: 3px;
+    align-items: center;
+    text-align: right;
+
+    padding-right: 5px;
+
+    color: var(--wine);
+    font-size: 12px;
 }
 
 .chart-y-labels span {
-    color: var(--wine);
-    font-size: 9px;
-    font-weight: 800;
-    text-align: right;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
 }
 
-/* Área do gráfico */
+
+/* -------------------------
+   ÁREA DO GRÁFICO
+------------------------- */
 
 .chart-area {
     position: relative;
-    width: 100%;
-    height: 205px;
     min-width: 0;
+    height: 250px;
+
+    display: grid;
+    grid-template-rows: 205px 30px;
 }
 
-/* Linhas horizontais */
+
+/* -------------------------
+   LINHAS DO GRÁFICO
+------------------------- */
 
 .chart-grid {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
 
-    height: 145px;
+    width: 100%;
+    height: 205px;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
 
-    z-index: 1;
+    pointer-events: none;
 }
 
 .chart-grid span {
-    display: block;
-    width: 100%;
-    height: 1px;
-
-    background: var(--wine);
-    opacity: 0.45;
+    border-top: 1px solid rgba(165, 0, 50, 0.45);
 }
 
-/* Área das barras */
+
+/* -------------------------
+   BARRAS
+------------------------- */
 
 .chart-bars {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-
-    height: 145px;
-    width: 100%;
-
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
-    gap: 5px;
-
-    padding: 0 5px;
-
-    z-index: 2;
+    height: 205px;
+    align-items: end;
 }
-
-/* Barras individuais */
 
 .pressure-bar {
-    width: 25px;
-    max-width: 25px;
-    min-height: 3px;
+    width: 38px;
+    height: var(--bar-height);
+    justify-self: center;
 
     background: var(--wine);
-    border-radius: 2px 2px 0 0;
-
-    transition: height 0.3s ease;
+    border-radius: 7px 7px 0 0;
 }
 
-/* Horários */
+
+/* -------------------------
+   LEGENDAS INFERIORES
+------------------------- */
 
 .chart-x-labels {
-    position: absolute;
-    top: 151px;
-    left: 0;
-    right: 0;
-
-    display: flex;
-    justify-content: space-around;
-    gap: 5px;
+    height: 30px;
+    align-items: center;
+    margin-top: 5px;
 }
 
 .chart-x-labels span {
-    flex: 1;
+    width: 30px;
+    justify-self: center;
+
+    text-align: center;
 
     color: var(--wine);
-    font-size: 10px;
-    font-weight: 800;
-    text-align: center;
-    white-space: nowrap;
-}
+    font-size: 12px;
+}   
 
 /* =========================================
    BOTÕES DE PERÍODO

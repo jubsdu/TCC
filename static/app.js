@@ -505,19 +505,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function updatePressureChart(period) {
 
-            const selectedData =
-                pressureHistoryData[period];
+            const selectedData = pressureHistoryData[period];
 
             if (!selectedData) {
                 return;
             }
 
-
-            // Limpar gráfico anterior
-
             pressureChart.innerHTML = "";
-
             pressureLabels.innerHTML = "";
+
+            const columnCount = selectedData.labels.length;
+
+            pressureChart.style.gridTemplateColumns =
+                `repeat(${columnCount}, 1fr)`;
+
+            pressureLabels.style.gridTemplateColumns =
+                `repeat(${columnCount}, 1fr)`;
 
 
             // Criar colunas do gráfico

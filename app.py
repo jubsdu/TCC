@@ -15,20 +15,20 @@ def index():
     return render_template('index.html')
 
 # Home
-@app.route('/home')
-def home():
-    user_id = session.get('user_id')
+# @app.route('/home')
+# def home():
+#     user_id = session.get('user_id')
 
-    if not user_id:
-        return redirect(url_for('login'))
+#     if not user_id:
+#         return redirect(url_for('login'))
 
-    user = db_session.query(User).filter_by(id=user_id).first()
+#     user = db_session.query(User).filter_by(id=user_id).first()
 
-    if not user:
-        session.clear()
-        return redirect(url_for('login'))
+#     if not user:
+#         session.clear()
+#         return redirect(url_for('login'))
 
-    return render_template('home.html', user=user)
+#     return render_template('home.html', user=user)
 
 # Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
@@ -41,42 +41,79 @@ def login():
 
         print("LOGIN RECEBIDO:", email)
 
-        user = db_session.query(User).filter_by(email=email).first()
+        user = db_session.query(User).filter_by(
+            email=email
+        ).first()
 
-        if user and user.password == password:
+        if not user:
+            return "Usuário não encontrado.", 401
 
-            print("LOGIN CORRETO - ID:", user.id)
+        if user.password != password:
+            return "Senha incorreta.", 401
 
-            session['user_id'] = user.id
+        # Guarda o ID do usuário existente
+        session['user_id'] = user.id
 
-            return redirect(url_for('home'))
+        print("LOGIN CORRETO - ID:", user.id)
+        print("SESSION:", dict(session))
 
-        return render_template(
-            'login.html',
-            error='Email ou senha incorretos.'
-        )
+        return redirect(url_for('home'))
 
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form.get("name")
-        phone = request.form.get("phone")
-        email = request.form.get("email")
-        password = request.form.get("password")
 
+    if request.method == 'POST':
+
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # Verifica se o email já existe
+        existing_user = db_session.query(User).filter_by(
+            email=email
+        ).first()
+
+        if existing_user:
+            return "Este email já está cadastrado.", 400
+
+        # Cria o usuário
         user = User(
             name=name,
             phone=phone,
             email=email,
             password=password
-        )        
+        )
 
         db_session.add(user)
         db_session.commit()
 
-        return render_template('login.html')
+        # Guarda o ID do novo usuário na sessão
+        session['user_id'] = user.id
+
+        print("USUÁRIO CRIADO - ID:", user.id)
+
+        # Recupera o acompanhamento escolhido antes do cadastro
+        treatment = session.get('treatment')
+
+        if treatment:
+            accompaniment = Accompaniment(
+                user_id=user.id,
+                psychotherapy=(treatment == 'psicoterapia'),
+                consultation=(treatment == 'consulta'),
+                medication=(treatment == 'medicacao')
+            )
+
+            db_session.add(accompaniment)
+            db_session.commit()
+
+            print("ACOMPANHAMENTO SALVO - ID:", accompaniment.id)
+
+            session.pop('treatment', None)
+
+        return redirect(url_for('home'))
 
     return render_template('register.html')
 
@@ -115,20 +152,13 @@ def onboarding_treatment():
 
         treatment = request.form.get('treatment')
 
-        user_id = session.get('user_id')
+        if not treatment:
+            return "Nenhum acompanhamento foi selecionado.", 400
 
-        if not user_id:
-            return redirect(url_for('login'))
+        # Guarda temporariamente a escolha
+        session['treatment'] = treatment
 
-        accompaniment = Accompaniment(
-            user_id=user_id,
-            psychotherapy=(treatment == 'psicoterapia'),
-            consultation=(treatment == 'consulta'),
-            medication=(treatment == 'medicacao')
-        )
-
-        db_session.add(accompaniment)
-        db_session.commit()
+        print("ACOMPANHAMENTO ESCOLHIDO:", treatment)
 
         return redirect(url_for('register'))
 
@@ -176,6 +206,27 @@ def report():
 #     db_session.commit()
 
 #     return f"Usuário {id} deletado com sucesso!"
+
+@app.route('/home')
+def home():
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user = db_session.query(User).filter_by(
+        id=user_id
+    ).first()
+
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+
+    return render_template(
+        'home.html',
+        user=user
+    )
 
 @app.route('/api/users', methods=["GET", "POST"])
 def users():
