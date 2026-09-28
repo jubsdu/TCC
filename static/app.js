@@ -501,7 +501,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         };
 
-
         // Atualizar gráfico de pressão
 
         function updatePressureChart(period) {

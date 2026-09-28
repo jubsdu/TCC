@@ -1,10 +1,11 @@
 import os
-from flask import Flask, render_template, jsonify, request, redirect, url_for
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from flask_cors import CORS
 from database import SessionLocal, init_db
 from models import User, Doctor, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly
 
 app = Flask(__name__)
+app.secret_key = "sua-chave-secreta"
 CORS(app)
 
 db_session = SessionLocal()
@@ -13,38 +14,48 @@ db_session = SessionLocal()
 def index():
     return render_template('index.html')
 
-from flask import Flask, render_template
-
-app = Flask(__name__)
-
-# Route principal / Index
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 # Home
 @app.route('/home')
 def home():
-    return render_template('home.html')
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user = db_session.query(User).filter_by(id=user_id).first()
+
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+
+    return render_template('home.html', user=user)
 
 # Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+
     if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
+
+        email = request.form.get('email')
+        password = request.form.get('password')
 
         print("LOGIN RECEBIDO:", email)
 
         user = db_session.query(User).filter_by(email=email).first()
 
         if user and user.password == password:
+
             print("LOGIN CORRETO - ID:", user.id)
-            return render_template('home.html')
 
-        print("LOGIN INCORRETO")
+            session['user_id'] = user.id
 
-        return render_template('login.html', error='Email ou senha incorretos.')
+            return redirect(url_for('home'))
+
+        return render_template(
+            'login.html',
+            error='Email ou senha incorretos.'
+        )
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -99,14 +110,47 @@ def onboarding_reason():
 
 @app.route('/onboarding-treatment', methods=['GET', 'POST'])
 def onboarding_treatment():
+
     if request.method == 'POST':
+
+        treatment = request.form.get('treatment')
+
+        user_id = session.get('user_id')
+
+        if not user_id:
+            return redirect(url_for('login'))
+
+        accompaniment = Accompaniment(
+            user_id=user_id,
+            psychotherapy=(treatment == 'psicoterapia'),
+            consultation=(treatment == 'consulta'),
+            medication=(treatment == 'medicacao')
+        )
+
+        db_session.add(accompaniment)
+        db_session.commit()
+
         return redirect(url_for('register'))
+
     return render_template('onboarding-treatment.html')
 
 # Módulos de Saúde e Monitoramento
 @app.route('/anxiety')
 def anxiety():
-    return render_template('anxiety.html')
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    accompaniment = db_session.query(Accompaniment).filter_by(
+        user_id=user_id
+    ).first()
+
+    return render_template(
+        'anxiety.html',
+        accompaniment=accompaniment
+    )
 
 @app.route('/performance')
 def performance():

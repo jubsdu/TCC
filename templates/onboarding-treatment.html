@@ -5,49 +5,71 @@
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Acompanhamento — VitaPulse</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
     </head>
     <body>
         <div class="app">
             <div class="mobile onboard">
                 <div class="status">
                     <span>9:41</span>
-                    <span class="status-icons"> WiFi </span>
+                    <span class="status-icons"><i class="ri-wifi-line" style="color:#fff; font-size: 1.5em;"></i></span>
                 </div>
-                
                 <h1 style="margin-top:120px">Você faz algum tratamento/<br>acompanhamento?</h1>
-                
                 <form action="{{ url_for('onboarding_treatment') }}" method="POST">
-                    <div class="choice-group">
-                        <button type="button" class="choice-btn" data-choice="psicoterapia">
+                    <div
+                        class="choice-group"
+                        style="display: flex; flex-direction: column; gap: 12px; width: 100%;"
+                    >
+                        <button
+                            type="submit"
+                            name="treatment"
+                            value="psicoterapia"
+                            class="choice-btn"
+                        >
                             Psicoterapia
                         </button>
-                        <button type="button" class="choice-btn" data-choice="consulta">
+
+                        <button
+                            type="submit"
+                            name="treatment"
+                            value="consulta"
+                            class="choice-btn"
+                        >
                             Consulta médica
                         </button>
-                        <button type="button" class="choice-btn" data-choice="medicacao">
+
+                        <button
+                            type="submit"
+                            name="treatment"
+                            value="medicacao"
+                            class="choice-btn"
+                        >
                             Medicação prescrita
                         </button>
-                        <button type="button" class="choice-btn" data-choice="nenhum">
+
+                        <button
+                            type="submit"
+                            name="treatment"
+                            value="nenhum"
+                            class="choice-btn"
+                        >
                             Nenhum acompanhamento
                         </button>
                     </div>
-
-                    <div class="onboard-spacer"></div>
-
-                    <div class="dots">
-                        <i class="dot"></i>
-                        <i class="dot"></i>
-                        <i class="dot active"></i>
-                    </div>
-
-                    <div class="choice-message" id="choiceMessage">
-                        Selecione uma opção para continuar
-                    </div>
-
-                    <button type="submit" class="primary-light">
-                        Próximo
-                    </button>
                 </form>
+
+                <div class="onboard-spacer" style="flex: 1;"></div>
+                <div class="dots">
+                    <i class="dot"></i>
+                    <i class="dot"></i>
+                    <i class="dot active"></i>
+                </div>
+                <div class="choice-message" id="choiceMessage">
+                    Selecione uma opção para continuar
+                </div>
+                <button class="primary-light" data-next="{{ url_for('register') }}">
+                    Próximo
+                </button>
             </div>
         </div>
         <script src="{{ url_for('static', filename='app.js') }}"></script>

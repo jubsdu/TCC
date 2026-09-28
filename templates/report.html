@@ -14,11 +14,26 @@
                     <button class="menu" data-menu>☰</button>
                     <h1>Relatório Semanal</h1>
                 
-                    <button
-                    class="avatar"
-                    onclick="toast('Perfil demonstrativo')"
-                ><i class="ri-user-3-fill" style="color:#000; font-size: 1.5em;"></i></button>
+                    <button class="avatar" onclick="openLogoutPopup()" type="button" > 
+                        <i class="ri-user-3-fill" style="color:#000; font-size:1.5em;"></i> 
+                    </button>
+                    
+                    <div id="logoutPopup" class="logout-overlay"> 
+                        <div class="logout-popup"> 
+                            <button class="logout-close" onclick="closeLogoutPopup()" type="button" aria-label="Fechar" > 
+                                <i class="ri-close-line"></i> 
+                            </button> <div class="logout-icon"> 
+                                <i class="ri-logout-box-r-line"></i> 
+                            </div> <h2>Sair da conta?</h2> 
+                            <p> Tem certeza que deseja sair da sua conta? </p> 
+                            <div class="logout-actions"> 
+                                <button class="logout-cancel" onclick="closeLogoutPopup()" type="button" > Cancelar </button> 
+                                <button class="logout-confirm" onclick="logout()" type="button" > Sair </button> 
+                            </div> 
+                        </div> 
+                    </div>
                 </header>
+
                 <main class="page-body">
                     <h2 class="section-title2">Semana</h2>
                     <section class="card week-card">
@@ -153,15 +168,16 @@
                             src="{{ url_for('static', filename='assets/vitapulse-logo-full.png') }}"
                             alt="VitaPulse"
                         >
-                        <button onclick="window.location.href='{{ url_for('home') }}'">⌂ Página Inicial</button>
-                        <button onclick="window.location.href='{{ url_for('performance') }}'">♡ Performance Física</button>
-                        <button onclick="window.location.href='{{ url_for('anxiety') }}'">◉ Ansiedade</button>
-                        <button onclick="window.location.href='{{ url_for('pressure') }}'">♥ Pressão arterial</button>
-                        <button onclick="window.location.href='{{ url_for('report') }}'">▤ Relatório Semanal</button>
+                        <button onclick="window.location.href='{{ url_for('home') }}'"><i class="ri-home-2-fill" style="color: #fff;"></i> Página Inicial</button>
+                        <button onclick="window.location.href='{{ url_for('performance') }}'"><i class="ri-service-fill" style="color: #fff;"></i> Performance Física</button>
+                        <button onclick="window.location.href='{{ url_for('anxiety') }}'"><i class="ri-mental-health-fill" style="color: #fff;"></i> Ansiedade</button>
+                        <button onclick="window.location.href='{{ url_for('pressure') }}'"><i class="ri-heart-pulse-fill" style="color: #fff;"></i> Pressão arterial</button>
+                        <button onclick="window.location.href='{{ url_for('report') }}'"><i class="ri-file-chart-fill" style="color: #fff;"></i> Relatório Semanal</button>
                     </nav>
                 </div>
             </div>
         </div>
         <script src="{{ url_for('static', filename='app.js') }}"></script>
+        <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
     </body>
 </html>
