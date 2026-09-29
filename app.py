@@ -15,10 +15,9 @@ def index():
     return render_template('index.html')
 
 # Home
-<<<<<<< HEAD
 import random
 from datetime import date, datetime, timezone, timedelta
-=======
+
 # @app.route('/home')
 # def home():
 #     user_id = session.get('user_id')
@@ -33,7 +32,6 @@ from datetime import date, datetime, timezone, timedelta
 #         return redirect(url_for('login'))
 
 #     return render_template('home.html', user=user)
->>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
 
 # Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
@@ -76,25 +74,19 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
 
-<<<<<<< HEAD
-        # Verifica se já existe
-=======
         # Verifica se o email já existe
->>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
         existing_user = db_session.query(User).filter_by(
             email=email
         ).first()
 
         if existing_user:
-<<<<<<< HEAD
+
             return "Este email já está cadastrado."
 
         # Cria usuário
-=======
             return "Este email já está cadastrado.", 400
 
         # Cria o usuário
->>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
         user = User(
             name=name,
             phone=phone,
@@ -105,7 +97,6 @@ def register():
         db_session.add(user)
         db_session.commit()
 
-<<<<<<< HEAD
         print("USUÁRIO CRIADO:", user.id, user.email)
 
         # ==========================================
@@ -124,7 +115,6 @@ def register():
 
         session['user_id'] = user.id
 
-=======
         # Guarda o ID do novo usuário na sessão
         session['user_id'] = user.id
 
@@ -148,7 +138,6 @@ def register():
 
             session.pop('treatment', None)
 
->>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
         return redirect(url_for('home'))
 
     return render_template('register.html')
@@ -698,6 +687,55 @@ def anxiety():
         user_id=user_id
     ).first()
 
+    # =====================================================
+    # TÉCNICAS USADAS
+    # =====================================================
+
+    techniques = (
+        db_session.query(Tecnic)
+        .join(
+            Episode_tecniques,
+            Episode_tecniques.tecnic_id == Tecnic.id
+        )
+        .join(
+            Episode_anxious,
+            Episode_anxious.id == Episode_tecniques.episode_id
+        )
+        .filter(
+            Episode_anxious.user_id == user_id
+        )
+        .distinct()
+        .all()
+    )
+
+    # =====================================================
+    # GATILHOS REGISTRADOS
+    # =====================================================
+
+    trigger_counts = (
+        db_session.query(
+            Trigger.name,
+            func.count(Episode_trigger.id)
+        )
+        .join(
+            Episode_trigger,
+            Episode_trigger.trigger_id == Trigger.id
+        )
+        .join(
+            Episode_anxious,
+            Episode_anxious.id == Episode_trigger.episode_id
+        )
+        .filter(
+            Episode_anxious.user_id == user_id
+        )
+        .group_by(
+            Trigger.name
+        )
+        .order_by(
+            func.count(Episode_trigger.id).desc()
+        )
+        .all()
+    )
 
     # =====================================================
     # TODOS OS EPISÓDIOS DO USUÁRIO
@@ -710,16 +748,41 @@ def anxiety():
         .all()
     )
 
+    # =====================================================
+    # ÚLTIMOS EPISÓDIOS
+    # =====================================================
+
+    latest_episodes = (
+        db_session.query(Episode_anxious)
+        .filter(
+            Episode_anxious.user_id == user_id
+        )
+        .order_by(
+            Episode_anxious.date_time.desc()
+        )
+        .limit(5)
+        .all()
+    )
+
     print("USUÁRIO ANSIEDADE:", user.id, user.email)
     print("EPISÓDIOS:", len(episodes))
-
 
         # =====================================================
     # SEMANA ATUAL
     # 21/09 até 27/09
     # =====================================================
 
-    inicio_semana = datetime(2026, 9, 21, 0, 0, 0)
+    hoje = datetime.now()
+
+    inicio_semana = (
+        hoje - timedelta(days=hoje.weekday())
+    ).replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+
     fim_semana = inicio_semana + timedelta(days=7)
 
     episodes_this_week = [
@@ -729,7 +792,6 @@ def anxiety():
     ]
 
     print("EPISÓDIOS ESTA SEMANA:", len(episodes_this_week))
-
 
     # =====================================================
     # SEMANA ANTERIOR
@@ -815,7 +877,6 @@ def anxiety():
     else:
         average_duration = 0
 
-
     # =====================================================
     # EPISÓDIOS POR DIA
     # =====================================================
@@ -878,30 +939,21 @@ def anxiety():
 
     return render_template(
         'anxiety.html',
-
         user=user,
-
         accompaniment=accompaniment,
-
         episodes=episodes,
-
         episodes_this_week=episodes_this_week,
-
         episodes_previous_week=episodes_previous_week,
-
         episodes_by_day=episodes_by_day,
-
         average_anxiety=average_anxiety,
-
         average_bpm=average_bpm,
-
         max_bpm=max_bpm,
-
         average_duration=average_duration,
-
         most_frequent_time=most_frequent_time,
-
-        previous_average_anxiety=previous_average_anxiety
+        previous_average_anxiety=previous_average_anxiety,
+        techniques=techniques,
+        trigger_counts=trigger_counts,
+        latest_episodes=latest_episodes
     )
 
 @app.route('/performance')
@@ -1006,16 +1058,11 @@ def report():
 
 @app.route('/home')
 def home():
-<<<<<<< HEAD
-=======
-
->>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
     user_id = session.get('user_id')
 
     if not user_id:
         return redirect(url_for('login'))
 
-<<<<<<< HEAD
     user = db_session.query(User).filter(
         User.id == user_id
     ).first()
@@ -1063,7 +1110,7 @@ def home():
         current_bpm=current_bpm,
         min_bpm=min_bpm,
         max_bpm=max_bpm
-=======
+    )
     user = db_session.query(User).filter_by(
         id=user_id
     ).first()
@@ -1075,7 +1122,6 @@ def home():
     return render_template(
         'home.html',
         user=user
->>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
     )
 
 @app.route('/api/users', methods=["GET", "POST"])
