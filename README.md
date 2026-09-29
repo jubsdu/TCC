@@ -15,4 +15,4 @@ Esse trabalho tem como objetivo a criação de um **aplicativo** com foco em aux
 - Enzo: Relatório, pesquisa e auxílio geral;
 - Gustavo: Inteligência Artificial e design;
 - Júlia: Prototipação, realização do aplicativo e design;
-- Lucas: Banco de dados, Computação em nuvem e Inteligência Artificial.
+- Lucas: Banco de dados, Computação em nuvem e QA.

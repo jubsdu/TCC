@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from flask_cors import CORS
 from database import SessionLocal, init_db
-from models import User, Doctor, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly
+from models import User, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly, Assessment_anxious
 
 app = Flask(__name__)
 app.secret_key = "sua-chave-secreta"
@@ -15,20 +15,8 @@ def index():
     return render_template('index.html')
 
 # Home
-@app.route('/home')
-def home():
-    user_id = session.get('user_id')
-
-    if not user_id:
-        return redirect(url_for('login'))
-
-    user = db_session.query(User).filter_by(id=user_id).first()
-
-    if not user:
-        session.clear()
-        return redirect(url_for('login'))
-
-    return render_template('home.html', user=user)
+import random
+from datetime import date, datetime, timezone, timedelta
 
 # Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
@@ -41,44 +29,547 @@ def login():
 
         print("LOGIN RECEBIDO:", email)
 
-        user = db_session.query(User).filter_by(email=email).first()
+        user = db_session.query(User).filter_by(
+            email=email
+        ).first()
 
-        if user and user.password == password:
+        if not user:
+            return "Usuário não encontrado.", 401
 
-            print("LOGIN CORRETO - ID:", user.id)
+        if user.password != password:
+            return "Senha incorreta.", 401
 
-            session['user_id'] = user.id
+        # Guarda o ID do usuário existente
+        session['user_id'] = user.id
 
-            return redirect(url_for('home'))
+        print("LOGIN CORRETO - ID:", user.id)
+        print("SESSION:", dict(session))
 
-        return render_template(
-            'login.html',
-            error='Email ou senha incorretos.'
-        )
+        return redirect(url_for('home'))
 
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form.get("name")
-        phone = request.form.get("phone")
-        email = request.form.get("email")
-        password = request.form.get("password")
 
+    if request.method == 'POST':
+
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # Verifica se já existe
+        existing_user = db_session.query(User).filter_by(
+            email=email
+        ).first()
+
+        if existing_user:
+            return "Este email já está cadastrado."
+
+        # Cria usuário
         user = User(
             name=name,
             phone=phone,
             email=email,
             password=password
-        )        
+        )
 
         db_session.add(user)
         db_session.commit()
 
-        return render_template('login.html')
+        print("USUÁRIO CRIADO:", user.id, user.email)
+
+        # ==========================================
+        # CRIA OS DADOS FICTÍCIOS DESSE USUÁRIO
+        # ==========================================
+
+        criar_dados_iniciais(user.id)
+        criar_dados_performance(user.id)
+        criar_dados_ansiedade(user.id)
+        # criar_dados_pressao(user.id)
+        # criar_dados_relatorio(user.id)
+
+        # ==========================================
+        # LOGIN AUTOMÁTICO
+        # ==========================================
+
+        session['user_id'] = user.id
+
+        return redirect(url_for('home'))
 
     return render_template('register.html')
+
+def criar_dados_iniciais(user_id):
+    print(f"CRIANDO DADOS INICIAIS PARA USUÁRIO {user_id}")
+
+    # ==========================================
+    # 1. ATIVIDADE
+    # ==========================================
+    
+    activity = Activity(
+        user_id=user_id,
+        date=date.today() - timedelta(days=random.randint(0, 7)),
+        average_rate=random.randint(70, 100),
+        maximum_rate=random.randint(120, 160),
+        active_time=random.randint(30, 240),
+        intensity=random.choice([
+            "Zona 2",
+            "Zona 3",
+            "Zona 4"
+        ]),
+        time_recovery=random.randint(15, 60),
+        quant_sessions=random.randint(1, 5)
+    )
+
+    db_session.add(activity)
+    db_session.flush()
+
+    # ==========================================
+    # 2. MEDIÇÕES DE BPM
+    # ==========================================
+
+    for i in range(5):
+
+        measurement = Measurement_bpm(
+            user_id=user_id,
+            activity_id=activity.id,
+            bpm=random.randint(60, 140),
+            date_time=datetime.now(timezone.utc) - timedelta(
+                hours=random.randint(1, 48)
+            )
+        )
+
+        db_session.add(measurement)
+
+    # ==========================================
+    # 3. CHECKUPS RECENTES
+    # ==========================================
+
+    for i in range(2):
+
+        checkup = Checkup(
+            user_id=user_id,
+            type=random.choice([
+                "Checkup geral",
+                "Avaliação física",
+                "Acompanhamento"
+            ]),
+            date=date.today() - timedelta(days=i + 1),
+            average_bpm=random.randint(70, 100),
+            observation="Checkup realizado com sucesso."
+        )
+
+        db_session.add(checkup)
+
+    # ==========================================
+    # 4. SALVA TUDO
+    # ==========================================
+
+    db_session.commit()
+    print(f"DADOS INICIAIS DO USUÁRIO {user_id} CRIADOS!")
+
+def criar_dados_performance(user_id):
+
+    print(f"CRIANDO PERFORMANCE PARA USUÁRIO {user_id}")
+
+    hoje = date.today()
+
+    # ==========================================
+    # ATIVIDADE DA SEMANA
+    # ==========================================
+
+    data_atividade = hoje - timedelta(days=1)
+
+    media_bpm = random.randint(70, 90)
+    max_bpm = random.randint(130, 170)
+
+    atividade = Activity(
+        user_id=user_id,
+        date=data_atividade,
+        average_rate=media_bpm,
+        maximum_rate=max_bpm,
+        active_time=random.randint(180, 240),
+        intensity=random.choice([
+            "Zona 3",
+            "Zona 4"
+        ]),
+        time_recovery=random.randint(25, 45),
+        quant_sessions=random.randint(3, 5)
+    )
+
+    db_session.add(atividade)
+    db_session.flush()
+
+    # ==========================================
+    # ZONAS CARDÍACAS
+    # ==========================================
+
+    zonas = [
+        ("Zona 1", "Muito leve", random.randint(8, 20)),
+        ("Zona 2", "Leve/moderada", random.randint(15, 35)),
+        ("Zona 3", "Moderada", random.randint(15, 30)),
+        ("Zona 4", "Intensa", random.randint(5, 15)),
+        ("Zona 5", "Muito intensa", random.randint(1, 5))
+    ]
+
+    for zona, intensidade, minutos in zonas:
+
+        db_session.add(
+            Cardiac_zone(
+                user_id=user_id,
+                date=data_atividade,
+                zone=zona,
+                intensity=intensidade,
+                minutes=minutos
+            )
+        )
+
+    # ==========================================
+    # RECUPERAÇÃO
+    # ==========================================
+
+    final_bpm = random.randint(150, 175)
+    bpm_1 = random.randint(120, 145)
+    bpm_2 = random.randint(105, 125)
+
+    queda_2 = final_bpm - bpm_2
+
+    db_session.add(
+        Recovery(
+            user_id=user_id,
+            date=data_atividade,
+            final_bpm=final_bpm,
+            bpm_1_min=bpm_1,
+            bpm_2_min=bpm_2,
+            queda_2_min=queda_2
+        )
+    )
+
+    # ==========================================
+    # EVOLUÇÃO / AVALIAÇÃO FÍSICA
+    # ==========================================
+
+    inicio_semana = hoje - timedelta(days=6)
+
+    db_session.add(
+        Physical_assessment(
+            user_id=user_id,
+            beggining_date=inicio_semana,
+            end_date=hoje,
+            average_fc=media_bpm,
+            active_time=atividade.active_time,
+            quant_sessions=atividade.quant_sessions
+        )
+    )
+
+    # ==========================================
+    # METAS DA SEMANA
+    # ==========================================
+
+    meta_atividade = 150
+    atividade_realizada = random.randint(100, 150)
+
+    meta_intensidade = 90
+    intensidade_realizada = random.randint(45, 90)
+
+    meta_sessoes = 4
+    sessoes_realizadas = random.randint(2, 4)
+
+    db_session.add(
+        Goal_weekly(
+            user_id=user_id,
+            beginning_week=inicio_semana,
+            end_week=hoje,
+
+            goal_activity=meta_atividade,
+            activity_completed=atividade_realizada,
+
+            goal_intensity=meta_intensidade,
+            intensity_completed=intensidade_realizada,
+
+            goal_sessions=meta_sessoes,
+            sessions_completed=sessoes_realizadas
+        )
+    )
+
+    # ==========================================
+    # MEDIÇÕES DE BPM
+    # ==========================================
+
+    for i in range(8):
+
+        db_session.add(
+            Measurement_bpm(
+                user_id=user_id,
+                activity_id=atividade.id,
+                bpm=random.randint(65, max_bpm),
+                date_time=datetime.now(timezone.utc)
+                - timedelta(hours=random.randint(1, 72))
+            )
+        )
+
+    db_session.commit()
+
+    print(f"PERFORMANCE DO USUÁRIO {user_id} CRIADA!")
+
+def criar_dados_ansiedade(user_id):
+
+    print("Criando dados de ansiedade para usuário:", user_id)
+
+    # =========================================================
+    # 1. ACOMPANHAMENTO
+    # =========================================================
+
+    acompanhamento = db_session.query(Accompaniment).filter_by(
+        user_id=user_id
+    ).first()
+
+    if not acompanhamento:
+
+        acompanhamento = Accompaniment(
+            user_id=user_id,
+            psychotherapy=True,
+            consultation=True,
+            medication=False
+        )
+
+        db_session.add(acompanhamento)
+
+        print("Acompanhamento criado.")
+
+    # =========================================================
+    # 2. GATILHOS
+    # =========================================================
+
+    trigger_names = [
+        "Estudos",
+        "Sono",
+        "Social"
+    ]
+
+    triggers = {}
+
+    for name in trigger_names:
+
+        trigger = db_session.query(Trigger).filter_by(
+            name=name
+        ).first()
+
+        if not trigger:
+
+            trigger = Trigger(
+                name=name
+            )
+
+            db_session.add(trigger)
+            db_session.flush()
+
+            print("Gatilho criado:", name)
+
+        triggers[name] = trigger
+
+
+    # =========================================================
+    # 3. TÉCNICAS
+    # =========================================================
+
+    tecnic_names = [
+        ("Respiração", "Exercício de respiração para controle da ansiedade", "respiracao-icon.png"),
+        ("Relaxamento", "Técnica de relaxamento", "relaxamento-icon.png"),
+        ("Aterramento", "Técnica de aterramento", "aterramento-icon.png"),
+        ("Registrar sentimentos", "Registro dos sentimentos percebidos", "registrar-icon.png")
+    ]
+
+    tecnicas = {}
+
+    for name, description, icon in tecnic_names:
+
+        tecnic = db_session.query(Tecnic).filter_by(
+            name=name
+        ).first()
+
+        if not tecnic:
+
+            tecnic = Tecnic(
+                name=name,
+                description=description,
+                icon=icon
+            )
+
+            db_session.add(tecnic)
+            db_session.flush()
+
+            print("Técnica criada:", name)
+
+        tecnicas[name] = tecnic
+
+
+    # =========================================================
+    # 4. VERIFICA SE O USUÁRIO JÁ POSSUI EPISÓDIOS
+    # =========================================================
+
+    episode_exists = db_session.query(Episode_anxious).filter_by(
+        user_id=user_id
+    ).first()
+
+    if episode_exists:
+
+        print("Dados de ansiedade já existem para este usuário.")
+
+        db_session.commit()
+
+        return
+
+
+    # =========================================================
+    # 5. EPISÓDIOS DE ANSIEDADE
+    # =========================================================
+
+    hoje = datetime.now()
+
+    data_inicio = (
+        hoje - timedelta(days=hoje.weekday())
+    ).replace(
+        hour=9,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+
+    episodios = [
+
+        {
+            "dia": 0,
+            "hora": 14,
+            "nivel": 6,
+            "bpm": 91,
+            "minutos": 15,
+            "observacao": "Ansiedade durante os estudos.",
+            "gatilho": "Estudos",
+            "tecnica": "Respiração"
+        },
+
+        {
+            "dia": 0,
+            "hora": 17,
+            "nivel": 7,
+            "bpm": 104,
+            "minutos": 18,
+            "observacao": "Sensação de ansiedade durante período de estudos.",
+            "gatilho": "Estudos",
+            "tecnica": "Relaxamento"
+        },
+
+        {
+            "dia": 1,
+            "hora": 10,
+            "nivel": 5,
+            "bpm": 88,
+            "minutos": 12,
+            "observacao": "Episódio leve durante a manhã.",
+            "gatilho": "Sono",
+            "tecnica": "Respiração"
+        },
+
+        {
+            "dia": 2,
+            "hora": 15,
+            "nivel": 8,
+            "bpm": 112,
+            "minutos": 25,
+            "observacao": "Ansiedade elevada durante estudos.",
+            "gatilho": "Estudos",
+            "tecnica": "Aterramento"
+        },
+
+        {
+            "dia": 5,
+            "hora": 16,
+            "nivel": 6,
+            "bpm": 96,
+            "minutos": 17,
+            "observacao": "Ansiedade associada a situação social.",
+            "gatilho": "Social",
+            "tecnica": "Relaxamento"
+        },
+
+        {
+            "dia": 6,
+            "hora": 9,
+            "nivel": 5,
+            "bpm": 87,
+            "minutos": 14,
+            "observacao": "Episódio leve pela manhã.",
+            "gatilho": "Sono",
+            "tecnica": "Respiração"
+        },
+
+        {
+            "dia": 6,
+            "hora": 18,
+            "nivel": 7,
+            "bpm": 101,
+            "minutos": 25,
+            "observacao": "Ansiedade durante interação social.",
+            "gatilho": "Social",
+            "tecnica": "Registrar sentimentos"
+        }
+    ]
+
+    for dados in episodios:
+
+        data_episodio = data_inicio + timedelta(days=dados["dia"])
+
+        data_episodio = data_episodio.replace(
+            hour=dados["hora"],
+            minute=random.choice([0, 15, 30, 45])
+        )
+
+        episodio = Episode_anxious(
+            user_id=user_id,
+            date_time=data_episodio,
+            level_anxious=dados["nivel"],
+            cardiac_rate=dados["bpm"],
+            minutes=dados["minutos"],
+            observation=dados["observacao"]
+        )
+
+        db_session.add(episodio)
+        db_session.flush()
+
+
+        # =====================================================
+        # GATILHO DO EPISÓDIO
+        # =====================================================
+
+        episode_trigger = Episode_trigger(
+            episode_id=episodio.id,
+            trigger_id=triggers[dados["gatilho"]].id
+        )
+
+        db_session.add(episode_trigger)
+
+
+        # =====================================================
+        # TÉCNICA UTILIZADA
+        # =====================================================
+
+        episode_tecnic = Episode_tecniques(
+            episode_id=episodio.id,
+            tecnic_id=tecnicas[dados["tecnica"]].id
+        )
+
+        db_session.add(episode_tecnic)
+
+
+    # =========================================================
+    # 6. SALVA TUDO
+    # =========================================================
+
+    db_session.commit()
+
+    print("Dados de ansiedade criados com sucesso!")
 
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot():
@@ -115,26 +606,22 @@ def onboarding_treatment():
 
         treatment = request.form.get('treatment')
 
-        user_id = session.get('user_id')
+        if not treatment:
+            return "Nenhum acompanhamento foi selecionado.", 400
 
-        if not user_id:
-            return redirect(url_for('login'))
+        # Guarda temporariamente a escolha
+        session['treatment'] = treatment
 
-        accompaniment = Accompaniment(
-            user_id=user_id,
-            psychotherapy=(treatment == 'psicoterapia'),
-            consultation=(treatment == 'consulta'),
-            medication=(treatment == 'medicacao')
-        )
-
-        db_session.add(accompaniment)
-        db_session.commit()
+        print("ACOMPANHAMENTO ESCOLHIDO:", treatment)
 
         return redirect(url_for('register'))
 
     return render_template('onboarding-treatment.html')
 
 # Módulos de Saúde e Monitoramento
+from datetime import datetime, timedelta
+from sqlalchemy import func
+
 @app.route('/anxiety')
 def anxiety():
 
@@ -143,18 +630,305 @@ def anxiety():
     if not user_id:
         return redirect(url_for('login'))
 
+    user = db_session.query(User).filter_by(
+        id=user_id
+    ).first()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    # =====================================================
+    # ACOMPANHAMENTO
+    # =====================================================
+
     accompaniment = db_session.query(Accompaniment).filter_by(
         user_id=user_id
     ).first()
 
+
+    # =====================================================
+    # TODOS OS EPISÓDIOS DO USUÁRIO
+    # =====================================================
+
+    episodes = (
+        db_session.query(Episode_anxious)
+        .filter(Episode_anxious.user_id == user_id)
+        .order_by(Episode_anxious.date_time.desc())
+        .all()
+    )
+
+    print("USUÁRIO ANSIEDADE:", user.id, user.email)
+    print("EPISÓDIOS:", len(episodes))
+
+
+        # =====================================================
+    # SEMANA ATUAL
+    # 21/09 até 27/09
+    # =====================================================
+
+    inicio_semana = datetime(2026, 9, 21, 0, 0, 0)
+    fim_semana = inicio_semana + timedelta(days=7)
+
+    episodes_this_week = [
+        episode
+        for episode in episodes
+        if inicio_semana <= episode.date_time < fim_semana
+    ]
+
+    print("EPISÓDIOS ESTA SEMANA:", len(episodes_this_week))
+
+
+    # =====================================================
+    # SEMANA ANTERIOR
+    # 14/09 até 20/09
+    # =====================================================
+
+    inicio_semana_anterior = inicio_semana - timedelta(days=7)
+    fim_semana_anterior = inicio_semana
+
+    episodes_previous_week = [
+        episode
+        for episode in episodes
+        if inicio_semana_anterior <= episode.date_time < fim_semana_anterior
+    ]
+
+    print(
+        "EPISÓDIOS SEMANA ANTERIOR:",
+        len(episodes_previous_week)
+    )
+
+    # =====================================================
+    # MÉDIA DE ANSIEDADE
+    # =====================================================
+
+    anxiety_values = [
+        episode.level_anxious
+        for episode in episodes_this_week
+        if episode.level_anxious is not None
+    ]
+
+    if anxiety_values:
+        average_anxiety = sum(anxiety_values) / len(anxiety_values)
+    else:
+        average_anxiety = 0
+
+    # =====================================================
+    # MÉDIA DE ANSIEDADE DA SEMANA ANTERIOR
+    # =====================================================
+
+    previous_anxiety_values = [
+        episode.level_anxious
+        for episode in episodes_previous_week
+        if episode.level_anxious is not None
+    ]
+
+    if previous_anxiety_values:
+        previous_average_anxiety = (
+            sum(previous_anxiety_values) /
+            len(previous_anxiety_values)
+        )
+    else:
+        previous_average_anxiety = 0
+
+    # =====================================================
+    # BPM
+    # =====================================================
+
+    bpm_values = [
+        episode.cardiac_rate
+        for episode in episodes_this_week
+        if episode.cardiac_rate is not None
+    ]
+
+    if bpm_values:
+        average_bpm = sum(bpm_values) / len(bpm_values)
+        max_bpm = max(bpm_values)
+    else:
+        average_bpm = 0
+        max_bpm = 0
+
+    # =====================================================
+    # DURAÇÃO MÉDIA
+    # =====================================================
+
+    duration_values = [
+        episode.minutes
+        for episode in episodes_this_week
+        if episode.minutes is not None
+    ]
+
+    if duration_values:
+        average_duration = sum(duration_values) / len(duration_values)
+    else:
+        average_duration = 0
+
+
+    # =====================================================
+    # EPISÓDIOS POR DIA
+    # =====================================================
+
+    dias_semana = [
+        "Segunda",
+        "Terça",
+        "Quarta",
+        "Quinta",
+        "Sexta",
+        "Sábado",
+        "Domingo"
+    ]
+
+    episodes_by_day = []
+
+    for i, day_name in enumerate(dias_semana):
+
+        data = inicio_semana + timedelta(days=i)
+
+        count = sum(
+            1
+            for episode in episodes_this_week
+            if episode.date_time.date() == data.date()
+        )
+
+        episodes_by_day.append({
+            "name": day_name,
+            "count": count
+        })
+
+
+    # =====================================================
+    # HORÁRIO MAIS FREQUENTE
+    # =====================================================
+
+    if episodes_this_week:
+
+        hours = [
+            episode.date_time.hour
+            for episode in episodes_this_week
+        ]
+
+        most_common_hour = max(
+            set(hours),
+            key=hours.count
+        )
+
+        most_frequent_time = f"{most_common_hour}h"
+
+    else:
+
+        most_frequent_time = "Sem registros"
+
+
+    print("MÉDIA ANSIEDADE:", average_anxiety)
+    print("MÉDIA BPM:", average_bpm)
+    print("BPM MÁXIMO:", max_bpm)
+
+
     return render_template(
         'anxiety.html',
-        accompaniment=accompaniment
+
+        user=user,
+
+        accompaniment=accompaniment,
+
+        episodes=episodes,
+
+        episodes_this_week=episodes_this_week,
+
+        episodes_previous_week=episodes_previous_week,
+
+        episodes_by_day=episodes_by_day,
+
+        average_anxiety=average_anxiety,
+
+        average_bpm=average_bpm,
+
+        max_bpm=max_bpm,
+
+        average_duration=average_duration,
+
+        most_frequent_time=most_frequent_time,
+
+        previous_average_anxiety=previous_average_anxiety
     )
 
 @app.route('/performance')
 def performance():
-    return render_template('performance.html')
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user = db_session.query(User).filter(
+        User.id == user_id
+    ).first()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    # ==========================
+    # ATIVIDADE
+    # ==========================
+
+    activity = (
+        db_session.query(Activity)
+        .filter(Activity.user_id == user_id)
+        .order_by(Activity.date.desc())
+        .first()
+    )
+
+    # ==========================
+    # ZONAS CARDÍACAS
+    # ==========================
+
+    cardiac_zones = (
+        db_session.query(Cardiac_zone)
+        .filter(Cardiac_zone.user_id == user_id)
+        .order_by(Cardiac_zone.date.desc())
+        .all()
+    )
+
+    # ==========================
+    # RECUPERAÇÃO
+    # ==========================
+
+    recovery = (
+        db_session.query(Recovery)
+        .filter(Recovery.user_id == user_id)
+        .order_by(Recovery.date.desc())
+        .first()
+    )
+
+    # ==========================
+    # AVALIAÇÃO FÍSICA
+    # ==========================
+
+    physical_assessment = (
+        db_session.query(Physical_assessment)
+        .filter(Physical_assessment.user_id == user_id)
+        .order_by(Physical_assessment.end_date.desc())
+        .first()
+    )
+
+    # ==========================
+    # META SEMANAL
+    # ==========================
+
+    weekly_goal = (
+        db_session.query(Goal_weekly)
+        .filter(Goal_weekly.user_id == user_id)
+        .order_by(Goal_weekly.end_week.desc())
+        .first()
+    )
+
+    return render_template(
+        'performance.html',
+        user=user,
+        activity=activity,
+        cardiac_zones=cardiac_zones,
+        recovery=recovery,
+        physical_assessment=physical_assessment,
+        weekly_goal=weekly_goal,
+    )
 
 @app.route('/pressure')
 def pressure():
@@ -176,6 +950,62 @@ def report():
 #     db_session.commit()
 
 #     return f"Usuário {id} deletado com sucesso!"
+
+@app.route('/home')
+def home():
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user = db_session.query(User).filter(
+        User.id == user_id
+    ).first()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    recent_checkups = (
+        db_session.query(Checkup)
+        .filter(Checkup.user_id == user_id)
+        .order_by(Checkup.date.desc())
+        .limit(2)
+        .all()
+    )
+
+    categories = (
+        db_session.query(Category)
+        .order_by(Category.order)
+        .all()
+    )
+
+    all_checkups = (
+        db_session.query(Checkup)
+        .filter(Checkup.user_id == user_id)
+        .all()
+    )
+
+    bpm_values = [
+        checkup.average_bpm
+        for checkup in all_checkups
+        if checkup.average_bpm is not None
+    ]
+
+    current_bpm = bpm_values[-1] if bpm_values else 0
+    min_bpm = min(bpm_values) if bpm_values else 0
+    max_bpm = max(bpm_values) if bpm_values else 0
+
+    print("USUÁRIO LOGADO:", user.id, user.email)
+    print("CHECKUPS:", recent_checkups)
+    return render_template(
+        'home.html',
+        user=user,
+        recent_checkups=recent_checkups,
+        categories=categories,
+        current_bpm=current_bpm,
+        min_bpm=min_bpm,
+        max_bpm=max_bpm
+    )
 
 @app.route('/api/users', methods=["GET", "POST"])
 def users():

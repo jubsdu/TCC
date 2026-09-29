@@ -15,49 +15,55 @@
                     <span class="status-icons"><i class="ri-wifi-line" style="color:#fff; font-size: 1.5em;"></i></span>
                 </div>
                 <h1 style="margin-top:120px">Você faz algum tratamento/<br>acompanhamento?</h1>
-                <form action="{{ url_for('onboarding_treatment') }}" method="POST">
+                <form action="{{ url_for('onboarding_treatment') }}" method="POST" id="treatmentForm">
+
+                    <!-- Guarda a opção escolhida -->
+                    <input
+                        type="hidden"
+                        name="treatment"
+                        id="treatmentInput"
+                        value=""
+                    >
+
                     <div
                         class="choice-group"
                         style="display: flex; flex-direction: column; gap: 12px; width: 100%;"
                     >
+
                         <button
-                            type="submit"
-                            name="treatment"
-                            value="psicoterapia"
+                            type="button"
                             class="choice-btn"
+                            data-choice="psicoterapia"
                         >
                             Psicoterapia
                         </button>
 
                         <button
-                            type="submit"
-                            name="treatment"
-                            value="consulta"
+                            type="button"
                             class="choice-btn"
+                            data-choice="consulta"
                         >
                             Consulta médica
                         </button>
 
                         <button
-                            type="submit"
-                            name="treatment"
-                            value="medicacao"
+                            type="button"
                             class="choice-btn"
+                            data-choice="medicacao"
                         >
                             Medicação prescrita
                         </button>
 
                         <button
-                            type="submit"
-                            name="treatment"
-                            value="nenhum"
+                            type="button"
                             class="choice-btn"
+                            data-choice="nenhum"
                         >
                             Nenhum acompanhamento
                         </button>
+
                     </div>
                 </form>
-
                 <div class="onboard-spacer" style="flex: 1;"></div>
                 <div class="dots">
                     <i class="dot"></i>
@@ -67,9 +73,36 @@
                 <div class="choice-message" id="choiceMessage">
                     Selecione uma opção para continuar
                 </div>
-                <button class="primary-light" data-next="{{ url_for('register') }}">
+
+                <button 
+                type="submit"
+                class="primary-light"
+                id="nextButton"
+                form="treatmentForm">
                     Próximo
                 </button>
+
+                <script>
+                    const choiceButtons = document.querySelectorAll(".choice-btn");
+                    const treatmentInput = document.getElementById("treatmentInput");
+
+                    choiceButtons.forEach(button => {
+
+                        button.addEventListener("click", () => {
+
+                            choiceButtons.forEach(btn => {
+                                btn.classList.remove("selected");
+                            });
+
+                            button.classList.add("selected");
+
+                            treatmentInput.value = button.dataset.choice;
+
+                            console.log("ESCOLHIDO:", treatmentInput.value);
+                        });
+
+                    });
+                </script>
             </div>
         </div>
         <script src="{{ url_for('static', filename='app.js') }}"></script>

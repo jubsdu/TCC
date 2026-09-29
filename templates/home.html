@@ -127,7 +127,7 @@
                                 y="126"
                                 text-anchor="middle"
                             >
-                                82
+                                {{ current_bpm }}
                             </text>
 
                             <!-- Unidade -->
@@ -140,30 +140,26 @@
                                 BPM
                             </text>
 
-                            <!-- Valor mínimo -->
                             <text
                                 class="gauge-minmax gauge-min"
                                 x="78"
                                 y="177"
                                 text-anchor="middle"
                             >
-                                62
+                                {{ min_bpm }}
                             </text>
 
-                            <!-- Valor máximo -->
                             <text
                                 class="gauge-minmax gauge-max"
                                 x="142"
                                 y="177"
                                 text-anchor="middle"
                             >
-                                124
+                                {{ max_bpm }}
                             </text>
 
                         </svg>
-
                     </div>
-
                 </section>
 
 
@@ -256,106 +252,62 @@
 
                 </div>
 
-
                 <!-- REGISTROS RECENTES -->
                 <h2 class="section-title">
-
                     Recentes
-
                     <small style="background:#f16b86;border-radius:50%;padding:2px 6px;font-size:11px">
-                        1
+                        {{ recent_checkups|length }}
                     </small>
-
                 </h2>
 
+                {% for checkup in recent_checkups %}
 
-                <!-- PRIMEIRO REGISTRO -->
                 <div class="card recent">
 
                     <button
                         class="pulse-btn"
                         onclick="toast('Dados cardíacos atualizados')"
                     >
-
                         <img
                             src="{{ url_for('static', filename='assets/pulse-icon.png') }}"
                             alt="Batimentos"
                         >
-
                     </button>
 
-
                     <div class="mini">
+                        {{ checkup.date.strftime('%d/%m/%Y') }}<br>
 
-                        11/09/2026<br>
-                        Sexta-feira
+                        {% set dias = {
+                            'Monday': 'Segunda-feira',
+                            'Tuesday': 'Terça-feira',
+                            'Wednesday': 'Quarta-feira',
+                            'Thursday': 'Quinta-feira',
+                            'Friday': 'Sexta-feira',
+                            'Saturday': 'Sábado',
+                            'Sunday': 'Domingo'
+                        } %}
 
+                        {{ dias[checkup.date.strftime('%A')] }}
                     </div>
-
 
                     <div>
-                        Checkup geral
+                        {{ checkup.type }}
                     </div>
-
 
                     <div class="mean">
-                        ♡ Média: 78 BPM
+                        ♡ Média: {{ checkup.average_bpm|int }} BPM
                     </div>
-
 
                     <button
                         class="info-link"
-                        onclick="toast('Detalhes do checkup de 11/09/2026')"
+                        onclick="toast('Detalhes do checkup')"
                     >
                         Mais informações ↗
                     </button>
 
                 </div>
 
-
-                <!-- SEGUNDO REGISTRO -->
-                <div class="card recent">
-
-                    <button
-                        class="pulse-btn"
-                        onclick="toast('Dados cardíacos atualizados')"
-                    >
-
-                        <img
-                            src="{{ url_for('static', filename='assets/pulse-icon.png') }}"
-                            alt="Batimentos"
-                        >
-
-                    </button>
-
-
-                    <div class="mini">
-
-                        10/09/2026<br>
-                        Quinta-feira
-
-                    </div>
-
-
-                    <div>
-                        Checkup geral
-                    </div>
-
-
-                    <div class="mean">
-                        ♡ Média: 83 BPM
-                    </div>
-
-
-                    <button
-                        class="info-link"
-                        onclick="toast('Detalhes do checkup de 10/09/2026')"
-                    >
-                        Mais informações ↗
-                    </button>
-
-                </div>
-
+                {% endfor %}
             </main>
 
 

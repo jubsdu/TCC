@@ -68,7 +68,7 @@
                     </h2>
 
                     <div style="font-size:22px;font-weight:800;margin:5px">
-                        5,8/10
+                        {{ "%.1f"|format(average_anxiety) }}/10
                     </div>
 
                     <hr style="border:0;border-top:1px solid #e22a55;margin:8px 0">
@@ -144,7 +144,7 @@
                                 y="126"
                                 text-anchor="middle"
                             >
-                                82
+                                {{ average_bpm|round|int }}
                             </text>
 
 
@@ -175,12 +175,12 @@
                             <!-- Valor máximo -->
 
                             <text
-                                class="gauge-minmax gauge-max"
+                                class="gauge-max"
                                 x="142"
                                 y="177"
                                 text-anchor="middle"
                             >
-                                124
+                                {{ max_bpm|round|int }}
                             </text>
 
                         </svg>
@@ -208,71 +208,49 @@
 
                     <div class="anxiety-week-grid">
 
-                        <div class="day">Segunda</div>
-                        <div class="anxiety-day-result">
-                            <img
-                                class="bola-icon"
-                                src="{{ url_for('static', filename='assets/bola-icon.png') }}"
-                                alt=""
-                            >
-                            2 episódios registrados
+                        {% for day in episodes_by_day %}
+
+                            <div class="day">
+                                {{ day.name }}
+                            </div>
+
+                            <div class="anxiety-day-result">
+
+                                {% if day.count > 0 %}
+
+                                    <img
+                                        class="bola-icon"
+                                        src="{{ url_for('static', filename='assets/bola-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% endif %}
+
+                                {{ day.count }}
+
+                                {% if day.count == 1 %}
+                                    episódio registrado
+                                {% else %}
+                                    episódios registrados
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        <div class="day">
+                            Total
                         </div>
 
-                        <div class="day">Terça</div>
                         <div class="anxiety-day-result">
-                            <img
-                                class="bola-icon"
-                                src="{{ url_for('static', filename='assets/bola-icon.png') }}"
-                                alt=""
-                            >
-                            1 episódio registrado
-                        </div>
 
-                        <div class="day">Quarta</div>
-                        <div class="anxiety-day-result">
-                            <img
-                                class="bola-icon"
-                                src="{{ url_for('static', filename='assets/bola-icon.png') }}"
-                                alt=""
-                            >
-                            1 episódio registrado
-                        </div>
+                            <strong>
+                                {{ episodes_by_day|sum(attribute='count') }}
+                                episódios registrados
+                            </strong>
 
-                        <div class="day">Quinta</div>
-                        <div class="anxiety-day-result">
-                            0 episódios registrados
                         </div>
-
-                        <div class="day">Sexta</div>
-                        <div class="anxiety-day-result">
-                            0 episódios registrados
-                        </div>
-
-                        <div class="day">Sábado</div>
-                        <div class="anxiety-day-result">
-                            <img
-                                class="bola-icon"
-                                src="{{ url_for('static', filename='assets/bola-icon.png') }}"
-                                alt=""
-                            >
-                            1 episódio registrado
-                        </div>
-
-                        <div class="day">Domingo</div>
-                        <div class="anxiety-day-result">
-                            <img
-                                class="bola-icon"
-                                src="{{ url_for('static', filename='assets/bola-icon.png') }}"
-                                alt=""
-                            >
-                            2 episódios registrados
-                        </div>
-
-                        <div class="day">Total</div>
-                        <div class="anxiety-day-result">
-                            <strong>7 episódios registrados ↓</strong>
-                        </div>
-
                     </div>
 
                 </section>
@@ -294,25 +272,33 @@
                         <li>
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Crises esta semana:
-                            <b>7↓</b>
+                            <b>
+                                {{ episodes_this_week|length }}
+                            </b>
                         </li>
 
                         <li>
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Semana anterior:
-                            <b>11</b>
+                            <b>
+                                {{ episodes_previous_week|length }}
+                            </b>
                         </li>
 
                         <li>
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Duração média:
-                            <b>18 min</b>
+                            <b>
+                                {{ average_duration|round|int }} min
+                            </b>
                         </li>
 
                         <li>
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Horário mais frequente:
-                            <b>14h-18h</b>
+                            <b>
+                                {{ most_frequent_time }}
+                            </b>    
                         </li>
 
                     </ul>
@@ -336,19 +322,19 @@
                         <li>
                             <img class="coracaoBola-icon" src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}" alt="">
                             FC média:
-                            <b>94 BPM</b>
+                            <b>{{ average_bpm|round|int }} BPM</b>
                         </li>
 
                         <li>
                             <img class="coracaoBola-icon" src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}" alt="">
                             FC máxima:
-                            <b>112 BPM</b>
+                            <b>{{ max_bpm|round|int }} BPM</b>
                         </li>
 
                         <li>
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Ansiedade percebida:
-                            <b>7,2/10</b>
+                            <b>{{ "%.1f"|format(average_anxiety) }}/10</b>  
                         </li>
 
                     </ul>
@@ -376,14 +362,18 @@
 
                         <b>
                             <span>Média desta semana:</span>
-                            <strong>5,8/10</strong>
+                            <strong>
+                                {{ "%.1f"|format(average_anxiety) }}/10
+                            </strong>
                         </b>
 
                         <br>
 
                         <b>
                             <span>Média anterior:</span>
-                            <strong>6,5/10</strong>
+                            <strong>
+                                {{ "%.1f"|format(previous_average_anxiety) }}/10
+                            </strong>
                         </b>
 
                     </p>
@@ -411,25 +401,32 @@
 
                             <ul class="simple-list techniques-list">
 
-                                <li>
-                                    <img src="{{ url_for('static', filename='assets/respiracao-icon.png') }}" alt="">
-                                    Respiração
-                                </li>
+                                {% for technique in techniques %}
 
-                                <li>
-                                    <img src="{{ url_for('static', filename='assets/relaxamento-icon.png') }}" alt="">
-                                    Relaxamento
-                                </li>
+                                    <li>
 
-                                <li>
-                                    <img src="{{ url_for('static', filename='assets/aterramento-icon.png') }}" alt="">
-                                    Aterramento
-                                </li>
+                                        {% if technique.icon %}
 
-                                <li>
-                                    <img src="{{ url_for('static', filename='assets/registrar-icon.png') }}" alt="">
-                                    Registrar sentimentos
-                                </li>
+                                            <img
+                                                src="{{ url_for('static', filename=assets/respiracao-icon.png) }}"
+                                                alt=""
+                                            >
+
+                                        {% endif %}
+
+                                        {{ technique.name }}
+
+                                    </li>
+
+                                {% endfor %}
+
+                                {% if not techniques %}
+
+                                    <li>
+                                        Nenhuma técnica registrada.
+                                    </li>
+
+                                {% endif %}
 
                             </ul>
 
@@ -449,7 +446,7 @@
                         <div class="card">
 
                             <label>
-                                {% if accompaniment and accompaniment.phycoterapy %}
+                                {% if accompaniment and accompaniment.psychotherapy %}
                                     ☑
                                 {% else %}
                                     □
@@ -498,29 +495,42 @@
 
                     <table class="summary-table">
 
-                        <tr>
-                            <td>
-                                <img class="coracaoVazio-icon" src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}" alt="">
-                                Estudos
-                            </td>
-                            <td>5 registros</td>
-                        </tr>
+                        {% for trigger in trigger_counts %}
 
-                        <tr>
-                            <td>
-                                <img class="coracaoVazio-icon" src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}" alt="">
-                                Sono
-                            </td>
-                            <td>3 registros</td>
-                        </tr>
+                            <tr>
 
-                        <tr>
-                            <td>
-                                <img class="coracaoVazio-icon" src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}" alt="">
-                                Social
-                            </td>
-                            <td>2 registros</td>
-                        </tr>
+                                <td>
+
+                                    <img
+                                        class="coracaoVazio-icon"
+                                        src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                    {{ trigger[0] }}
+
+                                </td>
+
+                                <td>
+                                    {{ trigger[1] }} registros
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+
+                        {% if not trigger_counts %}
+
+                            <tr>
+
+                                <td colspan="2">
+                                    Nenhum gatilho registrado.
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
 
                     </table>
 
@@ -540,20 +550,42 @@
 
                     <ul class="simple-list">
 
-                        <li>
-                            <img class="bola-icon" src="{{ url_for('static', filename='assets/bola-icon.png') }}" alt="">
-                            15:42 &nbsp;&nbsp; 8/10 &nbsp;&nbsp; 104 BPM
-                        </li>
+                        {% for episode in latest_episodes %}
 
-                        <li>
-                            <img class="bola-icon" src="{{ url_for('static', filename='assets/bola-icon.png') }}" alt="">
-                            09:15 &nbsp;&nbsp; 6/10 &nbsp;&nbsp; 91 BPM
-                        </li>
+                            <li>
+
+                                <img
+                                    class="bola-icon"
+                                    src="{{ url_for('static', filename='assets/bola-icon.png') }}"
+                                    alt=""
+                                >
+
+                                {{ episode.date_time.strftime('%H:%M') }}
+
+                                &nbsp;&nbsp;
+
+                                {{ episode.level_anxious }}/10
+
+                                &nbsp;&nbsp;
+
+                                {{ episode.cardiac_rate }} BPM
+
+                            </li>
+
+                        {% endfor %}
+
+
+                        {% if not latest_episodes %}
+
+                            <li>
+                                Nenhum episódio registrado.
+                            </li>
+
+                        {% endif %}
 
                     </ul>
 
                 </section>
-
 
             </main>
 

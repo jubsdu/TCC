@@ -124,12 +124,14 @@
 
                                 <!-- Valor atual -->
 
-                                <text
+                                 <text
                                     class="gauge-value"
                                     x="110"
                                     y="126"
                                     text-anchor="middle"
-                                >82</text>
+                                >
+                                    {{ activity.average_rate if activity else 0 }}
+                                </text>
 
 
                                 <!-- Unidade -->
@@ -159,7 +161,9 @@
                                     x="142"
                                     y="177"
                                     text-anchor="middle"
-                                >124</text>
+                                >
+                                    {{ activity.maximum_rate if activity else 140 }}
+                                </text>
 
                             </svg>
 
@@ -179,27 +183,49 @@
 
                             <tr>
                                 <td>BC médio</td>
-                                <td>72 BPM</td>
+                                <td>
+                                    {{ activity.average_rate if activity else 0 }} BPM
+                                </td>
                             </tr>
 
                             <tr>
                                 <td>Tempo ativo</td>
-                                <td>3h42</td>
+                                <td>
+                                    {% if activity %}
+                                        {{ activity.active_time // 60 }}h{{ '%02d'|format(activity.active_time % 60) }}
+                                    {% else %}
+                                        0h00
+                                    {% endif %}
+                                </td>
                             </tr>
 
                             <tr>
                                 <td>Intensidade</td>
-                                <td>Zona 4</td>
+                                <td>
+                                    {{ activity.intensity if activity else '-' }}
+                                </td>
                             </tr>
 
                             <tr>
                                 <td>Recuperação</td>
-                                <td>34 BPM/min</td>
+                                <td>
+                                    {% if recovery %}
+                                        {{ recovery.queda_2_min }} BPM/min
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                             </tr>
 
                             <tr>
                                 <td>Atividade</td>
-                                <td>+12%</td>
+                                <td>
+                                    {% if weekly_goal and weekly_goal.goal_activity %}
+                                        +{{ ((weekly_goal.activity_completed / weekly_goal.goal_activity) * 100)|round|int }}%
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                             </tr>
 
                         </table>
@@ -218,10 +244,19 @@
 
                 <section class="card data-card">
 
-                    <div class="mini">
-                        21/09/2026<br>
-                        Segunda-feira
-                    </div>
+                    {% if cardiac_zones %}
+
+                        <div class="mini">
+
+                            {{ cardiac_zones[0].date.strftime('%d/%m/%Y') }}
+
+                            <br>
+
+                            {{ cardiac_zones[0].date.strftime('%A') }}
+
+                        </div>
+
+                    {% endif %}
 
                     <table class="summary-table zones">
 
@@ -231,46 +266,78 @@
                             <th>Tempo</th>
                         </tr>
 
-                        <tr>
-                            <td class="z z1">
-                                <img class="zone-icon" src="{{ url_for('static', filename='assets/z1-icon.png') }}" alt="">
-                            </td>
-                            <td>Muito leve</td>
-                            <td>12 min</td>
-                        </tr>
+                        {% for zone in cardiac_zones %}
 
                         <tr>
-                            <td class="z z2">
-                                <img class="zone-icon" src="{{ url_for('static', filename='assets/z2-icon.png') }}" alt="">
+
+                            <td class="z">
+
+                                {% if loop.index == 1 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z1-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% elif loop.index == 2 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z2-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% elif loop.index == 3 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z3-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% elif loop.index == 4 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z4-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% else %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z5-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% endif %}
+
                             </td>
-                            <td>Leve/moderada</td>
-                            <td>25 min</td>
+
+                            <td>
+                                {{ zone.intensity }}
+                            </td>
+
+                            <td>
+                                {{ zone.minutes }} min
+                            </td>
+
                         </tr>
+
+                        {% endfor %}
+                        {% if not cardiac_zones %}
 
                         <tr>
-                            <td class="z z3">
-                                <img class="zone-icon" src="{{ url_for('static', filename='assets/z3-icon.png') }}" alt="">
+
+                            <td colspan="3">
+                                Nenhum dado registrado.
                             </td>
-                            <td>Moderada</td>
-                            <td>18 min</td>
+
                         </tr>
 
-                        <tr>
-                            <td class="z z4">
-                                <img class="zone-icon" src="{{ url_for('static', filename='assets/z4-icon.png') }}" alt="">
-                            </td>
-                            <td>Intensa</td>
-                            <td>8 min</td>
-                        </tr>
-
-                        <tr>
-                            <td class="z z5">
-                                <img class="zone-icon" src="{{ url_for('static', filename='assets/z5-icon.png') }}" alt="">
-                            </td>
-                            <td>Muito intensa</td>
-                            <td>2 min</td>
-                        </tr>
-
+                        {% endif %}
                     </table>
 
                 </section>
@@ -282,47 +349,91 @@
                 ========================== -->
 
                 <h2 class="section-title">Recuperação</h2>
-
                 <section class="card">
+                    {% if recovery %}
 
-                    <div class="mini">
-                        21/09/2026<br>
-                        Segunda-feira
-                    </div>
+                        <div class="mini">
 
-                    <ul class="simple-list">
+                            {{ recovery.date.strftime('%d/%m/%Y') }}
 
-                        <li>
-                            <img class="recovery-icon"
-                            src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
-                            alt="">
-                            Final exercício: <b>168 BPM</b>
-                        </li>
+                            <br>
 
-                        <li>
-                            <img class="recovery-icon"
-                            src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
-                            alt="">
-                            Após 1min: <b>132 BPM</b>
-                        </li>
+                            {{ recovery.date.strftime('%A') }}
 
-                        <li>
-                            <img class="recovery-icon"
-                            src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
-                            alt="">
-                            Após 2min: <b>118 BPM</b>
-                        </li>
+                        </div>
 
-                        <li>
-                            ↓ Queda em 1min:
-                            <b>36 BPM</b>
-                        </li>
 
-                    </ul>
+                        <ul class="simple-list">
 
+                            <li>
+
+                                <img
+                                    class="recovery-icon"
+                                    src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
+                                    alt=""
+                                >
+
+                                Final exercício:
+
+                                <b>
+                                    {{ recovery.final_bpm }} BPM
+                                </b>
+
+                            </li>
+
+
+                            <li>
+
+                                <img
+                                    class="recovery-icon"
+                                    src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
+                                    alt=""
+                                >
+
+                                Após 1min:
+
+                                <b>
+                                    {{ recovery.bpm_1_min }} BPM
+                                </b>
+
+                            </li>
+
+
+                            <li>
+
+                                <img
+                                    class="recovery-icon"
+                                    src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
+                                    alt=""
+                                >
+
+                                Após 2min:
+
+                                <b>
+                                    {{ recovery.bpm_2_min }} BPM
+                                </b>
+
+                            </li>
+
+
+                            <li>
+
+                                ↓ Queda em 2min:
+
+                                <b>
+                                    {{ recovery.queda_2_min }} BPM
+                                </b>
+
+                            </li>
+
+                        </ul>
+
+                    {% else %}
+
+                        <p>Nenhum dado de recuperação registrado.</p>
+
+                    {% endif %}
                 </section>
-
-
 
                 <!-- =========================
                      EVOLUÇÃO
@@ -343,9 +454,13 @@
                                 FC média
                             </td>
 
-                            <td>72 BPM</td>
+                            <td>
+                                {{ activity.average_rate if activity else 0 }} BPM
+                            </td>
 
-                            <td>↓2 BPM</td>
+                            <td>
+                                ↓
+                            </td>
 
                         </tr>
 
@@ -359,9 +474,19 @@
                                 Tempo ativo
                             </td>
 
-                            <td>3H40</td>
+                            <td>
 
-                            <td>↑12%</td>
+                                {% if activity %}
+                                    {{ activity.active_time // 60 }}h{{ '%02d'|format(activity.active_time % 60) }}
+                                {% else %}
+                                    0h00
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                ↑
+                            </td>
 
                         </tr>
 
@@ -375,9 +500,31 @@
                                 Treinos
                             </td>
 
-                            <td>4</td>
+                            <td>
+                                {{ activity.quant_sessions if activity else 0 }}
+                            </td>
 
-                            <td>✓ Meta</td>
+                            <td>
+
+                                {% if weekly_goal and weekly_goal.goal_sessions %}
+
+                                    {% if weekly_goal.sessions_completed >= weekly_goal.goal_sessions %}
+
+                                        ✓ Meta
+
+                                    {% else %}
+
+                                        {{ weekly_goal.sessions_completed }}/{{ weekly_goal.goal_sessions }}
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
 
                         </tr>
 
@@ -395,10 +542,18 @@
 
                 <section class="card weekly-goals-card">
 
+                    {% if weekly_goal %}
+
                     <div class="mini">
-                        21/09/2026<br>
-                        Segunda-feira
+
+                        {{ weekly_goal.beginning_week.strftime('%d/%m/%Y') }}
+
+                        <br>
+
+                        Semana
+
                     </div>
+
 
                     <button
                         class="pulse-btn"
@@ -413,15 +568,36 @@
                     </button>
 
 
-                    <b>Atividade semanal</b>
+                    <!-- ATIVIDADE -->
+
+                    <b>
+                        Atividade semanal
+                    </b>
 
                     <div class="progress-row">
 
                         <div class="progress">
-                            <i style="width:80%"></i>
+
+                            <i
+                                style="
+                                width:
+                                {{ (
+                                    weekly_goal.activity_completed /
+                                    weekly_goal.goal_activity * 100
+                                ) if weekly_goal.goal_activity else 0
+                                }}%;
+                                "
+                            ></i>
+
                         </div>
 
-                        <span>120/150 minutos</span>
+                        <span>
+
+                            {{ weekly_goal.activity_completed }}/
+                            {{ weekly_goal.goal_activity }}
+                            minutos
+
+                        </span>
 
                     </div>
 
@@ -431,10 +607,25 @@
                     <div class="progress-row">
 
                         <div class="progress">
-                            <i style="width:60%"></i>
+                             <i
+                                style="
+                                width:
+                                {{ (
+                                    weekly_goal.intensity_completed /
+                                    weekly_goal.goal_intensity * 100
+                                ) if weekly_goal.goal_intensity else 0
+                                }}%;
+                                "
+                            ></i>
                         </div>
 
-                        <span>54/90 minutos</span>
+                        <span>
+
+                            {{ weekly_goal.intensity_completed }}/
+                            {{ weekly_goal.goal_intensity }}
+                            minutos
+
+                        </span>
 
                     </div>
 
@@ -444,13 +635,34 @@
                     <div class="progress-row">
 
                         <div class="progress">
-                            <i style="width:100%"></i>
+                            <i
+                                style="
+                                width:
+                                {{ (
+                                    weekly_goal.sessions_completed /
+                                    weekly_goal.goal_sessions * 100
+                                ) if weekly_goal.goal_sessions else 0
+                                }}%;
+                                "
+                            ></i>
                         </div>
 
-                        <span>4/4 sessões</span>
+                        <span>
+
+                            {{ weekly_goal.sessions_completed }}/
+                            {{ weekly_goal.goal_sessions }}
+                            sessões
+
+                        </span>
 
                     </div>
+                    {% else %}
 
+                        <p>
+                            Nenhuma meta semanal registrada.
+                        </p>
+
+                    {% endif %}
                 </section>
 
 
