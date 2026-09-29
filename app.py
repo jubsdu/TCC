@@ -15,8 +15,25 @@ def index():
     return render_template('index.html')
 
 # Home
+<<<<<<< HEAD
 import random
 from datetime import date, datetime, timezone, timedelta
+=======
+# @app.route('/home')
+# def home():
+#     user_id = session.get('user_id')
+
+#     if not user_id:
+#         return redirect(url_for('login'))
+
+#     user = db_session.query(User).filter_by(id=user_id).first()
+
+#     if not user:
+#         session.clear()
+#         return redirect(url_for('login'))
+
+#     return render_template('home.html', user=user)
+>>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
 
 # Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
@@ -59,15 +76,25 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
 
+<<<<<<< HEAD
         # Verifica se já existe
+=======
+        # Verifica se o email já existe
+>>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
         existing_user = db_session.query(User).filter_by(
             email=email
         ).first()
 
         if existing_user:
+<<<<<<< HEAD
             return "Este email já está cadastrado."
 
         # Cria usuário
+=======
+            return "Este email já está cadastrado.", 400
+
+        # Cria o usuário
+>>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
         user = User(
             name=name,
             phone=phone,
@@ -78,6 +105,7 @@ def register():
         db_session.add(user)
         db_session.commit()
 
+<<<<<<< HEAD
         print("USUÁRIO CRIADO:", user.id, user.email)
 
         # ==========================================
@@ -96,6 +124,31 @@ def register():
 
         session['user_id'] = user.id
 
+=======
+        # Guarda o ID do novo usuário na sessão
+        session['user_id'] = user.id
+
+        print("USUÁRIO CRIADO - ID:", user.id)
+
+        # Recupera o acompanhamento escolhido antes do cadastro
+        treatment = session.get('treatment')
+
+        if treatment:
+            accompaniment = Accompaniment(
+                user_id=user.id,
+                psychotherapy=(treatment == 'psicoterapia'),
+                consultation=(treatment == 'consulta'),
+                medication=(treatment == 'medicacao')
+            )
+
+            db_session.add(accompaniment)
+            db_session.commit()
+
+            print("ACOMPANHAMENTO SALVO - ID:", accompaniment.id)
+
+            session.pop('treatment', None)
+
+>>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
         return redirect(url_for('home'))
 
     return render_template('register.html')
@@ -953,11 +1006,16 @@ def report():
 
 @app.route('/home')
 def home():
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
     user_id = session.get('user_id')
 
     if not user_id:
         return redirect(url_for('login'))
 
+<<<<<<< HEAD
     user = db_session.query(User).filter(
         User.id == user_id
     ).first()
@@ -1005,6 +1063,19 @@ def home():
         current_bpm=current_bpm,
         min_bpm=min_bpm,
         max_bpm=max_bpm
+=======
+    user = db_session.query(User).filter_by(
+        id=user_id
+    ).first()
+
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+
+    return render_template(
+        'home.html',
+        user=user
+>>>>>>> 4cfc882928a55d2517f07daf2290c5420aa17c5d
     )
 
 @app.route('/api/users', methods=["GET", "POST"])
