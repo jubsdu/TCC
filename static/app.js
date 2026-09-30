@@ -1,5 +1,79 @@
 document.addEventListener("DOMContentLoaded", function () {
     // =========================
+    // EXIBIR / OCULTAR SENHA
+    // =========================
+
+    const eyeButtons = document.querySelectorAll(".eye");
+
+    eyeButtons.forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            // Encontra o input de senha dentro do mesmo field
+            const field = button.closest(".field");
+            const passwordInput = field.querySelector("input");
+
+            if (!passwordInput) {
+                return;
+            }
+
+            // Alterna entre senha e texto
+            if (passwordInput.type === "password") {
+
+                passwordInput.type = "text";
+
+                // Troca o ícone
+                const icon = button.querySelector("i");
+
+                if (icon) {
+                    icon.classList.remove("ri-eye-fill");
+                    icon.classList.add("ri-eye-off-fill");
+                }
+
+            } else {
+
+                passwordInput.type = "password";
+
+                // Volta o ícone
+                const icon = button.querySelector("i");
+
+                if (icon) {
+                    icon.classList.remove("ri-eye-off-fill");
+                    icon.classList.add("ri-eye-fill");
+                }
+
+            }
+
+        });
+
+    });
+    
+    // =========================
+    // NAVEGAÇÃO DATA-NEXT
+    // =========================
+
+    const nextButtons = document.querySelectorAll("[data-next]");
+
+    nextButtons.forEach(function (button) {
+
+        // Não interfere no botão de motivo
+        if (button.id === "reasonNextButton") {
+            return;
+        }
+
+        button.addEventListener("click", function () {
+
+            const nextPage = button.dataset.next;
+
+            if (nextPage) {
+                window.location.href = nextPage;
+            }
+
+        });
+
+    });
+    
+    // =========================
     // ONBOARDING - MOTIVO
     // =========================
 
@@ -70,8 +144,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // SELEÇÃO DAS OPÇÕES
     // =========================
 
+    // Seleciona apenas opções que NÃO pertencem
+    // ao formulário de acompanhamento
     const choiceButtons = document.querySelectorAll(
-        ".choice-btn[data-choice]"
+        ".choice-btn[data-choice]:not(#treatmentForm .choice-btn[data-choice])"
     );
 
     choiceButtons.forEach(function (button) {
@@ -83,7 +159,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 otherButton.classList.remove("selected");
             });
 
-            // Seleciona a opção clicada
+            // Mantém visualmente selecionada
+            // a opção clicada
             button.classList.add("selected");
 
             // Esconde mensagem de erro
@@ -98,16 +175,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
+
     // =========================
     // ACOMPANHAMENTO
     // =========================
 
-    const treatmentForm = document.getElementById("treatmentForm");
+    const treatmentForm =
+        document.getElementById("treatmentForm");
 
     if (treatmentForm) {
 
-        const choiceButtons =
-            treatmentForm.querySelectorAll(".choice-btn[data-choice]");
+        const treatmentButtons =
+            treatmentForm.querySelectorAll(
+                ".choice-btn[data-choice]"
+            );
 
         const message =
             document.getElementById("choiceMessage");
@@ -123,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // SELECIONAR OPÇÃO
         // =========================
 
-        choiceButtons.forEach(function (button) {
+        treatmentButtons.forEach(function (button) {
 
             button.addEventListener("click", function () {
 
@@ -131,39 +212,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 // =========================
-                // NENHUM
+                // NENHUM ACOMPANHAMENTO
                 // =========================
 
                 if (choice === "nenhum") {
 
-                    choiceButtons.forEach(function (otherButton) {
+                    // Remove todas as outras seleções
+                    treatmentButtons.forEach(function (otherButton) {
                         otherButton.classList.remove("selected");
                     });
 
+                    // Mantém "Nenhum" selecionado visualmente
                     button.classList.add("selected");
 
                 }
 
 
                 // =========================
-                // OUTRAS OPÇÕES
+                // OUTRA OPÇÃO
                 // =========================
 
                 else {
 
-                    // Cadastro inicial:
-                    // apenas uma opção
-
+                    // No cadastro inicial, apenas uma opção
+                    // pode ficar selecionada
                     if (!editMode) {
 
-                        choiceButtons.forEach(function (otherButton) {
+                        treatmentButtons.forEach(function (otherButton) {
                             otherButton.classList.remove("selected");
                         });
 
                     }
 
                     // Remove "Nenhum"
-
                     const nenhumButton =
                         treatmentForm.querySelector(
                             '[data-choice="nenhum"]'
@@ -173,14 +254,27 @@ document.addEventListener("DOMContentLoaded", function () {
                         nenhumButton.classList.remove("selected");
                     }
 
-                    // Seleciona a opção
-
+                    // Mantém a opção clicada visualmente selecionada
                     button.classList.add("selected");
 
                 }
 
 
-                // Esconde mensagem
+                // =========================
+                // ATUALIZA INPUT
+                // =========================
+
+                if (treatmentInput) {
+
+                    treatmentInput.value =
+                        button.dataset.choice;
+
+                }
+
+
+                // =========================
+                // ESCONDE MENSAGEM
+                // =========================
 
                 if (message) {
                     message.classList.remove("show");
@@ -203,8 +297,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
 
-            // Nenhuma opção
-
+            // Nenhuma opção selecionada
             if (selectedButtons.length === 0) {
 
                 event.preventDefault();
@@ -236,8 +329,12 @@ document.addEventListener("DOMContentLoaded", function () {
             // PRIMEIRA OPÇÃO
             // =========================
 
-            treatmentInput.value =
-                selectedButtons[0].dataset.choice;
+            if (treatmentInput) {
+
+                treatmentInput.value =
+                    selectedButtons[0].dataset.choice;
+
+            }
 
 
             // =========================
@@ -320,7 +417,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     });
-
 
     // =========================
     // FECHAR MENU AO CLICAR FORA
@@ -443,7 +539,6 @@ document.addEventListener("DOMContentLoaded", function () {
         let minBpm = 62;
         let maxBpm = 124;
 
-
         // Recuperar dados salvos
 
         try {
@@ -467,7 +562,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-
         // Limitar valores
 
         function clamp(value, min, max) {
@@ -478,7 +572,6 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
         }
-
 
         // Atualizar medidor
 
@@ -498,7 +591,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 currentBpm
             );
 
-
             const percentage = clamp(
                 (currentBpm - 40) / 140,
                 0,
@@ -511,7 +603,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 0.1,
                 arcPercentage * percentage
             );
-
 
             heartRateGauges.forEach(function (container) {
 
@@ -526,7 +617,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const gaugeWave =
                     container.querySelector(".gauge-wave");
-
 
                 if (
                     !gaugeProgress ||
@@ -544,17 +634,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 }
 
-
                 // Valor principal
 
                 gaugeValue.textContent = currentBpm;
-
 
                 // Valores mínimo e máximo
 
                 gaugeMinMax[0].textContent = minBpm;
                 gaugeMinMax[1].textContent = maxBpm;
-
 
                 // Arco do medidor
 
@@ -562,7 +649,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     "stroke-dasharray",
                     `${filledArc} ${100 - filledArc}`
                 );
-
 
                 // Onda do coração
 
@@ -584,7 +670,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
             });
-
 
             // Salvar dados
 
@@ -609,16 +694,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-
         // Disponibilizar função globalmente
 
         window.updateHeartRate = updateHeartRate;
 
-
         // Iniciar medidor
 
         updateHeartRate(currentBpm);
-
 
         // Simulação automática
 
@@ -638,7 +720,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 2500);
 
     }
-
 
     // =========================
     // GRÁFICO DE PRESSÃO ARTERIAL
@@ -737,7 +818,6 @@ document.addEventListener("DOMContentLoaded", function () {
             pressureLabels.style.gridTemplateColumns =
                 `repeat(${columnCount}, 1fr)`;
 
-
             // Criar colunas do gráfico
 
             selectedData.values.forEach(function (value) {
@@ -767,7 +847,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             });
 
-
             // Atualizar botão ativo
 
             pressureButtons.forEach(function (button) {
@@ -784,7 +863,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-
         // Eventos dos botões de pressão
 
         pressureButtons.forEach(function (button) {
@@ -799,7 +877,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
         });
-
 
         // Iniciar gráfico em 24 horas
 

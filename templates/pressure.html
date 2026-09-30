@@ -310,6 +310,65 @@
                             </div>
                         </div>
 
+                        <style>
+                            .pressure-history-card {
+                                padding: 12px 15px;
+                                border-radius: 14px;
+                                background: #fff;
+                                overflow: hidden;
+                                }
+
+                                .pressure-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                table-layout: fixed;
+                                font-size: 14px;
+                                color: var(--ink);
+                                }
+
+                                .pressure-table th {
+                                padding: 8px 4px 10px;
+                                color: var(--wine);
+                                font-size: 13px;
+                                font-weight: 900;
+                                text-align: center;
+                                border-bottom: 1px solid var(--wine);
+                                }
+
+                                .pressure-table td {
+                                height: 30px;
+                                padding: 7px 4px;
+                                text-align: center;
+                                font-size: 13px;
+                                color: #333;
+                                border-bottom: 1px solid var(--wine);
+                                }
+
+                                .pressure-table th:first-child,
+                                .pressure-table td:first-child {
+                                width: 29%;
+                                text-align: left;
+                                color: var(--wine);
+                                font-weight: 800;
+                                }
+
+                                .pressure-table th:nth-child(2),
+                                .pressure-table td:nth-child(2) {
+                                width: 31%;
+                                border-left: 1px solid var(--wine);
+                                border-right: 1px solid var(--wine);
+                                }
+
+                                .pressure-table th:nth-child(3),
+                                .pressure-table td:nth-child(3) {
+                                width: 40%;
+                                }
+
+                                .pressure-table tbody tr:last-child td {
+                                border-bottom: none;
+                                }
+                        </style>
+
                         <div class="history-controls">
                             <button
                                 type="button"

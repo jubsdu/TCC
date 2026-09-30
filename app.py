@@ -81,9 +81,6 @@ def register():
 
         if existing_user:
 
-            return "Este email já está cadastrado."
-
-        # Cria usuário
             return "Este email já está cadastrado.", 400
 
         # Cria o usuário
@@ -145,7 +142,6 @@ def register():
 
                 db_session.add(accompaniment)
 
-
             if "nenhum" in treatments:
 
                 accompaniment.psychotherapy = False
@@ -165,7 +161,6 @@ def register():
                 accompaniment.medication = (
                     "medication" in treatments
                 )
-
 
             db_session.commit()
 
@@ -190,6 +185,10 @@ def register():
             )
 
             session.pop('treatments', None)
+
+            return redirect(url_for('login'))
+
+    return render_template('register.html')
 
 def criar_dados_iniciais(user_id):
     print(f"CRIANDO DADOS INICIAIS PARA USUÁRIO {user_id}")
