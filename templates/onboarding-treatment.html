@@ -16,11 +16,12 @@
                 </div>
                 <h1 style="margin-top:120px">Você faz algum tratamento/<br>acompanhamento?</h1>
                 <form
+                    id="treatmentForm"
                     action="{% if edit_mode %}{{ url_for('onboarding_treatment_edit') }}{% else %}{{ url_for('onboarding_treatment') }}{% endif %}"
                     method="POST"
+                    data-edit-mode="{{ 'true' if edit_mode else 'false' }}"
                 >
 
-                    <!-- Guarda a opção escolhida -->
                     <input
                         type="hidden"
                         name="treatment"
@@ -31,7 +32,6 @@
                     <div
                         class="choice-group"
                         style="display: flex; flex-direction: column; gap: 12px; width: 100%;"
-                        id="selectedTreatments"
                     >
 
                         <button
@@ -86,7 +86,6 @@
                         </button>
 
                     </div>
-                    <div id="selectedTreatments"></div>
 
                 </form>
                 <div class="onboard-spacer" style="flex: 1;"></div>

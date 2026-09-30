@@ -17,16 +17,16 @@
             </div>
             <h1 style="margin-top:120px">Qual seu motivo para usar<br>nosso aplicativo?</h1>
             <div class="choice-group">
-                <button type="button" class="choice-btn" data-choice>
+                <button type="button" class="choice-btn" data-choice="ansiedade">
                     Ansiedade
                 </button>
-                <button type="button" class="choice-btn" data-choice>
+                <button type="button" class="choice-btn" data-choice="cardiovascular">
                     Problema cardiovascular
                 </button>
-                <button type="button" class="choice-btn" data-choice>
+                <button type="button" class="choice-btn" data-choice="pressao">
                     Pressão alta/baixa
                 </button>
-                <button type="button" class="choice-btn" data-choice>
+                <button type="button" class="choice-btn" data-choice="outro">
                     Outro
                 </button>
             </div>
@@ -40,7 +40,12 @@
                 Selecione uma opção para continuar
             </div>
             <!-- Rota ajustada para a função do Flask -->
-            <button class="primary-light" data-next="{{ url_for('onboarding_treatment') }}">
+            <button
+                type="button"
+                class="primary-light"
+                id="reasonNextButton"
+                data-next="{{ url_for('onboarding_treatment') }}"
+            >
                 Próximo
             </button>
         </div>
