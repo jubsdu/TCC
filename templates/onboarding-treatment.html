@@ -15,7 +15,10 @@
                     <span class="status-icons"><i class="ri-wifi-line" style="color:#fff; font-size: 1.5em;"></i></span>
                 </div>
                 <h1 style="margin-top:120px">Você faz algum tratamento/<br>acompanhamento?</h1>
-                <form action="{{ url_for('onboarding_treatment') }}" method="POST" id="treatmentForm">
+                <form
+                    action="{% if edit_mode %}{{ url_for('onboarding_treatment_edit') }}{% else %}{{ url_for('onboarding_treatment') }}{% endif %}"
+                    method="POST"
+                >
 
                     <!-- Guarda a opção escolhida -->
                     <input
@@ -28,41 +31,63 @@
                     <div
                         class="choice-group"
                         style="display: flex; flex-direction: column; gap: 12px; width: 100%;"
+                        id="selectedTreatments"
                     >
 
                         <button
                             type="button"
-                            class="choice-btn"
-                            data-choice="psicoterapia"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment and accompaniment.psychotherapy %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="psychotherapy"
                         >
                             Psicoterapia
                         </button>
 
                         <button
                             type="button"
-                            class="choice-btn"
-                            data-choice="consulta"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment and accompaniment.consultation %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="consultation"
                         >
                             Consulta médica
                         </button>
 
                         <button
                             type="button"
-                            class="choice-btn"
-                            data-choice="medicacao"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment and accompaniment.medication %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="medication"
                         >
                             Medicação prescrita
                         </button>
 
                         <button
                             type="button"
-                            class="choice-btn"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment
+                                    and not accompaniment.psychotherapy
+                                    and not accompaniment.consultation
+                                    and not accompaniment.medication %}
+                                    selected
+                                {% endif %}
+                            "
                             data-choice="nenhum"
                         >
                             Nenhum acompanhamento
                         </button>
 
                     </div>
+                    <div id="selectedTreatments"></div>
+
                 </form>
                 <div class="onboard-spacer" style="flex: 1;"></div>
                 <div class="dots">
@@ -81,28 +106,6 @@
                 form="treatmentForm">
                     Próximo
                 </button>
-
-                <script>
-                    const choiceButtons = document.querySelectorAll(".choice-btn");
-                    const treatmentInput = document.getElementById("treatmentInput");
-
-                    choiceButtons.forEach(button => {
-
-                        button.addEventListener("click", () => {
-
-                            choiceButtons.forEach(btn => {
-                                btn.classList.remove("selected");
-                            });
-
-                            button.classList.add("selected");
-
-                            treatmentInput.value = button.dataset.choice;
-
-                            console.log("ESCOLHIDO:", treatmentInput.value);
-                        });
-
-                    });
-                </script>
             </div>
         </div>
         <script src="{{ url_for('static', filename='app.js') }}"></script>

@@ -17,9 +17,9 @@
                     <button class="avatar" onclick="openLogoutPopup()" type="button" > 
                         <i class="ri-user-3-fill" style="color:#000; font-size:1.5em;"></i> 
                     </button>
-                    
+
                     <div id="logoutPopup" class="logout-overlay"> 
-                        <div class="logout-popup"> 
+                        <div class="logout-popup">  
                             <button class="logout-close" onclick="closeLogoutPopup()" type="button" aria-label="Fechar" > 
                                 <i class="ri-close-line"></i> 
                             </button> <div class="logout-icon"> 
@@ -37,127 +37,422 @@
                 <main class="page-body">
                     <h2 class="section-title2">Semana</h2>
                     <section class="card week-card">
+
                         <div class="week-selector">
-                            <button class="week-button" id="weekButton">
-                                <span class="week-date">15–21 set 2026</span>
-                                <span id="weekArrow">▼</span>
+
+                            <button
+                                class="week-button"
+                                id="weekButton"
+                                type="button"
+                            >
+
+                                <span class="week-date">
+
+                                    {{ beginning_date.strftime('%d') }}–{{
+                                    end_date.strftime('%d') }}
+
+                                    {% set meses = {
+                                        1: 'jan',
+                                        2: 'fev',
+                                        3: 'mar',
+                                        4: 'abr',
+                                        5: 'mai',
+                                        6: 'jun',
+                                        7: 'jul',
+                                        8: 'ago',
+                                        9: 'set',
+                                        10: 'out',
+                                        11: 'nov',
+                                        12: 'dez'
+                                    } %}
+
+                                    {{ meses[end_date.month] }}
+                                    {{ end_date.year }}
+
+                                </span>
+
+                                <span id="weekArrow">
+                                    ▼
+                                </span>
+
                             </button>
 
-                            <div class="week-menu" id="weekMenu">
-                                <button data-week="15–21 set 2026">15–21 set 2026</button>
-                                <button data-week="08–14 set 2026">08–14 set 2026</button>
-                                <button data-week="01–07 set 2026">01–07 set 2026</button>
-                                <button data-week="25–31 ago 2026">25–31 ago 2026</button>
+
+                            <div
+                                class="week-menu"
+                                id="weekMenu"
+                            >
+
+                                <button
+                                    data-week="{{ beginning_date.strftime('%d/%m/%Y') }} - {{ end_date.strftime('%d/%m/%Y') }}"
+                                >
+                                    Semana atual
+                                </button>
+
                             </div>
+
                         </div>
+
                     </section>
                     <h2 class="section-title">Resumo da semana</h2>
                     <section class="card">
                         <ul class="simple-list">
+
                             <li>
-                                <td><span class="summary-label">Frequência média:</span> 78 BPM</td>
+
+                                <span class="summary-label">
+                                    Frequência média:
+                                </span>
+
+                                {{ average_bpm|round|int }} BPM
+
                             </li>
+
+
                             <li>
-                                <td><span class="summary-label">Ansiedade média:</span> 4,2/10</td>
+
+                                <span class="summary-label">
+                                    Ansiedade média:
+                                </span>
+
+                                {{ "%.1f"|format(average_anxiety) }}/10
+
                             </li>
+
+
                             <li>
-                                <td><span class="summary-label">Pressão arterial média:</span> 118/76</td>
+
+                                <span class="summary-label">
+                                    Pressão arterial média:
+                                </span>
+
+                                {{ average_sistolica|round|int }}/{{ average_diastolica|round|int }}
+                                mmHg
+
                             </li>
+
                         </ul>
                     </section>
                     <h2 class="section-title">Performance física</h2>
                     <section class="card performance-card">
+
                         <p>
+
                             <b>Sessões:</b>
-                            4 sessões
+
+                            {{ total_activities }}
+                            {% if total_activities == 1 %}
+                                sessão
+                            {% else %}
+                                sessões
+                            {% endif %}
+
                         </p>
+
+
                         <p>
+
                             <b>Tempo total:</b>
-                            3h25
+
+                            {{ total_activity_time }}
+
+                            min
+
                         </p>
+
+
                         <table class="summary-table">
+
                             <tr>
-                                <td>BC médio</td>
-                                <td>72 BPM</td>
+
+                                <td>
+                                    BC médio
+                                </td>
+
+                                <td>
+                                    {{ average_bpm|round|int }} BPM
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Tempo ativo</td>
-                                <td>3h42</td>
+
+                                <td>
+                                    Tempo ativo
+                                </td>
+
+                                <td>
+                                    {{ total_activity_time }} min
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Intensidade</td>
-                                <td>Zona 4</td>
+
+                                <td>
+                                    Intensidade
+                                </td>
+
+                                <td>
+                                    Dados disponíveis na performance
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Recuperação</td>
-                                <td>34 BPM/min</td>
+
+                                <td>
+                                    Recuperação
+                                </td>
+
+                                <td>
+                                    Dados disponíveis na performance
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Atividade</td>
-                                <td>+12%</td>
+
+                                <td>
+                                    Atividade
+                                </td>
+
+                                <td>
+                                    {{ total_activities }} sessões
+                                </td>
+
                             </tr>
+
                         </table>
+
                     </section>
                     <h2 class="section-title">Ansiedade e estresse</h2>
                     <section class="card ansiedade-card">
+
                         <p>
+
                             <b>Episódios:</b>
-                            7 episódios
+
+                            {{ anxiety_episodes|length }}
+
+                            {% if anxiety_episodes|length == 1 %}
+                                episódio
+                            {% else %}
+                                episódios
+                            {% endif %}
+
                         </p>
+
+
                         <p>
+
                             <b>Ansiedade média:</b>
-                            4,2/10
+
+                            {{ "%.1f"|format(average_anxiety) }}/10
+
                         </p>
+
+
                         <table class="summary-table">
+
                             <tr>
-                                <td>FC média</td>
-                                <td>94 BPM</td>
+
+                                <td>
+                                    FC média
+                                </td>
+
+                                <td>
+                                    {{ average_bpm|round|int }} BPM
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Duração média</td>
-                                <td>18 min</td>
+
+                                <td>
+                                    Duração média
+                                </td>
+
+                                <td>
+
+                                    {% if anxiety_episodes %}
+
+                                        {{
+                                            (
+                                                anxiety_episodes
+                                                |map(attribute='minutes')
+                                                |select
+                                                |sum
+                                                /
+                                                anxiety_episodes|length
+                                            )|round|int
+                                        }}
+
+                                        min
+
+                                    {% else %}
+
+                                        0 min
+
+                                    {% endif %}
+
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Horário mais frequente</td>
-                                <td>14-18h</td>
+
+                                <td>
+                                    Horário mais frequente
+                                </td>
+
+                                <td>
+
+                                    {% if anxiety_episodes %}
+
+                                        {% set hours = [] %}
+
+                                        {% for episode in anxiety_episodes %}
+
+                                            {% set _ = hours.append(
+                                                episode.date_time.hour
+                                            ) %}
+
+                                        {% endfor %}
+
+                                        {{ (hours|sort)[0] }}h
+
+                                    {% else %}
+
+                                        Sem registros
+
+                                    {% endif %}
+
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Tendência média</td>
-                                <td>5,8/10</td>
+
+                                <td>
+                                    Tendência média
+                                </td>
+
+                                <td>
+                                    {{ "%.1f"|format(average_anxiety) }}/10
+                                </td>
+
                             </tr>
+
+
                             <tr>
-                                <td>Acompanhamento</td>
-                                <td>Psicoterapia</td>
+
+                                <td>
+                                    Acompanhamento
+                                </td>
+
+                                <td>
+                                    Dados registrados
+                                </td>
+
                             </tr>
+
                         </table>
+
                     </section>
                     <h2 class="section-title">Pressão estimada</h2>
                     <section class="card pressure-card">
+
+                        {% set normal_count = namespace(value=0) %}
+                        {% set high_count = namespace(value=0) %}
+
+                        {% for measurement in pressure_measurements %}
+
+                            {% if measurement.sistolica < 130
+                                and measurement.diastolica < 80 %}
+
+                                {% set normal_count.value =
+                                    normal_count.value + 1 %}
+
+                            {% else %}
+
+                                {% set high_count.value =
+                                    high_count.value + 1 %}
+
+                            {% endif %}
+
+                        {% endfor %}
+
+
                         <p>
-                            <td><span class="summary-label">Pressão normal:</span> 6 dentro da faixa</td>
+
+                            <span class="summary-label">
+                                Pressão normal:
+                            </span>
+
+                            {{ normal_count.value }}
+                            dentro da faixa
+
                         </p>
+
+
                         <p>
-                            <td><span class="summary-label">Pressão alta:</span> 1 acima da faixa</td>
+
+                            <span class="summary-label">
+                                Pressão alta:
+                            </span>
+
+                            {{ high_count.value }}
+                            acima da faixa
+
                         </p>
-                        <div class="bar-chart" data-pressure-chart></div>
+
+
+                        <div
+                            class="bar-chart"
+                            data-pressure-chart
+                        ></div>
+
                     </section>
+
                     <h2 class="section-title">Insight semanal</h2>
                     <section class="card insight">
-                        <ul style="list-style: none; padding: 0;">
-                            <li>
-                                <span class="summary-label">Atividade física:</span>
-                                sua atividade física aumentou, tendo o tempo ativo maior e treinos atendendo a meta estipulada.
-                            </li>
+                        <ul
+                            style="list-style:none; padding:0;"
+                        >
 
-                            <li>
-                                <span class="summary-label">Ansiedade e estresse:</span>
-                                sua ansiedade está menor que semana passada, com menos crises e picos entre segunda-feira e domingo.
-                            </li>
+                            {% if insights %}
 
-                            <li>
-                                <span class="summary-label">Pressão:</span>
-                                apesar de um aumento durante à tarde, houve melhora na normalização da pressão, contanto que haja atenção ao pós-almoço e estresse no trabalho.
-                            </li>
+                                {% for insight in insights %}
+
+                                    <li style="margin-bottom:15px;">
+
+                                        <span class="summary-label">
+                                            Insight:
+                                        </span>
+
+                                        {{ insight }}
+
+                                    </li>
+
+                                {% endfor %}
+
+                            {% else %}
+
+                                <li>
+                                    Ainda não existem informações suficientes
+                                    para gerar os insights da semana.
+                                </li>
+
+                            {% endif %}
+
                         </ul>
                     </section>
                 </main>

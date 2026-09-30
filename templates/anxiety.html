@@ -305,8 +305,6 @@
 
                 </section>
 
-
-
                 <!-- =========================
                      ANSIEDADE X FREQUÊNCIA
                 ========================== -->
@@ -340,8 +338,6 @@
                     </ul>
 
                 </section>
-
-
 
                 <!-- =========================
                      TENDÊNCIA DE ANSIEDADE
@@ -380,14 +376,11 @@
 
                 </section>
 
-
-
                 <!-- =========================
                      TÉCNICAS E ACOMPANHAMENTO
                 ========================== -->
 
                 <div class="two-col">
-
 
                     <!-- Técnicas usadas -->
 
@@ -401,40 +394,25 @@
 
                             <ul class="simple-list techniques-list">
 
-                                {% for technique in techniques %}
+                                {% for tecnic in tecnics %}
 
                                     <li>
 
-                                        {% if technique.icon %}
-
-                                            <img
-                                                src="{{ url_for('static', filename=assets/respiracao-icon.png) }}"
-                                                alt=""
-                                            >
-
-                                        {% endif %}
-
-                                        {{ technique.name }}
+                                        <img
+                                            src="{{ url_for('static', filename='assets/' + tecnic.icon) }}"
+                                            alt=""
+                                        >
+                                        {{ tecnic.name }}
 
                                     </li>
 
                                 {% endfor %}
 
-                                {% if not techniques %}
-
-                                    <li>
-                                        Nenhuma técnica registrada.
-                                    </li>
-
-                                {% endif %}
-
                             </ul>
 
                         </div>
-
+                
                     </section>
-
-
 
                     <!-- Acompanhamento -->
                     <section>
@@ -477,11 +455,14 @@
                             </label>
 
                         </div>
-
+                         <a
+                            href="{{ url_for('onboarding_treatment_edit') }}"
+                            class="change-treatment-button"
+                        >
+                            Alterar acompanhamento
+                        </a>
                     </section>
                 </div>
-
-
 
                 <!-- =========================
                      GATILHOS REGISTRADOS
@@ -534,8 +515,6 @@
                     </table>
 
                 </section>
-
-
 
                 <!-- =========================
                      ÚLTIMOS EPISÓDIOS

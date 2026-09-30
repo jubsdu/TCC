@@ -42,6 +42,44 @@ a {
     color: inherit;
 }
 
+/* =========================
+   BOTÃO ALTERAR ACOMPANHAMENTO
+   ========================= */
+
+.change-treatment-button {
+    display: block;
+    width: fit-content;
+    margin: 14px auto 0;
+    padding: 9px 16px;
+
+    background: #d3445781;
+    color: #ffb6cf;
+
+    border: 1.5px solid #a9003b;
+    border-radius: 8px;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.change-treatment-button:hover {
+    background-color: #cc3b6ec0;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.change-treatment-button:active {
+    transform: translateY(0);
+}
+
 .choice-btn.selected {
     background: var(--wine-soft);
     color: #fff;

@@ -35,17 +35,46 @@
                 </header>
                 <main class="page-body">
                     <section class="card pressure-main-card" style="text-align:center">
-                        <h2 style="color:#ad0037">
-                            Pressão arterial estimada
-                        </h2>
+                        {% if latest_measurement %}
 
-                        <div style="font-size:20px">
-                            118/76 mmHg
-                        </div>
+                            <div style="font-size:20px">
 
-                        <div style="margin:10px">
-                            🟢 Estimativa estável
-                        </div>
+                                {{ latest_measurement.sistolica }}/{{ latest_measurement.diastolica }}
+                                mmHg
+
+                            </div>
+
+                            <div style="margin:10px">
+
+                                {% if latest_measurement.sistolica < 130
+                                    and latest_measurement.diastolica < 80 %}
+
+                                    🟢 Estimativa estável
+
+                                {% elif latest_measurement.sistolica < 140
+                                    and latest_measurement.diastolica < 90 %}
+
+                                    🟡 Atenção aos valores
+
+                                {% else %}
+
+                                    🔴 Pressão acima do habitual
+
+                                {% endif %}
+
+                            </div>
+
+                        {% else %}
+
+                            <div style="font-size:20px">
+                                Sem medições
+                            </div>
+
+                            <div style="margin:10px">
+                                ⚪ Nenhum dado disponível
+                            </div>
+
+                        {% endif %}
 
                         <hr style="border:0;border-top:1px solid #e22a55">
 
@@ -54,12 +83,17 @@
                         </h2>
 
                         <div class="pressure-gauge-wrap">
-                            <div class="heart-gauge" data-heart-rate-gauge>
+                            <div
+                                class="heart-gauge"
+                                data-heart-rate-gauge
+                            >
+
                                 <svg
                                     class="gauge"
                                     viewBox="0 0 220 220"
                                     aria-label="Frequência cardíaca"
                                 >
+
                                     <circle
                                         cx="110"
                                         cy="110"
@@ -73,6 +107,7 @@
                                         transform="rotate(135 110 110)"
                                     />
 
+
                                     <circle
                                         class="gauge-progress"
                                         cx="110"
@@ -83,9 +118,16 @@
                                         stroke-width="24"
                                         stroke-linecap="round"
                                         pathLength="100"
-                                        stroke-dasharray="52 100"
+
+                                        {% if average_bpm %}
+                                            stroke-dasharray="{{ (average_bpm / 180 * 73)|round|int }} 100"
+                                        {% else %}
+                                            stroke-dasharray="0 100"
+                                        {% endif %}
+
                                         transform="rotate(135 110 110)"
                                     />
+
 
                                     <path
                                         class="gauge-wave"
@@ -95,33 +137,62 @@
                                         stroke-width="3"
                                     />
 
+
                                     <text
                                         x="110"
                                         y="126"
                                         text-anchor="middle"
                                         class="gauge-value"
-                                    >82</text>
+                                    >
+                                        {{ average_bpm|round|int }}
+                                    </text>
+
 
                                     <text
                                         x="110"
                                         y="160"
                                         text-anchor="middle"
                                         class="gauge-label"
-                                    >BPM</text>
+                                    >
+                                        BPM
+                                    </text>
+
 
                                     <text
                                         x="78"
                                         y="177"
                                         text-anchor="middle"
                                         class="gauge-minmax"
-                                    >62</text>
+                                    >
+                                        {% if measurements_this_week %}
+                                            {{ measurements_this_week
+                                                |map(attribute='cardiac_rate')
+                                                |select
+                                                |min
+                                            }}
+                                        {% else %}
+                                            0
+                                        {% endif %}
+                                    </text>
+
 
                                     <text
                                         x="142"
                                         y="177"
                                         text-anchor="middle"
                                         class="gauge-minmax"
-                                    >124</text>
+                                    >
+                                        {% if measurements_this_week %}
+                                            {{ measurements_this_week
+                                                |map(attribute='cardiac_rate')
+                                                |select
+                                                |max
+                                            }}
+                                        {% else %}
+                                            0
+                                        {% endif %}
+                                    </text>
+
                                 </svg>
                             </div>
                         </div>
@@ -134,41 +205,74 @@
                     <section class="card pressure-history-card">
                         <table class="pressure-table">
                             <tbody>
-                                <tr>
-                                    <td>Segunda</td>
-                                    <td>116/74</td>
-                                    <td>Normal</td>
-                                </tr>
-                                <tr>
-                                    <td>Terça</td>
-                                    <td>120/78</td>
-                                    <td>Elevada</td>
-                                </tr>
-                                <tr>
-                                    <td>Quarta</td>
-                                    <td>118/76</td>
-                                    <td>Normal</td>
-                                </tr>
-                                <tr>
-                                    <td>Quinta</td>
-                                    <td>122/79</td>
-                                    <td>Elevada</td>
-                                </tr>
-                                <tr>
-                                    <td>Sexta</td>
-                                    <td>117/75</td>
-                                    <td>Normal</td>
-                                </tr>
-                                <tr>
-                                    <td>Sábado</td>
-                                    <td>119/77</td>
-                                    <td>Normal</td>
-                                </tr>
-                                <tr>
-                                    <td>Domingo</td>
-                                    <td>118/76</td>
-                                    <td>Normal</td>
-                                </tr>
+
+                                {% for day in measurements_by_day %}
+
+                                    <tr>
+
+                                        <td>
+                                            {{ day.name }}
+                                        </td>
+
+                                        {% set day_measurements = measurements_this_week
+                                            |selectattr('date_time')
+                                            |list
+                                        %}
+
+                                        {% set found = namespace(measurement=None) %}
+
+                                        {% for measurement in measurements_this_week %}
+
+                                            {% if measurement.date_time.weekday() == loop.index0 %}
+
+                                                {% if found.measurement is none %}
+
+                                                    {% set found.measurement = measurement %}
+
+                                                {% endif %}
+
+                                            {% endif %}
+
+                                        {% endfor %}
+
+
+                                        {% if found.measurement %}
+
+                                            <td>
+                                                {{ found.measurement.sistolica }}/{{ found.measurement.diastolica }}
+                                            </td>
+
+                                            <td>
+
+                                                {% if found.measurement.sistolica < 130
+                                                    and found.measurement.diastolica < 80 %}
+
+                                                    Normal
+
+                                                {% elif found.measurement.sistolica < 140
+                                                    and found.measurement.diastolica < 90 %}
+
+                                                    Elevada
+
+                                                {% else %}
+
+                                                    Alta
+
+                                                {% endif %}
+
+                                            </td>
+
+                                        {% else %}
+
+                                            <td>—</td>
+                                            <td>Sem registro</td>
+
+                                        {% endif %}
+
+                                    </tr>
+
+                                {% endfor %}
+
                             </tbody>
                         </table>
                     </section>
@@ -247,33 +351,158 @@
 
                     <h2 class="section-title">Dados do PPG</h2>
                     <section class="card">
-                        <ul class="simple-list">
-                            <li>
-                                <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="Recovery">
-                                Frequência cardíaca: <b>72 BPM</b>
-                            </li>
-                            <li>
-                                <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="Recovery">
-                                HRV: <b>58 ms</b> ↓
-                            </li>
-                            <li>
-                                <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="Recovery">
-                                Qualidade do sinal: <b>92%</b>
-                            </li>
-                        </ul>
+                        {% if ppg_measurements %}
+
+                            {% set latest_ppg = ppg_measurements[0] %}
+
+                            <ul class="simple-list">
+
+                                <li>
+
+                                    <img
+                                        class="recovery-icon"
+                                        src="{{ url_for(
+                                            'static',
+                                            filename='assets/recovery-icon.png'
+                                        ) }}"
+                                        alt="Recovery"
+                                    >
+
+                                    Frequência cardíaca:
+
+                                    <b>
+                                        {{ latest_ppg.cardiac_rate }} BPM
+                                    </b>
+
+                                </li>
+
+
+                                <li>
+
+                                    <img
+                                        class="recovery-icon"
+                                        src="{{ url_for(
+                                            'static',
+                                            filename='assets/recovery-icon.png'
+                                        ) }}"
+                                        alt="Recovery"
+                                    >
+
+                                    HRV:
+
+                                    <b>
+                                        {{ latest_ppg.hrv }} ms
+                                    </b>
+
+                                </li>
+
+
+                                <li>
+
+                                    <img
+                                        class="recovery-icon"
+                                        src="{{ url_for(
+                                            'static',
+                                            filename='assets/recovery-icon.png'
+                                        ) }}"
+                                        alt="Recovery"
+                                    >
+
+                                    Qualidade do sinal:
+
+                                    <b>
+                                        {{ latest_ppg.quality_sign }}%
+                                    </b>
+
+                                </li>
+
+                            </ul>
+
+                        {% else %}
+
+                            <p>
+                                Nenhum dado PPG disponível.
+                            </p>
+
+                        {% endif %}
                     </section>
 
                     <h2 class="section-title">Tendência</h2>
                     <section class="card">
                         <ul class="simple-list">
+
                             <li>
-                                <img class="coracaoVazio-icon" src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}" alt="Coração">
-                                Média: <b>119/76 mmHg</b>
+
+                                <img
+                                    class="coracaoVazio-icon"
+                                    src="{{ url_for(
+                                        'static',
+                                        filename='assets/coracaoVazio-icon.png'
+                                    ) }}"
+                                    alt="Coração"
+                                >
+
+                                Média:
+
+                                <b>
+                                    {{ average_sistolica|round|int }}/{{ average_diastolica|round|int }}
+                                    mmHg
+                                </b>
+
                             </li>
+
+
                             <li>
-                                <img class="coracaoVazio-icon" src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}" alt="Coração">
-                                Variação: <b>-2/-2 mmHg</b>
+
+                                <img
+                                    class="coracaoVazio-icon"
+                                    src="{{ url_for(
+                                        'static',
+                                        filename='assets/coracaoVazio-icon.png'
+                                    ) }}"
+                                    alt="Coração"
+                                >
+
+                                Variação:
+
+                                <b>
+
+                                    {% if measurements_previous_week %}
+
+                                        {{ (
+                                            average_sistolica
+                                            -
+                                            (
+                                                measurements_previous_week
+                                                |map(attribute='sistolica')
+                                                |sum
+                                                /
+                                                measurements_previous_week|length
+                                            )
+                                        )|round|int
+                                        }}/{{ (
+                                            average_diastolica
+                                            -
+                                            (
+                                                measurements_previous_week
+                                                |map(attribute='diastolica')
+                                                |sum
+                                                /
+                                                measurements_previous_week|length
+                                            )
+                                        )|round|int
+                                        }} mmHg
+
+                                    {% else %}
+
+                                        Sem comparação
+
+                                    {% endif %}
+
+                                </b>
+
                             </li>
+
                         </ul>
                     </section>
 
@@ -283,9 +512,35 @@
                     </section>
 
                     <h2 class="section-title">ALERTAS</h2>
-                    <section class="card alert">
-                        <b>Cuidado com a pressão durante 13-15h.</b>
-                    </section>
+                    {% if warnings %}
+
+                        {% for warning in warnings %}
+
+                            <section class="card alert">
+
+                                <b>
+                                    {{ warning.title }}
+                                </b>
+
+                                <p>
+                                    {{ warning.message }}
+                                </p>
+
+                            </section>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <section class="card alert">
+
+                            <b>
+                                Nenhum alerta no momento.
+                            </b>
+
+                        </section>
+
+                    {% endif %} 
                 </main>
 
                 <div class="nav-drawer">

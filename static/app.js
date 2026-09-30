@@ -41,28 +41,148 @@ document.addEventListener("DOMContentLoaded", function () {
     // SELEÇÃO DAS OPÇÕES
     // =========================
 
-    const choiceButtons = document.querySelectorAll("[data-choice]");
+    const treatmentForm = document.getElementById("treatmentForm");
 
-    choiceButtons.forEach(function (button) {
+    if (treatmentForm) {
 
-        button.addEventListener("click", function () {
+        const choiceButtons =
+            treatmentForm.querySelectorAll(".choice-btn[data-choice]");
 
-            choiceButtons.forEach(function (otherButton) {
-                otherButton.classList.remove("selected");
+        const selectedTreatments =
+            document.getElementById("selectedTreatments");
+
+        const message =
+            document.getElementById("choiceMessage");
+
+        const editMode =
+            treatmentForm.dataset.editMode === "true";
+
+
+        // ==========================================
+        // CLICAR NAS OPÇÕES
+        // ==========================================
+
+        choiceButtons.forEach(function (button) {
+
+            button.addEventListener("click", function () {
+
+                const choice = button.dataset.choice;
+
+
+                // ======================================
+                // NENHUM ACOMPANHAMENTO
+                // ======================================
+
+                if (choice === "nenhum") {
+
+                    choiceButtons.forEach(function (otherButton) {
+                        otherButton.classList.remove("selected");
+                    });
+
+                    button.classList.add("selected");
+
+                }
+
+
+                // ======================================
+                // OUTRAS OPÇÕES
+                // ======================================
+
+                else {
+
+                    // Novo usuário:
+                    // apenas uma opção pode ser escolhida.
+
+                    if (!editMode) {
+
+                        choiceButtons.forEach(function (otherButton) {
+                            otherButton.classList.remove("selected");
+                        });
+
+                    }
+
+                    // Remove "Nenhum"
+                    const nenhumButton =
+                        treatmentForm.querySelector(
+                            '[data-choice="nenhum"]'
+                        );
+
+                    if (nenhumButton) {
+                        nenhumButton.classList.remove("selected");
+                    }
+
+                    // Marca a opção escolhida
+                    button.classList.add("selected");
+                }
+
+
+                if (message) {
+                    message.classList.remove("show");
+                }
+
             });
-
-            button.classList.add("selected");
-
-            const message = document.querySelector("#choiceMessage");
-
-            if (message) {
-                message.classList.remove("show");
-            }
 
         });
 
-    });
 
+        // ==========================================
+        // ENVIAR FORMULÁRIO
+        // ==========================================
+
+        treatmentForm.addEventListener("submit", function (event) {
+
+            const selectedButtons =
+                treatmentForm.querySelectorAll(
+                    ".choice-btn.selected"
+                );
+
+
+            // Nenhuma opção escolhida
+            if (selectedButtons.length === 0) {
+
+                event.preventDefault();
+
+                if (message) {
+                    message.classList.add("show");
+                }
+
+                return;
+            }
+
+            // Limpa inputs anteriores
+            selectedTreatments.innerHTML = "";
+
+            // Cria um input para cada opção selecionada
+            selectedButtons.forEach(function (button) {
+
+                const input =
+                    document.createElement("input");
+
+                input.type = "hidden";
+                input.name = "treatment";
+                input.value = button.dataset.choice;
+
+                selectedTreatments.appendChild(input);
+
+            });
+
+        });
+
+    }
+
+    // =========================
+    // RECUPERAR OPÇÃO JÁ SELECIONADA
+    // =========================
+
+    const initiallySelected =
+        document.querySelector("[data-choice].selected");
+
+    if (initiallySelected && treatmentInput) {
+
+        treatmentInput.value =
+            initiallySelected.dataset.choice;
+
+    }
 
     // =========================
     // MENU LATERAL
@@ -82,7 +202,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     });
-
 
     // =========================
     // BOTÕES DO MENU
@@ -120,7 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     }
-
 
     // =========================
     // GRÁFICO DE ANSIEDADE

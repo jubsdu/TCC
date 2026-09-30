@@ -106,8 +106,8 @@ def register():
         criar_dados_iniciais(user.id)
         criar_dados_performance(user.id)
         criar_dados_ansiedade(user.id)
-        # criar_dados_pressao(user.id)
-        # criar_dados_relatorio(user.id)
+        criar_dados_pressao(user.id)
+        criar_dados_relatorio(user.id)
 
         # ==========================================
         # LOGIN AUTOMÁTICO
@@ -120,27 +120,76 @@ def register():
 
         print("USUÁRIO CRIADO - ID:", user.id)
 
-        # Recupera o acompanhamento escolhido antes do cadastro
-        treatment = session.get('treatment')
+        # ==========================================
+        # SALVA O ACOMPANHAMENTO ESCOLHIDO
+        # ==========================================
 
-        if treatment:
-            accompaniment = Accompaniment(
-                user_id=user.id,
-                psychotherapy=(treatment == 'psicoterapia'),
-                consultation=(treatment == 'consulta'),
-                medication=(treatment == 'medicacao')
+        treatments = session.get('treatments', [])
+
+        if treatments:
+
+            accompaniment = (
+                db_session.query(Accompaniment)
+                .filter_by(user_id=user.id)
+                .first()
             )
 
-            db_session.add(accompaniment)
+            if not accompaniment:
+
+                accompaniment = Accompaniment(
+                    user_id=user.id,
+                    psychotherapy=False,
+                    consultation=False,
+                    medication=False
+                )
+
+                db_session.add(accompaniment)
+
+
+            if "nenhum" in treatments:
+
+                accompaniment.psychotherapy = False
+                accompaniment.consultation = False
+                accompaniment.medication = False
+
+            else:
+
+                accompaniment.psychotherapy = (
+                    "psychotherapy" in treatments
+                )
+
+                accompaniment.consultation = (
+                    "consultation" in treatments
+                )
+
+                accompaniment.medication = (
+                    "medication" in treatments
+                )
+
+
             db_session.commit()
 
-            print("ACOMPANHAMENTO SALVO - ID:", accompaniment.id)
+            print(
+                "ACOMPANHAMENTO SALVO - ID:",
+                accompaniment.id
+            )
 
-            session.pop('treatment', None)
+            print(
+                "Psicoterapia:",
+                accompaniment.psychotherapy
+            )
 
-        return redirect(url_for('home'))
+            print(
+                "Consulta:",
+                accompaniment.consultation
+            )
 
-    return render_template('register.html')
+            print(
+                "Medicação:",
+                accompaniment.medication
+            )
+
+            session.pop('treatments', None)
 
 def criar_dados_iniciais(user_id):
     print(f"CRIANDO DADOS INICIAIS PARA USUÁRIO {user_id}")
@@ -371,8 +420,8 @@ def criar_dados_ansiedade(user_id):
 
         acompanhamento = Accompaniment(
             user_id=user_id,
-            psychotherapy=True,
-            consultation=True,
+            psychotherapy=False,
+            consultation=False,
             medication=False
         )
 
@@ -443,6 +492,13 @@ def criar_dados_ansiedade(user_id):
             db_session.flush()
 
             print("Técnica criada:", name)
+
+        else:
+
+            tecnic.description = description
+            tecnic.icon = icon
+
+            print("Técnica atualizada:", name)
 
         tecnicas[name] = tecnic
 
@@ -613,6 +669,251 @@ def criar_dados_ansiedade(user_id):
 
     print("Dados de ansiedade criados com sucesso!")
 
+# =========================================================
+# CRIAR DADOS DE PRESSÃO ARTERIAL
+# =========================================================
+
+def criar_dados_pressao(user_id):
+
+    print("Criando dados de pressão para usuário:", user_id)
+
+    # Verifica se o usuário já possui dados
+    pressure_exists = db_session.query(
+        Measurement_pressure
+    ).filter_by(
+        user_id=user_id
+    ).first()
+
+    if pressure_exists:
+        print("Dados de pressão já existem para este usuário.")
+        return
+
+    # ---------------------------------------------------------
+    # 1. MEDIÇÕES DE PRESSÃO
+    # ---------------------------------------------------------
+
+    data_inicio = datetime(2026, 9, 21, 8, 0)
+
+    measurements = [
+        {
+            "dia": 0,
+            "hora": 8,
+            "sistolica": 118,
+            "diastolica": 76,
+            "bpm": 72,
+            "origin": "Manual",
+            "observation": "Medição realizada pela manhã."
+        },
+        {
+            "dia": 1,
+            "hora": 9,
+            "sistolica": 122,
+            "diastolica": 79,
+            "bpm": 75,
+            "origin": "PPG",
+            "observation": "Medição realizada após o café da manhã."
+        },
+        {
+            "dia": 2,
+            "hora": 14,
+            "sistolica": 128,
+            "diastolica": 82,
+            "bpm": 81,
+            "origin": "Manual",
+            "observation": "Medição realizada durante a tarde."
+        },
+        {
+            "dia": 3,
+            "hora": 10,
+            "sistolica": 135,
+            "diastolica": 86,
+            "bpm": 84,
+            "origin": "PPG",
+            "observation": "Pressão acima das medições anteriores."
+        },
+        {
+            "dia": 4,
+            "hora": 16,
+            "sistolica": 125,
+            "diastolica": 80,
+            "bpm": 78,
+            "origin": "Manual",
+            "observation": "Medição realizada durante a tarde."
+        },
+        {
+            "dia": 5,
+            "hora": 9,
+            "sistolica": 119,
+            "diastolica": 77,
+            "bpm": 70,
+            "origin": "PPG",
+            "observation": "Medição realizada pela manhã."
+        },
+        {
+            "dia": 6,
+            "hora": 18,
+            "sistolica": 130,
+            "diastolica": 84,
+            "bpm": 82,
+            "origin": "Manual",
+            "observation": "Medição realizada no final do dia."
+        }
+    ]
+
+    created_measurements = []
+
+    for dados in measurements:
+
+        date_measurement = data_inicio + timedelta(
+            days=dados["dia"]
+        )
+
+        date_measurement = date_measurement.replace(
+            hour=dados["hora"],
+            minute=random.choice([0, 15, 30, 45])
+        )
+
+        measurement = Measurement_pressure(
+            user_id=user_id,
+            date_time=date_measurement,
+            sistolica=dados["sistolica"],
+            diastolica=dados["diastolica"],
+            cardiac_rate=dados["bpm"],
+            origin=dados["origin"],
+            observation=dados["observation"]
+        )
+
+        db_session.add(measurement)
+        db_session.flush()
+
+        created_measurements.append(measurement)
+
+        print(
+            "Medição criada:",
+            measurement.sistolica,
+            "/",
+            measurement.diastolica
+        )
+
+    # ---------------------------------------------------------
+    # 2. DADOS PPG
+    # ---------------------------------------------------------
+
+    for measurement in created_measurements:
+
+        # Criamos PPG somente para medições originadas pelo PPG
+        if measurement.origin != "PPG":
+            continue
+
+        ppg = Measurement_ppg(
+            user_id=user_id,
+            measurement_pressure_id=measurement.id,
+            cardiac_rate=measurement.cardiac_rate,
+            hrv=random.choice([42.5, 45.2, 48.7, 51.3, 55.1]),
+            quality_sign=random.choice([91.5, 93.2, 95.7, 97.1, 98.4]),
+            date_time=measurement.date_time
+        )
+
+        db_session.add(ppg)
+
+        print(
+            "PPG criado para medição:",
+            measurement.id
+        )
+
+    # ---------------------------------------------------------
+    # 3. AVISOS
+    # ---------------------------------------------------------
+
+    warnings = [
+        {
+            "dia": 3,
+            "title": "Pressão acima do habitual",
+            "message": "Foi registrada uma medição de pressão acima das medições anteriores.",
+            "level": "atenção"
+        },
+        {
+            "dia": 6,
+            "title": "Acompanhe sua pressão",
+            "message": "Uma nova medição foi registrada. Continue acompanhando seus dados.",
+            "level": "informativo"
+        }
+    ]
+
+    for warning_data in warnings:
+
+        warning = Warning_pressure(
+            user_id=user_id,
+            data=(
+                data_inicio +
+                timedelta(days=warning_data["dia"])
+            ).date(),
+            title=warning_data["title"],
+            message=warning_data["message"],
+            level=warning_data["level"],
+            viewed=False
+        )
+
+        db_session.add(warning)
+
+        print(
+            "Aviso criado:",
+            warning_data["title"]
+        )
+
+    db_session.commit()
+
+    print("Dados de pressão criados com sucesso!")
+
+# =========================================================
+# CRIAR DADOS DO RELATÓRIO SEMANAL
+# =========================================================
+
+def criar_dados_relatorio(user_id):
+
+    print("Criando relatório semanal para usuário:", user_id)
+
+    # Semana de teste: 21/09/2026 até 27/09/2026
+    beginning_date = date(2026, 9, 21)
+    end_date = date(2026, 9, 27)
+
+    # Verifica se já existe relatório para esse período
+    report_exists = (
+        db_session.query(Report_weekly)
+        .filter(
+            Report_weekly.user_id == user_id,
+            Report_weekly.beginning_date == beginning_date,
+            Report_weekly.end_date == end_date
+        )
+        .first()
+    )
+
+    if report_exists:
+
+        print("Relatório semanal já existe para este usuário.")
+
+        return report_exists
+
+    # Cria o relatório
+    report = Report_weekly(
+        user_id=user_id,
+        beginning_date=beginning_date,
+        end_date=end_date
+    )
+
+    db_session.add(report)
+
+    db_session.flush()
+
+    print(
+        "Relatório criado:",
+        beginning_date,
+        "até",
+        end_date
+    )
+
+    return report
+
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot():
     if request.method == 'POST':
@@ -646,19 +947,107 @@ def onboarding_treatment():
 
     if request.method == 'POST':
 
-        treatment = request.form.get('treatment')
+        treatments = request.form.getlist("treatment")
 
-        if not treatment:
+        if not treatments:
             return "Nenhum acompanhamento foi selecionado.", 400
 
-        # Guarda temporariamente a escolha
-        session['treatment'] = treatment
+        session['treatments'] = treatments
 
-        print("ACOMPANHAMENTO ESCOLHIDO:", treatment)
+        print(
+            "ACOMPANHAMENTOS ESCOLHIDOS:",
+            treatments
+        )
 
         return redirect(url_for('register'))
 
     return render_template('onboarding-treatment.html')
+
+# =====================================================
+# ALTERAR / ADICIONAR ACOMPANHAMENTO
+# =====================================================
+
+@app.route('/onboarding-treatment-edit', methods=['GET', 'POST'])
+def onboarding_treatment_edit():
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    accompaniment = (
+        db_session.query(Accompaniment)
+        .filter_by(user_id=user_id)
+        .first()
+    )
+
+    if not accompaniment:
+
+        accompaniment = Accompaniment(
+            user_id=user_id,
+            psychotherapy=False,
+            consultation=False,
+            medication=False
+        )
+
+        db_session.add(accompaniment)
+        db_session.commit()
+
+
+    if request.method == 'POST':
+
+        treatments = request.form.getlist("treatment")
+
+        if not treatments:
+            return "Nenhum acompanhamento foi selecionado.", 400
+
+        print(
+            "ALTERANDO ACOMPANHAMENTO:",
+            treatments,
+            "USUÁRIO:",
+            user_id
+        )
+
+
+        # ==========================================
+        # NENHUM
+        # ==========================================
+
+        if "nenhum" in treatments:
+
+            accompaniment.psychotherapy = False
+            accompaniment.consultation = False
+            accompaniment.medication = False
+
+
+        # ==========================================
+        # ADICIONA / MANTÉM
+        # ==========================================
+
+        else:
+
+            if "psychotherapy" in treatments:
+                accompaniment.psychotherapy = True
+
+            if "consultation" in treatments:
+                accompaniment.consultation = True
+
+            if "medication" in treatments:
+                accompaniment.medication = True
+
+
+        db_session.commit()
+
+        print("ACOMPANHAMENTO ATUALIZADO!")
+
+        return redirect(url_for("home"))
+
+
+    return render_template(
+        'onboarding-treatment.html',
+        edit_mode=True,
+        accompaniment=accompaniment
+    )
 
 # Módulos de Saúde e Monitoramento
 from datetime import datetime, timedelta
@@ -691,7 +1080,7 @@ def anxiety():
     # TÉCNICAS USADAS
     # =====================================================
 
-    techniques = (
+    tecnics = (
         db_session.query(Tecnic)
         .join(
             Episode_tecniques,
@@ -908,7 +1297,6 @@ def anxiety():
             "count": count
         })
 
-
     # =====================================================
     # HORÁRIO MAIS FREQUENTE
     # =====================================================
@@ -931,11 +1319,11 @@ def anxiety():
 
         most_frequent_time = "Sem registros"
 
-
     print("MÉDIA ANSIEDADE:", average_anxiety)
     print("MÉDIA BPM:", average_bpm)
     print("BPM MÁXIMO:", max_bpm)
 
+    tecnics = db_session.query(Tecnic).all()
 
     return render_template(
         'anxiety.html',
@@ -951,9 +1339,9 @@ def anxiety():
         average_duration=average_duration,
         most_frequent_time=most_frequent_time,
         previous_average_anxiety=previous_average_anxiety,
-        techniques=techniques,
-        trigger_counts=trigger_counts,
-        latest_episodes=latest_episodes
+        tecnics=tecnics,
+        latest_episodes=latest_episodes,
+        trigger_counts=trigger_counts
     )
 
 @app.route('/performance')
@@ -1037,11 +1425,609 @@ def performance():
 
 @app.route('/pressure')
 def pressure():
-    return render_template('pressure.html')
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user = db_session.query(User).filter_by(
+        id=user_id
+    ).first()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    # =========================================================
+    # MEDIÇÕES DE PRESSÃO
+    # =========================================================
+
+    measurements = (
+        db_session.query(Measurement_pressure)
+        .filter(
+            Measurement_pressure.user_id == user_id
+        )
+        .order_by(
+            Measurement_pressure.date_time.desc()
+        )
+        .all()
+    )
+
+    # =========================================================
+    # MEDIÇÕES PPG
+    # =========================================================
+
+    ppg_measurements = (
+        db_session.query(Measurement_ppg)
+        .filter(
+            Measurement_ppg.user_id == user_id
+        )
+        .order_by(
+            Measurement_ppg.date_time.desc()
+        )
+        .all()
+    )
+
+    # =========================================================
+    # AVISOS
+    # =========================================================
+
+    warnings = (
+        db_session.query(Warning_pressure)
+        .filter(
+            Warning_pressure.user_id == user_id
+        )
+        .order_by(
+            Warning_pressure.data.desc()
+        )
+        .all()
+    )
+
+    # =========================================================
+    # SEMANA ATUAL
+    # =========================================================
+
+    inicio_semana = datetime(
+        2026, 9, 21, 0, 0, 0
+    )
+
+    fim_semana = inicio_semana + timedelta(days=7)
+
+    measurements_this_week = [
+        measurement
+        for measurement in measurements
+        if inicio_semana
+        <= measurement.date_time
+        < fim_semana
+    ]
+
+    # =========================================================
+    # SEMANA ANTERIOR
+    # =========================================================
+
+    inicio_semana_anterior = (
+        inicio_semana - timedelta(days=7)
+    )
+
+    fim_semana_anterior = inicio_semana
+
+    measurements_previous_week = [
+        measurement
+        for measurement in measurements
+        if inicio_semana_anterior
+        <= measurement.date_time
+        < fim_semana_anterior
+    ]
+
+    # =========================================================
+    # MÉDIA SISTÓLICA
+    # =========================================================
+
+    sistolic_values = [
+        measurement.sistolica
+        for measurement in measurements_this_week
+        if measurement.sistolica is not None
+    ]
+
+    if sistolic_values:
+        average_sistolica = (
+            sum(sistolic_values)
+            / len(sistolic_values)
+        )
+    else:
+        average_sistolica = 0
+
+    # =========================================================
+    # MÉDIA DIASTÓLICA
+    # =========================================================
+
+    diastolic_values = [
+        measurement.diastolica
+        for measurement in measurements_this_week
+        if measurement.diastolica is not None
+    ]
+
+    if diastolic_values:
+        average_diastolica = (
+            sum(diastolic_values)
+            / len(diastolic_values)
+        )
+    else:
+        average_diastolica = 0
+
+    # =========================================================
+    # MÉDIA BPM
+    # =========================================================
+
+    bpm_values = [
+        measurement.cardiac_rate
+        for measurement in measurements_this_week
+        if measurement.cardiac_rate is not None
+    ]
+
+    if bpm_values:
+        average_bpm = (
+            sum(bpm_values)
+            / len(bpm_values)
+        )
+    else:
+        average_bpm = 0
+
+    # =========================================================
+    # MAIOR SISTÓLICA
+    # =========================================================
+
+    if sistolic_values:
+        max_sistolica = max(sistolic_values)
+    else:
+        max_sistolica = 0
+
+    # =========================================================
+    # MAIOR DIASTÓLICA
+    # =========================================================
+
+    if diastolic_values:
+        max_diastolica = max(diastolic_values)
+    else:
+        max_diastolica = 0
+
+    # =========================================================
+    # MEDIÇÕES POR DIA
+    # =========================================================
+
+    dias_semana = [
+        "Segunda",
+        "Terça",
+        "Quarta",
+        "Quinta",
+        "Sexta",
+        "Sábado",
+        "Domingo"
+    ]
+
+    measurements_by_day = []
+
+    for i, day_name in enumerate(dias_semana):
+
+        data = inicio_semana + timedelta(days=i)
+
+        count = sum(
+            1
+            for measurement in measurements_this_week
+            if measurement.date_time.date()
+            == data.date()
+        )
+
+        measurements_by_day.append({
+            "name": day_name,
+            "count": count
+        })
+
+    # =========================================================
+    # ÚLTIMA MEDIÇÃO
+    # =========================================================
+
+    latest_measurement = (
+        measurements[0]
+        if measurements
+        else None
+    )
+
+    # =========================================================
+    # AVISOS NÃO VISUALIZADOS
+    # =========================================================
+
+    unread_warnings = [
+        warning
+        for warning in warnings
+        if not warning.viewed
+    ]
+
+    # =========================================================
+    # DEBUG
+    # =========================================================
+
+    print(
+        "USUÁRIO PRESSÃO:",
+        user.id,
+        user.email
+    )
+
+    print(
+        "MEDIÇÕES:",
+        len(measurements)
+    )
+
+    print(
+        "MEDIÇÕES ESTA SEMANA:",
+        len(measurements_this_week)
+    )
+
+    print(
+        "MÉDIA SISTÓLICA:",
+        average_sistolica
+    )
+
+    print(
+        "MÉDIA DIASTÓLICA:",
+        average_diastolica
+    )
+
+    print(
+        "MÉDIA BPM:",
+        average_bpm
+    )
+
+    # =========================================================
+    # TEMPLATE
+    # =========================================================
+
+    return render_template(
+        'pressure.html',
+
+        user=user,
+
+        measurements=measurements,
+        measurements_this_week=measurements_this_week,
+        measurements_previous_week=measurements_previous_week,
+
+        ppg_measurements=ppg_measurements,
+
+        warnings=warnings,
+        unread_warnings=unread_warnings,
+
+        measurements_by_day=measurements_by_day,
+
+        latest_measurement=latest_measurement,
+
+        average_sistolica=average_sistolica,
+        average_diastolica=average_diastolica,
+
+        average_bpm=average_bpm,
+
+        max_sistolica=max_sistolica,
+        max_diastolica=max_diastolica
+    )
+
+# =========================================================
+# RELATÓRIO SEMANAL
+# =========================================================
 
 @app.route('/report')
 def report():
-    return render_template('report.html')
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # =========================================================
+    # USUÁRIO
+    # =========================================================
+
+    user = (
+        db_session.query(User)
+        .filter_by(id=user_id)
+        .first()
+    )
+
+    if not user:
+        return redirect(url_for('login'))
+
+    # =========================================================
+    # RELATÓRIO MAIS RECENTE
+    # =========================================================
+
+    report = (
+        db_session.query(Report_weekly)
+        .filter(
+            Report_weekly.user_id == user_id
+        )
+        .order_by(
+            Report_weekly.beginning_date.desc()
+        )
+        .first()
+    )
+
+    # Se não existir relatório, cria
+    if not report:
+
+        report = criar_dados_report(user_id)
+
+        db_session.commit()
+
+    # =========================================================
+    # PERÍODO DO RELATÓRIO
+    # =========================================================
+
+    beginning_date = report.beginning_date
+
+    end_date = report.end_date + timedelta(days=1)
+
+    # =========================================================
+    # ANSIEDADE
+    # =========================================================
+
+    anxiety_episodes = (
+        db_session.query(Episode_anxious)
+        .filter(
+            Episode_anxious.user_id == user_id,
+            Episode_anxious.date_time >= datetime.combine(
+                beginning_date,
+                datetime.min.time()
+            ),
+            Episode_anxious.date_time < datetime.combine(
+                end_date,
+                datetime.min.time()
+            )
+        )
+        .order_by(
+            Episode_anxious.date_time.desc()
+        )
+        .all()
+    )
+
+    # Média de ansiedade
+
+    anxiety_values = [
+        episode.level_anxious
+        for episode in anxiety_episodes
+        if episode.level_anxious is not None
+    ]
+
+    if anxiety_values:
+
+        average_anxiety = (
+            sum(anxiety_values)
+            / len(anxiety_values)
+        )
+
+    else:
+
+        average_anxiety = 0
+
+    # =========================================================
+    # PRESSÃO
+    # =========================================================
+
+    pressure_measurements = (
+        db_session.query(Measurement_pressure)
+        .filter(
+            Measurement_pressure.user_id == user_id,
+            Measurement_pressure.date_time >= datetime.combine(
+                beginning_date,
+                datetime.min.time()
+            ),
+            Measurement_pressure.date_time < datetime.combine(
+                end_date,
+                datetime.min.time()
+            )
+        )
+        .order_by(
+            Measurement_pressure.date_time.desc()
+        )
+        .all()
+    )
+
+    # Média sistólica
+
+    sistolic_values = [
+        measurement.sistolica
+        for measurement in pressure_measurements
+        if measurement.sistolica is not None
+    ]
+
+    if sistolic_values:
+
+        average_sistolica = (
+            sum(sistolic_values)
+            / len(sistolic_values)
+        )
+
+    else:
+
+        average_sistolica = 0
+
+    # Média diastólica
+
+    diastolic_values = [
+        measurement.diastolica
+        for measurement in pressure_measurements
+        if measurement.diastolica is not None
+    ]
+
+    if diastolic_values:
+
+        average_diastolica = (
+            sum(diastolic_values)
+            / len(diastolic_values)
+        )
+
+    else:
+
+        average_diastolica = 0
+
+    # =========================================================
+    # BPM
+    # =========================================================
+
+    bpm_values = [
+        measurement.cardiac_rate
+        for measurement in pressure_measurements
+        if measurement.cardiac_rate is not None
+    ]
+
+    if bpm_values:
+
+        average_bpm = (
+            sum(bpm_values)
+            / len(bpm_values)
+        )
+
+        max_bpm = max(bpm_values)
+
+    else:
+
+        average_bpm = 0
+        max_bpm = 0
+
+    # =========================================================
+    # PERFORMANCE FÍSICA
+    # =========================================================
+
+    activities = (
+        db_session.query(Activity)
+        .filter(
+            Activity.user_id == user_id
+        )
+        .order_by(
+            Activity.date.desc()
+        )
+        .all()
+    )
+
+    # Filtra atividades da semana
+    weekly_activities = []
+
+    for activity in activities:
+        if activity.date is None:
+            continue
+
+        activity_date = activity.date
+
+        if beginning_date <= activity_date <= report.end_date:
+            weekly_activities.append(activity)
+
+    # =========================================================
+    # TEMPO TOTAL DE ATIVIDADE
+    # =========================================================
+
+    activity_times = [
+        activity.active_time
+        for activity in weekly_activities
+        if activity.active_time is not None
+    ]
+
+    if activity_times:
+
+        total_activity_time = sum(activity_times)
+
+    else:
+
+        total_activity_time = 0
+
+    # =========================================================
+    # QUANTIDADE DE ATIVIDADES
+    # =========================================================
+
+    total_activities = len(weekly_activities)
+
+    # =========================================================
+    # GERAÇÃO DE INSIGHTS
+    # =========================================================
+
+    insights = []
+
+    if average_anxiety > 6:
+
+        insights.append(
+            "A média de ansiedade ficou acima de 6 durante a semana."
+        )
+
+    elif average_anxiety > 0:
+
+        insights.append(
+            "A média de ansiedade permaneceu abaixo de 6 durante a semana."
+        )
+
+    if average_sistolica > 0:
+
+        insights.append(
+            f"A pressão sistólica média foi de "
+            f"{round(average_sistolica)}/{round(average_diastolica)} mmHg."
+        )
+
+    if total_activities > 0:
+
+        insights.append(
+            f"Foram registradas {total_activities} "
+            f"atividades físicas durante a semana."
+        )
+
+    else:
+
+        insights.append(
+            "Nenhuma atividade física foi registrada durante a semana."
+        )
+
+    # =========================================================
+    # DEBUG
+    # =========================================================
+
+    print("======================================")
+    print("RELATÓRIO SEMANAL")
+    print("Usuário:", user.id)
+    print("Período:", beginning_date, "até", report.end_date)
+    print("Episódios ansiedade:", len(anxiety_episodes))
+    print("Média ansiedade:", average_anxiety)
+    print("Medições pressão:", len(pressure_measurements))
+    print("Média pressão:", average_sistolica, "/", average_diastolica)
+    print("Média BPM:", average_bpm)
+    print("BPM máximo:", max_bpm)
+    print("Atividades:", total_activities)
+    print("Tempo atividade:", total_activity_time)
+    print("======================================")
+
+    # =========================================================
+    # TEMPLATE
+    # =========================================================
+
+    return render_template(
+        'report.html',
+
+        user=user,
+
+        report=report,
+
+        beginning_date=beginning_date,
+        end_date=report.end_date,
+
+        anxiety_episodes=anxiety_episodes,
+        average_anxiety=average_anxiety,
+
+        pressure_measurements=pressure_measurements,
+        average_sistolica=average_sistolica,
+        average_diastolica=average_diastolica,
+
+        average_bpm=average_bpm,
+        max_bpm=max_bpm,
+
+        weekly_activities=weekly_activities,
+        total_activities=total_activities,
+        total_activity_time=total_activity_time,
+
+        insights=insights
+    )
 
 # USUÁRIOS
 # @app.route('/api/users/<int:id>/delete', methods=['GET'])
