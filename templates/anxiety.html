@@ -68,7 +68,7 @@
                     </h2>
 
                     <div style="font-size:22px;font-weight:800;margin:5px">
-                        {{ "%.1f"|format(average_anxiety) }}/10
+                        {{ "%.1f"|format(average_anxiety or 0) }}/10
                     </div>
 
                     <hr style="border:0;border-top:1px solid #e22a55;margin:8px 0">
@@ -120,7 +120,7 @@
                                 stroke-width="24"
                                 stroke-linecap="round"
                                 pathLength="100"
-                                stroke-dasharray="22 78"
+                                stroke-dasharray="0 100"
                                 transform="rotate(135 110 110)"
                             />
 
@@ -144,7 +144,7 @@
                                 y="126"
                                 text-anchor="middle"
                             >
-                                {{ average_bpm|round|int }}
+                                {{ (average_bpm or 0)|round|int }}
                             </text>
 
 
@@ -168,7 +168,7 @@
                                 y="177"
                                 text-anchor="middle"
                             >
-                                62
+                                0
                             </text>
 
 
@@ -180,7 +180,7 @@
                                 y="177"
                                 text-anchor="middle"
                             >
-                                {{ max_bpm|round|int }}
+                                {{ (max_bpm or 0)|round|int }}
                             </text>
 
                         </svg>
@@ -188,9 +188,15 @@
                     </div>
 
 
-                    <small>
-                        ↓0,7% comparado à semana anterior
-                    </small>
+                    {% if average_anxiety and previous_average_anxiety %}
+                        <small>
+                            Comparação com a semana anterior disponível.
+                        </small>
+                    {% else %}
+                        <small>
+                            Ainda não há dados suficientes para comparação.
+                        </small>
+                    {% endif %}
 
                 </section>
 
@@ -255,8 +261,6 @@
 
                 </section>
 
-
-
                 <!-- =========================
                      DETALHAMENTO DOS EPISÓDIOS
                 ========================== -->
@@ -297,7 +301,7 @@
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Horário mais frequente:
                             <b>
-                                {{ most_frequent_time }}
+                                {{ (average_duration or 0)|round|int }} min
                             </b>    
                         </li>
 
@@ -320,19 +324,19 @@
                         <li>
                             <img class="coracaoBola-icon" src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}" alt="">
                             FC média:
-                            <b>{{ average_bpm|round|int }} BPM</b>
+                            <b>{{ (average_bpm or 0)|round|int }} BPM</b>
                         </li>
 
                         <li>
                             <img class="coracaoBola-icon" src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}" alt="">
                             FC máxima:
-                            <b>{{ max_bpm|round|int }} BPM</b>
+                            <b>{{ (max_bpm or 0)|round|int }} BPM</b>
                         </li>
 
                         <li>
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Ansiedade percebida:
-                            <b>{{ "%.1f"|format(average_anxiety) }}/10</b>  
+                            <b>{{ "%.1f"|format(average_anxiety or 0) }}/10</b>
                         </li>
 
                     </ul>
@@ -359,7 +363,7 @@
                         <b>
                             <span>Média desta semana:</span>
                             <strong>
-                                {{ "%.1f"|format(average_anxiety) }}/10
+                                {{ "%.1f"|format(average_anxiety or 0) }}/10
                             </strong>
                         </b>
 
@@ -368,7 +372,7 @@
                         <b>
                             <span>Média anterior:</span>
                             <strong>
-                                {{ "%.1f"|format(previous_average_anxiety) }}/10
+                               {{ "%.1f"|format(previous_average_anxiety or 0) }}/10
                             </strong>
                         </b>
 
@@ -392,25 +396,31 @@
 
                         <div class="card">
 
+                        {% if tecnics %}
+
                             <ul class="simple-list techniques-list">
 
                                 {% for tecnic in tecnics %}
 
                                     <li>
-
                                         <img
                                             src="{{ url_for('static', filename='assets/' + tecnic.icon) }}"
                                             alt=""
                                         >
                                         {{ tecnic.name }}
-
                                     </li>
 
                                 {% endfor %}
 
                             </ul>
 
-                        </div>
+                        {% else %}
+
+                            <p>Nenhuma técnica utilizada.</p>
+
+                        {% endif %}
+
+                    </div>
                 
                     </section>
 
@@ -454,6 +464,18 @@
                                 Medicação prescrita
                             </label>
 
+                            {% if not accompaniment
+                                or (
+                                    not accompaniment.psychotherapy
+                                    and not accompaniment.consultation
+                                    and not accompaniment.medication
+                                )
+                            %}
+
+                                <p>Nenhum acompanhamento selecionado.</p>
+
+                            {% endif %}
+
                         </div>
                          <a
                             href="{{ url_for('onboarding_treatment_edit') }}"
@@ -468,7 +490,7 @@
                      GATILHOS REGISTRADOS
                 ========================== -->
 
-                <h2 class="section-title">
+                <!-- <h2 class="section-title">
                     Gatilhos registrados
                 </h2>
 
@@ -514,7 +536,7 @@
 
                     </table>
 
-                </section>
+                </section> -->
 
                 <!-- =========================
                      ÚLTIMOS EPISÓDIOS

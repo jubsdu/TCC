@@ -1,4 +1,73 @@
 document.addEventListener("DOMContentLoaded", function () {
+        const performanceGauge =
+        document.querySelector(
+            '[data-heart-rate-gauge]'
+        );
+
+    if (performanceGauge) {
+
+        const progress =
+            performanceGauge.querySelector(
+                ".gauge-progress"
+            );
+
+        const valueElement =
+            performanceGauge.querySelector(
+                ".gauge-value"
+            );
+
+        if (progress && valueElement) {
+
+            const currentBpm =
+                Number(
+                    valueElement.textContent.trim()
+                );
+
+            const minBpm = 60;
+            const maxBpm = 140;
+
+            let percentage =
+                ((currentBpm - minBpm) /
+                (maxBpm - minBpm)) * 100;
+
+            percentage =
+                Math.max(
+                    0,
+                    Math.min(100, percentage)
+                );
+
+            progress.setAttribute(
+                "stroke-dasharray",
+                `${percentage} ${100 - percentage}`
+            );
+        }
+    }
+    
+    const heartGauge = document.querySelector("[data-heart-rate-gauge]");
+
+    if (heartGauge) {
+        const progress = heartGauge.querySelector(".gauge-progress");
+        const valueElement = heartGauge.querySelector(".gauge-value");
+
+        const currentBpm = Number(valueElement.textContent.trim());
+
+        const minBpm = 60;
+        const maxBpm = 140;
+
+        // Calcula a porcentagem do BPM dentro da escala
+        let percentage =
+            ((currentBpm - minBpm) / (maxBpm - minBpm)) * 100;
+
+        // Impede que o arco passe dos limites
+        percentage = Math.max(0, Math.min(100, percentage));
+
+        // Atualiza o arco
+        progress.setAttribute(
+            "stroke-dasharray",
+            `${percentage} ${100 - percentage}`
+        );
+    }
+    
     // =========================
     // EXIBIR / OCULTAR SENHA
     // =========================
@@ -78,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================
 
     const reasonButtons = document.querySelectorAll(
-        '.choice-btn[data-choice]'
+        '.choice-btn[data-choice]:not(#treatmentForm .choice-btn[data-choice])'
     );
 
     const reasonNextButton =
@@ -141,42 +210,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     // =========================
-    // SELEÇÃO DAS OPÇÕES
-    // =========================
-
-    // Seleciona apenas opções que NÃO pertencem
-    // ao formulário de acompanhamento
-    const choiceButtons = document.querySelectorAll(
-        ".choice-btn[data-choice]:not(#treatmentForm .choice-btn[data-choice])"
-    );
-
-    choiceButtons.forEach(function (button) {
-
-        button.addEventListener("click", function () {
-
-            // Remove seleção das outras opções
-            choiceButtons.forEach(function (otherButton) {
-                otherButton.classList.remove("selected");
-            });
-
-            // Mantém visualmente selecionada
-            // a opção clicada
-            button.classList.add("selected");
-
-            // Esconde mensagem de erro
-            const message =
-                document.getElementById("choiceMessage");
-
-            if (message) {
-                message.classList.remove("show");
-            }
-
-        });
-
-    });
-
-
-    // =========================
     // ACOMPANHAMENTO
     // =========================
 
@@ -190,94 +223,89 @@ document.addEventListener("DOMContentLoaded", function () {
                 ".choice-btn[data-choice]"
             );
 
-        const message =
-            document.getElementById("choiceMessage");
-
         const treatmentInput =
             document.getElementById("treatmentInput");
 
-        const editMode =
-            treatmentForm.dataset.editMode === "true";
+        const message =
+            document.getElementById("choiceMessage");
 
 
         // =========================
-        // SELECIONAR OPÇÃO
+        // CLICAR NAS OPÇÕES
         // =========================
 
         treatmentButtons.forEach(function (button) {
 
-            button.addEventListener("click", function () {
+            button.addEventListener("click", function (event) {
 
-                const choice = button.dataset.choice;
+                event.preventDefault();
+
+                const choice =
+                    button.dataset.choice;
 
 
-                // =========================
-                // NENHUM ACOMPANHAMENTO
-                // =========================
+                // -------------------------
+                // NENHUM
+                // -------------------------
 
                 if (choice === "nenhum") {
 
-                    // Remove todas as outras seleções
+                    // Remove seleção de todas
                     treatmentButtons.forEach(function (otherButton) {
+
                         otherButton.classList.remove("selected");
+
                     });
 
-                    // Mantém "Nenhum" selecionado visualmente
+                    // Seleciona "Nenhum"
                     button.classList.add("selected");
 
                 }
 
 
-                // =========================
-                // OUTRA OPÇÃO
-                // =========================
+                // -------------------------
+                // OUTRAS OPÇÕES
+                // -------------------------
 
                 else {
 
-                    // No cadastro inicial, apenas uma opção
-                    // pode ficar selecionada
-                    if (!editMode) {
+                    // Se clicar em qualquer acompanhamento,
+                    // "Nenhum" é desmarcado.
 
-                        treatmentButtons.forEach(function (otherButton) {
-                            otherButton.classList.remove("selected");
-                        });
-
-                    }
-
-                    // Remove "Nenhum"
                     const nenhumButton =
                         treatmentForm.querySelector(
                             '[data-choice="nenhum"]'
                         );
 
                     if (nenhumButton) {
-                        nenhumButton.classList.remove("selected");
+
+                        nenhumButton.classList.remove(
+                            "selected"
+                        );
+
                     }
 
-                    // Mantém a opção clicada visualmente selecionada
-                    button.classList.add("selected");
+
+                    // IMPORTANTE:
+                    // NÃO remove as outras opções.
+
+                    // Isso permite:
+
+                    // ☑ Psicoterapia
+                    // ☑ Consulta médica
+                    // ☑ Medicação
+
+                    button.classList.toggle("selected");
 
                 }
 
 
-                // =========================
-                // ATUALIZA INPUT
-                // =========================
-
-                if (treatmentInput) {
-
-                    treatmentInput.value =
-                        button.dataset.choice;
-
-                }
-
-
-                // =========================
-                // ESCONDE MENSAGEM
-                // =========================
+                // Esconde mensagem de erro
 
                 if (message) {
+
                     message.classList.remove("show");
+
                 }
 
             });
@@ -286,96 +314,81 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         // =========================
-        // ENVIAR FORMULÁRIO
+        // CLICAR EM "PRÓXIMO"
         // =========================
 
-        treatmentForm.addEventListener("submit", function (event) {
+        treatmentForm.addEventListener(
+            "submit",
+            function (event) {
 
-            const selectedButtons =
-                treatmentForm.querySelectorAll(
-                    ".choice-btn.selected"
+                const selectedButtons =
+                    treatmentForm.querySelectorAll(
+                        ".choice-btn.selected"
+                    );
+
+
+                // -------------------------
+                // NENHUMA SELEÇÃO
+                // -------------------------
+
+                if (selectedButtons.length === 0) {
+
+                    event.preventDefault();
+
+                    if (message) {
+
+                        message.classList.add("show");
+
+                    }
+
+                    return;
+
+                }
+
+
+                // -------------------------
+                // REMOVE INPUTS ANTIGOS
+                // -------------------------
+
+                treatmentForm
+                    .querySelectorAll(
+                        'input[name="treatment"]'
+                    )
+                    .forEach(function (input) {
+
+                        input.remove();
+
+                    });
+
+
+                // -------------------------
+                // CRIA UM INPUT PARA
+                // CADA OPÇÃO SELECIONADA
+                // -------------------------
+
+                selectedButtons.forEach(
+                    function (button) {
+
+                        const input =
+                            document.createElement("input");
+
+                        input.type = "hidden";
+
+                        input.name = "treatment";
+
+                        input.value =
+                            button.dataset.choice;
+
+                        treatmentForm.appendChild(input);
+
+                    }
                 );
 
 
-            // Nenhuma opção selecionada
-            if (selectedButtons.length === 0) {
-
-                event.preventDefault();
-
-                if (message) {
-                    message.classList.add("show");
-                }
-
-                return;
+                // O formulário continua normalmente.
+                // O navegador envia todos os inputs.
             }
-
-
-            // =========================
-            // LIMPAR INPUTS ANTIGOS
-            // =========================
-
-            treatmentForm
-                .querySelectorAll('input[name="treatment"]')
-                .forEach(function (input) {
-
-                    if (input.id !== "treatmentInput") {
-                        input.remove();
-                    }
-
-                });
-
-
-            // =========================
-            // PRIMEIRA OPÇÃO
-            // =========================
-
-            if (treatmentInput) {
-
-                treatmentInput.value =
-                    selectedButtons[0].dataset.choice;
-
-            }
-
-
-            // =========================
-            // OUTRAS OPÇÕES
-            // =========================
-
-            for (let i = 1; i < selectedButtons.length; i++) {
-
-                const input =
-                    document.createElement("input");
-
-                input.type = "hidden";
-                input.name = "treatment";
-                input.value =
-                    selectedButtons[i].dataset.choice;
-
-                treatmentForm.appendChild(input);
-
-            }
-
-        });
-
-
-        // =========================
-        // RECUPERAR SELEÇÕES
-        // =========================
-
-        const initiallySelected =
-            treatmentForm.querySelectorAll(
-                ".choice-btn.selected"
-            );
-
-        if (
-            initiallySelected.length > 0 &&
-            treatmentInput
-        ) {
-
-            treatmentInput.value =
-                initiallySelected[0].dataset.choice;
-
-        }
+        );
 
     }
 

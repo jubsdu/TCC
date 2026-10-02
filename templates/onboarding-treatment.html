@@ -46,6 +46,7 @@
                             Psicoterapia
                         </button>
 
+
                         <button
                             type="button"
                             class="choice-btn
@@ -57,6 +58,7 @@
                         >
                             Consulta médica
                         </button>
+
 
                         <button
                             type="button"
@@ -70,13 +72,15 @@
                             Medicação prescrita
                         </button>
 
+
                         <button
                             type="button"
                             class="choice-btn
                                 {% if edit_mode and accompaniment
                                     and not accompaniment.psychotherapy
                                     and not accompaniment.consultation
-                                    and not accompaniment.medication %}
+                                    and not accompaniment.medication
+                                %}
                                     selected
                                 {% endif %}
                             "
