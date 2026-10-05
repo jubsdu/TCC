@@ -4,29 +4,26 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================
 
     const reasonButtons = document.querySelectorAll(
-        '.choice-btn[data-choice]'
+        ".choice-btn[data-choice]"
     );
 
     const reasonNextButton =
         document.getElementById("reasonNextButton");
 
     const reasonMessage =
-
         document.getElementById("choiceMessage");
+
 
     reasonButtons.forEach(function (button) {
 
         button.addEventListener("click", function () {
 
-            // Remove seleção anterior
             reasonButtons.forEach(function (otherButton) {
                 otherButton.classList.remove("selected");
             });
 
-            // Seleciona o botão clicado
             button.classList.add("selected");
 
-            // Esconde mensagem
             if (reasonMessage) {
                 reasonMessage.classList.remove("show");
             }
@@ -41,10 +38,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const selectedButton =
                 document.querySelector(
-                    '.choice-btn[data-choice].selected'
+                    ".choice-btn[data-choice].selected"
                 );
 
-            // Não selecionou nada
             if (!selectedButton) {
 
                 if (reasonMessage) {
@@ -54,7 +50,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // Vai para a próxima página
             const nextPage =
                 reasonNextButton.dataset.next;
 
@@ -65,38 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     }
-    
-    // =========================
-    // SELEÇÃO DAS OPÇÕES
-    // =========================
-
-    const choiceButtons = document.querySelectorAll(
-        ".choice-btn[data-choice]"
-    );
-
-    choiceButtons.forEach(function (button) {
-
-        button.addEventListener("click", function () {
-
-            // Remove seleção das outras opções
-            choiceButtons.forEach(function (otherButton) {
-                otherButton.classList.remove("selected");
-            });
-
-            // Seleciona a opção clicada
-            button.classList.add("selected");
-
-            // Esconde mensagem de erro
-            const message =
-                document.getElementById("choiceMessage");
-
-            if (message) {
-                message.classList.remove("show");
-            }
-
-        });
-
-    });
 
     // =========================
     // ACOMPANHAMENTO

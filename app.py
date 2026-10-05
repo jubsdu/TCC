@@ -80,10 +80,6 @@ def register():
         ).first()
 
         if existing_user:
-
-            return "Este email já está cadastrado."
-
-        # Cria usuário
             return "Este email já está cadastrado.", 400
 
         # Cria o usuário
@@ -115,9 +111,6 @@ def register():
 
         session['user_id'] = user.id
 
-        # Guarda o ID do novo usuário na sessão
-        session['user_id'] = user.id
-
         print("USUÁRIO CRIADO - ID:", user.id)
 
         # ==========================================
@@ -135,7 +128,6 @@ def register():
             )
 
             if not accompaniment:
-
                 accompaniment = Accompaniment(
                     user_id=user.id,
                     psychotherapy=False,
@@ -144,7 +136,6 @@ def register():
                 )
 
                 db_session.add(accompaniment)
-
 
             if "nenhum" in treatments:
 
@@ -165,7 +156,6 @@ def register():
                 accompaniment.medication = (
                     "medication" in treatments
                 )
-
 
             db_session.commit()
 
@@ -190,6 +180,12 @@ def register():
             )
 
             session.pop('treatments', None)
+
+        # Vai para a página inicial depois do cadastro
+        return redirect(url_for('home'))
+
+    # Se acessar /register pelo navegador (GET)
+    return render_template('register.html')
 
 def criar_dados_iniciais(user_id):
     print(f"CRIANDO DADOS INICIAIS PARA USUÁRIO {user_id}")
