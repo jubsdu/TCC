@@ -93,10 +93,10 @@
                                     transform="rotate(135 110 110)"
                                 />
 
-
                                 <!-- Arco dinâmico -->
 
                                 <circle
+                                    id="performanceGaugeProgress"
                                     class="gauge-progress"
                                     cx="110"
                                     cy="110"
@@ -110,7 +110,6 @@
                                     transform="rotate(135 110 110)"
                                 />
 
-
                                 <!-- Cobrinha dinâmica -->
 
                                 <path
@@ -121,7 +120,6 @@
                                     stroke-width="3"
                                 />
 
-
                                 <!-- Valor atual -->
 
                                 <text
@@ -129,6 +127,7 @@
                                     x="110"
                                     y="126"
                                     text-anchor="middle"
+                                    id="performanceBpm"
                                 >
                                     {{ (average_bpm or 0)|round|int }}
                                 </text>
@@ -145,7 +144,6 @@
                                     BPM
                                 </text>
 
-
                                 <!-- Valor mínimo -->
 
                                 <text
@@ -153,10 +151,10 @@
                                     x="78"
                                     y="177"
                                     text-anchor="middle"
+                                    id="performanceMinBpm"
                                 >
-                                    0
+                                    62
                                 </text>
-
 
                                 <!-- Valor máximo -->
 
@@ -165,8 +163,9 @@
                                     x="142"
                                     y="177"
                                     text-anchor="middle"
+                                    id="performanceMaxBpm"
                                 >
-                                    {{ (max_bpm or 0)|round|int }}
+                                    124
                                 </text>
 
                             </svg>
@@ -174,8 +173,6 @@
                         </div>
 
                     </section>
-
-
 
                     <!-- RESUMO SEMANAL -->
 
@@ -188,7 +185,11 @@
                             <tr>
                                 <td>BC médio</td>
                                 <td>
-                                    {{ activity.average_rate if activity else 0 }} BPM
+                                    {% if bpm_semana %}
+                                        {{ bpm_semana|round|int }} BPM
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -206,7 +207,11 @@
                             <tr>
                                 <td>Intensidade</td>
                                 <td>
-                                    {{ activity.intensity if activity else 0 }}
+                                    {% if activity %}
+                                        {{ activity.intensity }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -237,8 +242,6 @@
                     </section>
 
                 </div>
-
-
 
                 <!-- =========================
                      ZONAS CARDÍACAS
@@ -385,7 +388,6 @@
 
                             </li>
 
-
                             <li>
 
                                 <img
@@ -459,7 +461,11 @@
                             </td>
 
                             <td>
-                                {{ activity.average_rate if activity else 0 }} BPM
+                                {% if bpm_semana %}
+                                    {{ bpm_semana|round|int }} BPM
+                                {% else %}
+                                    -
+                                {% endif %}
                             </td>
 
                             <td>
@@ -535,8 +541,6 @@
                     </table>
 
                 </section>
-
-
 
                 <!-- =========================
                      METAS DA SEMANA
@@ -696,7 +700,142 @@
 
     </div>
 
-
+    <script>
+        async function atualizarPerformance() {
+        
+            try {
+        
+                const resposta = await fetch('/api/performance-data');
+        
+                if (!resposta.ok) {
+                    console.error('Erro ao buscar dados da performance.');
+                    return;
+                }
+        
+                const dados = await resposta.json();
+        
+                const bpmElemento = document.getElementById(
+                    'performanceBpm'
+                );
+        
+                const minElemento = document.getElementById(
+                    'performanceMinBpm'
+                );
+        
+                const maxElemento = document.getElementById(
+                    'performanceMaxBpm'
+                );
+        
+                const gauge = document.getElementById(
+                    'performanceGaugeProgress'
+                );
+        
+                if (!bpmElemento || !minElemento || !maxElemento || !gauge) {
+                    return;
+                }
+        
+                if (!dados.tem_dados) {
+        
+                    bpmElemento.textContent = '0';
+                    minElemento.textContent = '0';
+                    maxElemento.textContent = '0';
+        
+                    gauge.style.strokeDasharray = '0 100';
+        
+                    return;
+                }
+        
+                const bpm = Number(dados.average_bpm);
+        
+                bpmElemento.textContent = Math.round(bpm);
+        
+                minElemento.textContent = Math.round(
+                    Number(dados.min_bpm)
+                );
+        
+                maxElemento.textContent = Math.round(
+                    Number(dados.max_bpm)
+                );
+        
+                /*
+                 * Faixa visual utilizada pelo gauge.
+                 *
+                 * Não significa uma classificação médica.
+                 * É apenas a escala visual do componente.
+                 */
+        
+                const bpmMin = 60;
+                const bpmMax = 160;
+        
+                let porcentagem =
+                    ((bpm - bpmMin) / (bpmMax - bpmMin)) * 100;
+        
+                porcentagem = Math.max(
+                    0,
+                    Math.min(100, porcentagem)
+                );
+        
+                gauge.style.strokeDasharray =
+                    `${porcentagem} 100`;
+        
+            } catch (erro) {
+        
+                console.error(
+                    'Erro ao atualizar Performance:',
+                    erro
+                );
+        
+            }
+        }
+        
+        
+        // Atualiza imediatamente
+        atualizarPerformance();
+        
+        
+        // Atualiza periodicamente
+        setInterval(
+            atualizarPerformance,
+            3000
+        );
+    </script>
+    <script>
+        function atualizarGaugePerformance() {
+        
+            const bpm = Number(
+                "{{ average_bpm or 0 }}"
+            );
+        
+            const gauge = document.getElementById(
+                "performanceGaugeProgress"
+            );
+        
+            if (!gauge) {
+                return;
+            }
+        
+            if (bpm <= 0) {
+                gauge.style.strokeDasharray = "0 100";
+                return;
+            }
+        
+            const bpmMin = 60;
+            const bpmMax = 160;
+        
+            let porcentagem =
+                ((bpm - bpmMin) / (bpmMax - bpmMin)) * 100;
+        
+            porcentagem = Math.max(
+                0,
+                Math.min(100, porcentagem)
+            );
+        
+            gauge.style.strokeDasharray =
+                `${porcentagem} 100`;
+        }
+        
+        atualizarGaugePerformance();
+    </script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
 </body>

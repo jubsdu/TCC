@@ -96,10 +96,10 @@
                                 transform="rotate(135 110 110)"
                             />
 
-
                             <!-- Arco dinâmico -->
 
                             <circle
+                                id="gaugeProgress"
                                 class="gauge-progress"
                                 cx="110"
                                 cy="110"
@@ -113,7 +113,6 @@
                                 transform="rotate(135 110 110)"
                             />
 
-
                             <!-- Cobrinha dinâmica -->
 
                             <path
@@ -124,18 +123,17 @@
                                 stroke-width="3"
                             />
 
-
                             <!-- Valor atual -->
 
                             <text
+                                id="bpmValue"
                                 class="gauge-value"
                                 x="110"
                                 y="126"
                                 text-anchor="middle"
                             >
-                                {{ (average_bpm or 0)|round|int }}
+                                {{ ((ia_data.bpm if ia_data else current_bpm) or 0)|round|int }}
                             </text>
-
 
                             <!-- Unidade -->
 
@@ -148,7 +146,6 @@
                                 BPM
                             </text>
 
-
                             <!-- Valor mínimo -->
 
                             <text
@@ -157,7 +154,7 @@
                                 y="177"
                                 text-anchor="middle"
                             >
-                                0
+                                62
                             </text>
 
 
@@ -169,12 +166,233 @@
                                 y="177"
                                 text-anchor="middle"
                             >
-                                {{ (max_bpm or 0)|round|int }}
+                                124
                             </text>
 
                         </svg>
                     </div>
                 </section>
+
+                <!-- ================================= -->
+                <!-- DADOS DA IA -->
+                <!-- ================================= -->
+
+                <h2 class="section-title">
+                    Análise inteligente
+                </h2>
+
+
+                {% if ia_data %}
+
+                    <section class="card ia-card">
+
+                        <div
+                            style="
+                                display:flex;
+                                align-items:center;
+                                gap:10px;
+                                margin-bottom:15px;
+                            "
+                        >
+
+                            <i
+                                class="ri-ai-generate-2"
+                                style="
+                                    font-size:26px;
+                                    color:#ad0037;
+                                "
+                            ></i>
+
+                            <h2
+                                style="
+                                    color:#ad0037;
+                                    margin:0;
+                                "
+                            >
+                                Dados da IA
+                            </h2>
+
+                        </div>
+                        
+                    <!-- DADOS PRINCIPAIS -->
+
+                        <div
+                            style="
+                                display:grid;
+                                grid-template-columns:repeat(2, 1fr);
+                                gap:12px;
+                            "
+                        >
+
+                            <!-- BPM -->
+                            <div class="ia-data-item">
+
+                                <small>
+                                    BPM atual
+                                </small>
+
+                                <strong>
+                                    {{ ia_data.bpm|round|int if ia_data.bpm is not none else '--' }}
+                                    BPM
+                                </strong>
+
+                            </div>
+
+
+                            <!-- BPM MÉDIO -->
+                            <div class="ia-data-item">
+
+                                <small>
+                                    BPM médio
+                                </small>
+
+                                <strong>
+                                    {{ ia_data.bpm_medio|round|int if ia_data.bpm_medio is not none else '--' }}
+                                    BPM
+                                </strong>
+
+                            </div>
+
+
+                            <!-- RMSSD -->
+                            <div class="ia-data-item">
+
+                                <small>
+                                    RMSSD
+                                </small>
+
+                                <strong>
+                                    {% if ia_data.rmssd is not none %}
+                                        {{ ia_data.rmssd|round(2) }} ms
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </strong>
+
+                            </div>
+
+
+                            <!-- PROBABILIDADE -->
+                            <div class="ia-data-item">
+
+                                <small>
+                                    Probabilidade
+                                </small>
+
+                                <strong>
+
+                                    {% if ia_data.probabilidade_ia is not none %}
+
+                                        {{ (ia_data.probabilidade_ia * 100)|round(1) }}%
+
+                                    {% else %}
+
+                                        --
+
+                                    {% endif %}
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- RESULTADO DA IA -->
+
+                        <div
+                            style="
+                                margin-top:15px;
+                                padding:12px;
+                                border-radius:10px;
+                                background:#fff0f4;
+                            "
+                        >
+
+                            <small>
+                                Resultado da análise
+                            </small>
+
+                            <div
+                                style="
+                                    margin-top:5px;
+                                    font-weight:bold;
+                                    color:#ad0037;
+                                "
+                            >
+
+                                {% if ia_data.resultado_ia is not none %}
+
+                                    {% if ia_data.resultado_ia == 1 %}
+
+                                        Análise positiva
+
+                                    {% else %}
+
+                                        Análise sem indicação
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    Aguardando análise da IA
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DATA DA MEDIÇÃO -->
+
+                        {% if ia_data.date_time %}
+
+                            <small
+                                style="
+                                    display:block;
+                                    margin-top:12px;
+                                    color:#777;
+                                "
+                            >
+
+                                Última medição:
+                                {{ ia_data.date_time.strftime('%d/%m/%Y %H:%M') }}
+
+                            </small>
+
+                        {% endif %}
+
+                    </section>
+
+                {% else %}
+
+                    <!-- ESTADO VAZIO -->
+
+                    <section class="card recent empty-state">
+
+                        <div class="empty-state-icon">
+                            <i class="ri-ai-generate-2"></i>
+                        </div>
+
+                        <div class="empty-state-content">
+
+                            <strong>
+                                Nenhuma análise disponível
+                            </strong>
+
+                            <br>
+
+                            <span>
+                                Ainda não existem dados suficientes
+                                para a análise da IA.
+                            </span>
+
+                        </div>
+
+                    </section>
+
+                {% endif %}
 
 
                 <!-- CATEGORIAS -->
@@ -311,7 +529,13 @@
                             </div>
 
                             <div class="mean">
-                                ♡ Média: {{ checkup.average_bpm|int }} BPM
+                                ♡ Atual:
+
+                                {% if checkup.current_bpm is not none %}
+                                    {{ checkup.current_bpm|round|int }} BPM
+                                {% else %}
+                                    Sem dados
+                                {% endif %}
                             </div>
 
                             <button
@@ -335,6 +559,7 @@
 
                         <div class="empty-state-content">
                             <strong>Nenhum registro</strong><br>
+
                             <span>
                                 Você ainda não possui registros recentes.
                             </span>
@@ -344,7 +569,6 @@
 
                 {% endif %}
             </main>
-
 
             <!-- MENU LATERAL -->
             <div class="nav-drawer">
@@ -374,6 +598,104 @@
     <!-- JAVASCRIPT -->
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
+    <script>
+        async function atualizarBPM() {
+        
+            try {
+        
+                const resposta = await fetch(
+                    "/api/ia-data?user_id={{ user.id }}"
+                );
+        
+                if (!resposta.ok) {
+                    return;
+                }
+        
+                const dados = await resposta.json();
+        
+                if (!dados.length) {
+                    return;
+                }
+        
+                const ultimo = dados[0];
+        
+                if (
+                    ultimo.bpm === null ||
+                    ultimo.bpm === undefined
+                ) {
+                    return;
+                }
+        
+                const bpm = Number(ultimo.bpm);
+        
+                // =========================
+                // ATUALIZA O NÚMERO
+                // =========================
+        
+                const elementoBpm =
+                    document.getElementById("bpmValue");
+        
+                if (elementoBpm) {
+                    elementoBpm.textContent =
+                        Math.round(bpm);
+                }
+        
+        
+                // =========================
+                // ATUALIZA O ARCO
+                // =========================
+        
+                const arco =
+                    document.getElementById("gaugeProgress");
+        
+                if (arco) {
+        
+                    /*
+                     * Define a faixa visual do gauge.
+                     *
+                     * 60 BPM = 0%
+                     * 160 BPM = 100%
+                     */
+        
+                    const bpmMin = 60;
+                    const bpmMax = 160;
+        
+                    let porcentagem =
+                        ((bpm - bpmMin) /
+                        (bpmMax - bpmMin)) * 100;
+        
+                    // Impede passar de 0%
+                    // ou de 100%
+                    porcentagem = Math.max(
+                        0,
+                        Math.min(100, porcentagem)
+                    );
+        
+                    arco.style.strokeDasharray =
+                        `${porcentagem} 100`;
+                }
+        
+            } catch (erro) {
+        
+                console.error(
+                    "Erro ao atualizar BPM:",
+                    erro
+                );
+        
+            }
+        }
+        
+        
+        // Atualiza assim que a página abre
+        atualizarBPM();
+        
+        
+        // Verifica novos dados a cada 1 segundo
+        setInterval(
+            atualizarBPM,
+            1000
+        );
+    </script>
 </body>
 
 </html>
