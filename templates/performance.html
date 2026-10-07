@@ -93,10 +93,10 @@
                                     transform="rotate(135 110 110)"
                                 />
 
-
                                 <!-- Arco dinâmico -->
 
                                 <circle
+                                    id="gaugeProgress"
                                     class="gauge-progress"
                                     cx="110"
                                     cy="110"
@@ -110,7 +110,6 @@
                                     transform="rotate(135 110 110)"
                                 />
 
-
                                 <!-- Cobrinha dinâmica -->
 
                                 <path
@@ -121,16 +120,16 @@
                                     stroke-width="3"
                                 />
 
-
                                 <!-- Valor atual -->
 
                                 <text
+                                    id="bpmValue"
                                     class="gauge-value"
                                     x="110"
                                     y="126"
                                     text-anchor="middle"
                                 >
-                                    {{ (average_bpm or 0)|round|int }}
+                                    {{ ((ia_data.bpm if ia_data else current_bpm) or 0)|round|int }}
                                 </text>
 
 
@@ -145,7 +144,6 @@
                                     BPM
                                 </text>
 
-
                                 <!-- Valor mínimo -->
 
                                 <text
@@ -153,10 +151,10 @@
                                     x="78"
                                     y="177"
                                     text-anchor="middle"
+                                    id="performanceMinBpm"
                                 >
-                                    0
+                                    60
                                 </text>
-
 
                                 <!-- Valor máximo -->
 
@@ -165,8 +163,9 @@
                                     x="142"
                                     y="177"
                                     text-anchor="middle"
+                                    id="performanceMaxBpm"
                                 >
-                                    {{ (max_bpm or 0)|round|int }}
+                                    160
                                 </text>
 
                             </svg>
@@ -175,7 +174,108 @@
 
                     </section>
 
+                    <!-- =========================
+                    ANÁLISE DA IA
+                    ========================== -->
 
+                    
+                    <section class="card ia-performance-card">
+                        <h2 class="section-title" style="color: #98002D;">
+                            Análise inteligente
+                        </h2>
+
+                        <div class="ia-performance-grid">
+
+                            <div class="ia-metric">
+
+                                <span class="ia-label">
+                                    BPM atual
+                                </span>
+
+                                <strong id="iaBpm">
+                                    0
+                                </strong>
+
+                                <small>
+                                    BPM
+                                </small>
+
+                            </div>
+
+
+                            <div class="ia-metric">
+
+                                <span class="ia-label">
+                                    BPM médio
+                                </span>
+
+                                <strong id="iaBpmMedio">
+                                    0
+                                </strong>
+
+                                <small>
+                                    BPM
+                                </small>
+
+                            </div>
+
+
+                            <div class="ia-metric">
+
+                                <span class="ia-label">
+                                    RMSSD
+                                </span>
+
+                                <strong id="iaRmssd">
+                                    0
+                                </strong>
+
+                                <small>
+                                    ms
+                                </small>
+
+                            </div>
+
+
+                            <div class="ia-metric">
+
+                                <span class="ia-label">
+                                    Probabilidade
+                                </span>
+
+                                <strong id="iaProbabilidade">
+                                    0%
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="ia-result">
+
+                            <span>
+                                Resultado da análise
+                            </span>
+
+                            <strong id="iaResultado">
+                                Aguardando dados...
+                            </strong>
+
+                        </div>
+
+
+                        <div class="ia-update">
+
+                            Última atualização:
+
+                            <span id="iaHorario">
+                                —
+                            </span>
+
+                        </div>
+
+                    </section>
 
                     <!-- RESUMO SEMANAL -->
 
@@ -186,9 +286,13 @@
                         <table class="summary-table">
 
                             <tr>
-                                <td>BC médio</td>
+                                <td>FC médio</td>
                                 <td>
-                                    {{ activity.average_rate if activity else 0 }} BPM
+                                    {% if bpm_semana %}
+                                        {{ bpm_semana|round|int }} BPM
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -206,7 +310,11 @@
                             <tr>
                                 <td>Intensidade</td>
                                 <td>
-                                    {{ activity.intensity if activity else 0 }}
+                                    {% if activity %}
+                                        {{ activity.intensity }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -237,8 +345,6 @@
                     </section>
 
                 </div>
-
-
 
                 <!-- =========================
                      ZONAS CARDÍACAS
@@ -346,8 +452,6 @@
 
                 </section>
 
-
-
                 <!-- =========================
                      RECUPERAÇÃO
                 ========================== -->
@@ -384,7 +488,6 @@
                                 </b>
 
                             </li>
-
 
                             <li>
 
@@ -459,7 +562,11 @@
                             </td>
 
                             <td>
-                                {{ activity.average_rate if activity else 0 }} BPM
+                                {% if bpm_semana %}
+                                    {{ bpm_semana|round|int }} BPM
+                                {% else %}
+                                    -
+                                {% endif %}
                             </td>
 
                             <td>
@@ -535,8 +642,6 @@
                     </table>
 
                 </section>
-
-
 
                 <!-- =========================
                      METAS DA SEMANA
@@ -672,8 +777,6 @@
 
             </main>
 
-
-
             <!-- =========================
                  MENU LATERAL
             ========================== -->
@@ -696,7 +799,246 @@
 
     </div>
 
+    <script>
+        async function atualizarPerformance() {
 
+            try {
+
+                const resposta = await fetch('/api/performance-data');
+
+                if (!resposta.ok) {
+                    console.error(
+                        'Erro ao buscar dados:',
+                        resposta.status
+                    );
+                    return;
+                }
+
+                const dados = await resposta.json();
+
+                console.log('DADOS DA PERFORMANCE:', dados);
+
+                // ==========================================
+                // ELEMENTOS DO GAUGE
+                // ==========================================
+
+                const bpmElement =
+                    document.getElementById('bpmValue');
+
+                const minElement =
+                    document.getElementById('performanceMinBpm');
+
+                const maxElement =
+                    document.getElementById('performanceMaxBpm');
+
+                const gaugeProgress =
+                    document.getElementById('gaugeProgress');
+
+                // ==========================================
+                // ELEMENTOS DA IA
+                // ==========================================
+
+                const iaBpm =
+                    document.getElementById('iaBpm');
+
+                const iaBpmMedio =
+                    document.getElementById('iaBpmMedio');
+
+                const iaRmssd =
+                    document.getElementById('iaRmssd');
+
+                const iaProbabilidade =
+                    document.getElementById('iaProbabilidade');
+
+                const iaResultado =
+                    document.getElementById('iaResultado');
+
+                const iaHorario =
+                    document.getElementById('iaHorario');
+
+
+                // ==========================================
+                // SEM DADOS
+                // ==========================================
+
+                if (!dados.tem_dados) {
+
+                    if (bpmElement)
+                        bpmElement.textContent = '0';
+
+                    if (minElement)
+                        minElement.textContent = '0';
+
+                    if (maxElement)
+                        maxElement.textContent = '0';
+
+                    if (iaBpm)
+                        iaBpm.textContent = '0';
+
+                    if (iaBpmMedio)
+                        iaBpmMedio.textContent = '0';
+
+                    if (iaRmssd)
+                        iaRmssd.textContent = '0';
+
+                    if (iaProbabilidade)
+                        iaProbabilidade.textContent = '0%';
+
+                    if (iaResultado)
+                        iaResultado.textContent =
+                            'Aguardando dados...';
+
+                    if (iaHorario)
+                        iaHorario.textContent = '—';
+
+                    if (gaugeProgress)
+                        gaugeProgress.style.strokeDasharray =
+                            '0 100';
+
+                    return;
+                }
+
+                // ==========================================
+                // VALORES
+                // ==========================================
+
+                const bpm =
+                    Number(dados.bpm || 0);
+
+                const bpmMedio =
+                    Number(dados.average_bpm || 0);
+
+                const rmssd =
+                    Number(dados.rmssd || 0);
+
+                const probabilidade =
+                    Number(dados.probabilidade_ia || 0);
+
+
+                // ==========================================
+                // GAUGE
+                // ==========================================
+
+                if (bpmElement) {
+
+                    bpmElement.textContent =
+                        Math.round(bpm);
+
+                }
+
+                if (gaugeProgress) {
+
+                    /*
+                    * 60 BPM = 0%
+                    * 160 BPM = 100%
+                    */
+
+                    const bpmMin = 60;
+                    const bpmMax = 160;
+
+                    let porcentagem =
+                        ((bpm - bpmMin) /
+                        (bpmMax - bpmMin)) * 100;
+
+                    porcentagem = Math.max(
+                        0,
+                        Math.min(100, porcentagem)
+                    );
+
+                    gaugeProgress.style.strokeDasharray =
+                        `${porcentagem} 100`;
+                }
+
+                // ==========================================
+                // MÉTRICAS DA IA
+                // ==========================================
+
+                if (iaBpm) {
+
+                    iaBpm.textContent =
+                        Math.round(bpm);
+
+                }
+
+                if (iaBpmMedio) {
+
+                    iaBpmMedio.textContent =
+                        Math.round(bpmMedio);
+
+                }
+
+                if (iaRmssd) {
+
+                    iaRmssd.textContent =
+                        rmssd.toFixed(2);
+
+                }
+
+                if (iaProbabilidade) {
+
+                    iaProbabilidade.textContent =
+                        `${(probabilidade * 100).toFixed(1)}%`;
+
+                }
+
+                // ==========================================
+                // RESULTADO DA IA
+                // ==========================================
+
+                if (iaResultado) {
+
+                    if (dados.resultado_ia === null) {
+
+                        iaResultado.textContent =
+                            'Aguardando dados...';
+
+                    } else if (dados.resultado_ia === 1) {
+
+                        iaResultado.textContent =
+                            'Análise positiva';
+
+                    } else {
+
+                        iaResultado.textContent =
+                            'Análise sem indicação';
+
+                    }
+
+                }
+
+                // ==========================================
+                // DATA/HORA
+                // ==========================================
+
+                if (iaHorario && dados.date_time) {
+
+                    const data =
+                        new Date(dados.date_time);
+
+                    iaHorario.textContent =
+                        data.toLocaleString('pt-BR');
+
+                }
+
+            } catch (erro) {
+
+                console.error(
+                    'Erro ao atualizar performance:',
+                    erro
+                );
+
+            }
+        }
+
+        // Atualiza quando a página abre
+        atualizarPerformance();
+
+        // Atualiza a cada 3 segundos
+        setInterval(
+            atualizarPerformance,
+            3000
+        );
+    </script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
 </body>

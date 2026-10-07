@@ -99,6 +99,7 @@
                             <!-- Arco dinâmico -->
 
                             <circle
+                                id="gaugeProgress"
                                 class="gauge-progress"
                                 cx="110"
                                 cy="110"
@@ -125,12 +126,13 @@
                             <!-- Valor atual -->
 
                             <text
+                                id="bpmValue"
                                 class="gauge-value"
                                 x="110"
                                 y="126"
                                 text-anchor="middle"
                             >
-                                 {{ ((ia_data.bpm_medio if ia_data else current_bpm) or 0)|round|int }}
+                                {{ ((ia_data.bpm if ia_data else current_bpm) or 0)|round|int }}
                             </text>
 
                             <!-- Unidade -->
@@ -152,7 +154,7 @@
                                 y="177"
                                 text-anchor="middle"
                             >
-                                0
+                                60
                             </text>
 
 
@@ -164,7 +166,7 @@
                                 y="177"
                                 text-anchor="middle"
                             >
-                                {{ (max_bpm or 0)|round|int }}
+                                160
                             </text>
 
                         </svg>
@@ -211,6 +213,7 @@
                             </h2>
 
                         </div>
+                        
                     <!-- DADOS PRINCIPAIS -->
 
                         <div
@@ -526,7 +529,13 @@
                             </div>
 
                             <div class="mean">
-                                ♡ Média: {{ checkup.current_bpm|int }} BPM
+                                ♡ Atual:
+
+                                {% if checkup.current_bpm is not none %}
+                                    {{ checkup.current_bpm|round|int }} BPM
+                                {% else %}
+                                    Sem dados
+                                {% endif %}
                             </div>
 
                             <button
@@ -550,6 +559,7 @@
 
                         <div class="empty-state-content">
                             <strong>Nenhum registro</strong><br>
+
                             <span>
                                 Você ainda não possui registros recentes.
                             </span>
@@ -559,7 +569,6 @@
 
                 {% endif %}
             </main>
-
 
             <!-- MENU LATERAL -->
             <div class="nav-drawer">
@@ -589,6 +598,103 @@
     <!-- JAVASCRIPT -->
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
+    <script>
+        async function atualizarBPM() {
+        
+            try {
+        
+                const resposta = await fetch(
+                    "/api/ia-data?user_id={{ user.id }}"
+                );
+        
+                if (!resposta.ok) {
+                    return;
+                }
+        
+                const dados = await resposta.json();
+        
+                if (!dados.length) {
+                    return;
+                }
+        
+                const ultimo = dados[0];
+        
+                if (
+                    ultimo.bpm === null ||
+                    ultimo.bpm === undefined
+                ) {
+                    return;
+                }
+        
+                const bpm = Number(ultimo.bpm);
+        
+                // =========================
+                // ATUALIZA O NÚMERO
+                // =========================
+        
+                const elementoBpm =
+                    document.getElementById("bpmValue");
+        
+                if (elementoBpm) {
+                    elementoBpm.textContent =
+                        Math.round(bpm);
+                }
+        
+                // =========================
+                // ATUALIZA O ARCO
+                // =========================
+        
+                const arco =
+                    document.getElementById("gaugeProgress");
+        
+                if (arco) {
+        
+                    /*
+                     * Define a faixa visual do gauge.
+                     *
+                     * 60 BPM = 0%
+                     * 160 BPM = 100%
+                     */
+        
+                    const bpmMin = 60;
+                    const bpmMax = 160;
+        
+                    let porcentagem =
+                        ((bpm - bpmMin) /
+                        (bpmMax - bpmMin)) * 100;
+        
+                    // Impede passar de 0%
+                    // ou de 100%
+                    porcentagem = Math.max(
+                        0,
+                        Math.min(100, porcentagem)
+                    );
+        
+                    arco.style.strokeDasharray =
+                        `${porcentagem} 100`;
+                }
+        
+            } catch (erro) {
+        
+                console.error(
+                    "Erro ao atualizar BPM:",
+                    erro
+                );
+        
+            }
+        }
+        
+        
+        // Atualiza assim que a página abre
+        atualizarBPM();
+        
+        
+        // Verifica novos dados a cada 1 segundo
+        setInterval(
+            atualizarBPM,
+            1000
+        );
+    </script>
 </body>
 
 </html>

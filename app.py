@@ -4,6 +4,7 @@ from flask_cors import CORS
 from database import SessionLocal, init_db
 from models import Measurement_ia, User, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly, Assessment_anxious
 import requests
+from sqlalchemy import func
 
 app = Flask(__name__)
 app.secret_key = "sua-chave-secreta"
@@ -34,18 +35,134 @@ from datetime import date, datetime, timezone, timedelta
 
 #     return render_template('home.html', user=user)
 
-@app.route('/api/ia-data', methods=['POST'])
-def receber_dados_ia():
+@app.route('/api/anxiety-data')
+def anxiety_data():
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return jsonify({
+            "tem_dados": False
+        }), 401
+
+    episodes = (
+        db_session.query(Episode_anxious)
+        .filter(
+            Episode_anxious.user_id == user_id
+        )
+        .order_by(
+            Episode_anxious.date_time.desc()
+        )
+        .all()
+    )
+
+    if not episodes:
+        return jsonify({
+            "tem_dados": False,
+            "average_anxiety": 0,
+            "average_bpm": 0,
+            "max_bpm": 0
+        })
+
+    # =========================================
+    # ANSIEDADE
+    # =========================================
+
+    anxiety_values = [
+        episode.level_anxious
+        for episode in episodes
+        if episode.level_anxious is not None
+    ]
+
+    average_anxiety = (
+        sum(anxiety_values) /
+        len(anxiety_values)
+        if anxiety_values
+        else 0
+    )
+
+    # =========================================
+    # BPM
+    # =========================================
+
+    bpm_values = [
+        episode.cardiac_rate
+        for episode in episodes
+        if episode.cardiac_rate is not None
+    ]
+
+    average_bpm = (
+        sum(bpm_values) /
+        len(bpm_values)
+        if bpm_values
+        else 0
+    )
+
+    max_bpm = (
+        max(bpm_values)
+        if bpm_values
+        else 0
+    )
+
+    # =========================================
+    # ÚLTIMO EPISÓDIO
+    # =========================================
+
+    ultimo = episodes[0]
+
+    return jsonify({
+        "tem_dados": True,
+
+        "average_anxiety":
+            float(average_anxiety),
+
+        "average_bpm":
+            float(average_bpm),
+
+        "max_bpm":
+            int(max_bpm),
+
+        "last_anxiety":
+            ultimo.level_anxious,
+
+        "last_bpm":
+            ultimo.cardiac_rate,
+
+        "last_date_time":
+            ultimo.date_time.isoformat()
+            if ultimo.date_time else None
+    })
+
+@app.route('/api/ia-anxiety', methods=['POST'])
+def receber_ansiedade_ia():
 
     data = request.get_json()
 
     if not data:
-        return jsonify({"erro": "Nenhum dado recebido"}), 400
+        return jsonify({
+            "erro": "Nenhum dado recebido"
+        }), 400
 
     user_id = data.get("user_id")
+    level_anxious = data.get("level_anxious")
+    cardiac_rate = data.get("cardiac_rate")
+    minutes = data.get("minutes")
+    tecnic_id = data.get("tecnic_id")
 
     if not user_id:
-        return jsonify({"erro": "user_id não informado"}), 400
+        return jsonify({
+            "erro": "user_id não informado"
+        }), 400
+
+    if level_anxious is None:
+        return jsonify({
+            "erro": "level_anxious não informado"
+        }), 400
+
+    if cardiac_rate is None:
+        return jsonify({
+            "erro": "cardiac_rate não informado"
+        }), 400
 
     user = (
         db_session.query(User)
@@ -54,14 +171,568 @@ def receber_dados_ia():
     )
 
     if not user:
-        return jsonify({"erro": "Usuário não encontrado"}), 404
+        return jsonify({
+            "erro": "Usuário não encontrado"
+        }), 404
 
     try:
+
+        episodio = Episode_anxious(
+            user_id=user_id,
+            level_anxious=int(level_anxious),
+            cardiac_rate=int(float(cardiac_rate)),
+            minutes=int(minutes or 1),
+            date_time=datetime.now(timezone.utc)
+        )
+
+        db_session.add(episodio)
+
+        # Garante que o ID do episódio esteja disponível
+        db_session.flush()
+
+        # =========================================
+        # TÉCNICA UTILIZADA
+        # =========================================
+
+        if tecnic_id:
+
+            tecnica = (
+                db_session.query(Tecnic)
+                .filter(Tecnic.id == tecnic_id)
+                .first()
+            )
+
+            if tecnica:
+
+                relacao = Episode_tecniques(
+                    episode_id=episodio.id,
+                    tecnic_id=tecnica.id
+                )
+
+                db_session.add(relacao)
+
+        db_session.commit()
+
+        return jsonify({
+            "status": "ok",
+            "mensagem": "Dados de ansiedade salvos",
+            "episode_id": episodio.id,
+            "level_anxious": episodio.level_anxious,
+            "cardiac_rate": episodio.cardiac_rate,
+            "minutes": episodio.minutes,
+            "tecnic_id": tecnic_id
+        }), 201
+
+    except Exception as e:
+
+        db_session.rollback()
+
+        print(
+            "ERRO AO SALVAR ANSIEDADE DA IA:",
+            e
+        )
+
+        return jsonify({
+            "erro": "Erro ao salvar dados de ansiedade"
+        }), 500
+
+@app.route('/api/ia-assessment', methods=['POST'])
+def atualizar_avaliacao_ia():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "erro": "Nenhum dado recebido"
+        }), 400
+
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({
+            "erro": "user_id não informado"
+        }), 400
+
+    hoje = datetime.now(timezone.utc).date()
+
+    inicio = hoje - timedelta(days=6)
+
+    atividades = (
+        db_session.query(Activity)
+        .filter(
+            Activity.user_id == user_id,
+            Activity.date >= inicio,
+            Activity.date <= hoje
+        )
+        .all()
+    )
+
+    if not atividades:
+        return jsonify({
+            "mensagem": "Ainda não existem atividades"
+        }), 200
+
+    fc = [
+        atividade.average_rate
+        for atividade in atividades
+        if atividade.average_rate is not None
+    ]
+
+    tempo = sum(
+        atividade.active_time or 0
+        for atividade in atividades
+    )
+
+    sessoes = sum(
+        atividade.quant_sessions or 0
+        for atividade in atividades
+    )
+
+    media_fc = (
+        int(sum(fc) / len(fc))
+        if fc
+        else 0
+    )
+
+    assessment = (
+        db_session.query(Physical_assessment)
+        .filter(
+            Physical_assessment.user_id == user_id
+        )
+        .order_by(
+            Physical_assessment.end_date.desc()
+        )
+        .first()
+    )
+
+    if not assessment:
+
+        assessment = Physical_assessment(
+            user_id=user_id,
+            beggining_date=inicio,
+            end_date=hoje,
+            average_fc=media_fc,
+            active_time=tempo,
+            quant_sessions=sessoes
+        )
+
+        db_session.add(assessment)
+
+    else:
+
+        assessment.beggining_date = inicio
+        assessment.end_date = hoje
+        assessment.average_fc = media_fc
+        assessment.active_time = tempo
+        assessment.quant_sessions = sessoes
+
+    db_session.commit()
+
+    return jsonify({
+        "status": "ok",
+        "average_fc": media_fc,
+        "active_time": tempo,
+        "quant_sessions": sessoes
+    }), 201
+
+@app.route('/api/ia-recovery', methods=['POST'])
+def gerar_recuperacao_ia():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "erro": "Nenhum dado recebido"
+        }), 400
+
+    user_id = data.get("user_id")
+    final_bpm = data.get("final_bpm")
+
+    if not user_id or final_bpm is None:
+        return jsonify({
+            "erro": "Dados incompletos"
+        }), 400
+
+    hoje = datetime.now(timezone.utc).date()
+
+    bpm_1_min = max(
+        50,
+        int(final_bpm - random.randint(10, 20))
+    )
+
+    bpm_2_min = max(
+        45,
+        int(bpm_1_min - random.randint(8, 18))
+    )
+
+    queda_2_min = int(
+        final_bpm - bpm_2_min
+    )
+
+    recovery = Recovery(
+        user_id=user_id,
+        date=hoje,
+        final_bpm=int(final_bpm),
+        bpm_1_min=bpm_1_min,
+        bpm_2_min=bpm_2_min,
+        queda_2_min=queda_2_min
+    )
+
+    db_session.add(recovery)
+    db_session.commit()
+
+    return jsonify({
+        "status": "ok",
+        "final_bpm": final_bpm,
+        "bpm_1_min": bpm_1_min,
+        "bpm_2_min": bpm_2_min,
+        "queda_2_min": queda_2_min
+    }), 201
+
+@app.route('/api/ia-performance', methods=['POST'])
+def receber_performance_ia():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "erro": "Nenhum dado recebido"
+        }), 400
+
+    user_id = data.get("user_id")
+    bpm = data.get("bpm")
+
+    if not user_id:
+        return jsonify({
+            "erro": "user_id não informado"
+        }), 400
+
+    if bpm is None:
+        return jsonify({
+            "erro": "bpm não informado"
+        }), 400
+
+    user = (
+        db_session.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if not user:
+        return jsonify({
+            "erro": "Usuário não encontrado"
+        }), 404
+
+    try:
+
+        # ==========================================
+        # ATIVIDADE DO USUÁRIO
+        # ==========================================
+
+        atividade = (
+            db_session.query(Activity)
+            .filter(Activity.user_id == user_id)
+            .order_by(Activity.date.desc())
+            .first()
+        )
+
+        hoje = datetime.now(timezone.utc).date()
+
+        if not atividade or atividade.date != hoje:
+
+            atividade = Activity(
+                user_id=user_id,
+                date=hoje,
+                average_rate=int(bpm),
+                maximum_rate=int(bpm),
+                active_time=0,
+                intensity="Leve",
+                time_recovery=0,
+                quant_sessions=1
+            )
+
+            db_session.add(atividade)
+            db_session.flush()
+
+        else:
+
+            # ==========================================
+            # ATUALIZAR MÉDIA
+            # ==========================================
+
+            media_anterior = atividade.average_rate or 0
+
+            atividade.average_rate = int(
+                (media_anterior + float(bpm)) / 2
+            )
+
+            # ==========================================
+            # MAIOR BPM
+            # ==========================================
+
+            if not atividade.maximum_rate:
+                atividade.maximum_rate = int(bpm)
+
+            else:
+                atividade.maximum_rate = max(
+                    atividade.maximum_rate,
+                    int(bpm)
+                )
+
+            # Cada chamada representa aproximadamente
+            # 3 segundos de atividade
+            atividade.active_time = (
+                atividade.active_time or 0
+            ) + 3
+
+        # ==========================================
+        # INTENSIDADE
+        # ==========================================
+
+        if bpm < 100:
+            atividade.intensity = "Leve"
+
+        elif bpm < 120:
+            atividade.intensity = "Moderada"
+
+        elif bpm < 140:
+            atividade.intensity = "Intensa"
+
+        else:
+            atividade.intensity = "Muito intensa"
+
+        # ==========================================
+        # MEDIÇÃO INDIVIDUAL
+        # ==========================================
+
+        medicao = Measurement_bpm(
+            user_id=user_id,
+            activity_id=atividade.id,
+            bpm=int(bpm)
+        )
+
+        db_session.add(medicao)
+
+        # ==========================================
+        # ZONA CARDÍACA
+        # ==========================================
+
+        if bpm < 100:
+            zona = "Zona 1"
+            intensidade = "Leve"
+
+        elif bpm < 120:
+            zona = "Zona 2"
+            intensidade = "Moderada"
+
+        elif bpm < 140:
+            zona = "Zona 3"
+            intensidade = "Intensa"
+
+        elif bpm < 160:
+            zona = "Zona 4"
+            intensidade = "Muito intensa"
+
+        else:
+            zona = "Zona 5"
+            intensidade = "Máxima"
+
+        zona_existente = (
+            db_session.query(Cardiac_zone)
+            .filter(
+                Cardiac_zone.user_id == user_id,
+                Cardiac_zone.date == hoje,
+                Cardiac_zone.zone == zona
+            )
+            .first()
+        )
+
+        if zona_existente:
+
+            zona_existente.minutes = (
+                zona_existente.minutes or 0
+            ) + 1
+
+        else:
+
+            zona_existente = Cardiac_zone(
+                user_id=user_id,
+                date=hoje,
+                zone=zona,
+                intensity=intensidade,
+                minutes=1
+            )
+
+            db_session.add(zona_existente)
+
+        # ==========================================
+        # META SEMANAL
+        # ==========================================
+
+        inicio_semana = hoje - timedelta(
+            days=hoje.weekday()
+        )
+
+        fim_semana = inicio_semana + timedelta(days=6)
+
+        meta = (
+            db_session.query(Goal_weekly)
+            .filter(
+                Goal_weekly.user_id == user_id,
+                Goal_weekly.beginning_week == inicio_semana
+            )
+            .first()
+        )
+
+        if not meta:
+
+            meta = Goal_weekly(
+                user_id=user_id,
+                beginning_week=inicio_semana,
+                end_week=fim_semana,
+                goal_activity=150,
+                activity_completed=0,
+                goal_intensity=75,
+                intensity_completed=0,
+                goal_sessions=5,
+                sessions_completed=1
+            )
+
+            db_session.add(meta)
+
+        else:
+
+            meta.activity_completed = (
+                meta.activity_completed or 0
+            ) + 3
+
+            if intensidade in [
+                "Moderada",
+                "Intensa",
+                "Muito intensa",
+                "Máxima"
+            ]:
+
+                meta.intensity_completed = (
+                    meta.intensity_completed or 0
+                ) + 1
+
+        # ==========================================
+        # SALVAR
+        # ==========================================
+
+        db_session.commit()
+
+        return jsonify({
+            "status": "ok",
+            "mensagem": "Performance atualizada",
+            "activity_id": atividade.id,
+            "bpm": bpm,
+            "zona": zona
+        }), 201
+
+    except Exception as e:
+
+        db_session.rollback()
+
+        print(
+            "ERRO AO SALVAR PERFORMANCE DA IA:",
+            e
+        )
+
+        return jsonify({
+            "erro": "Erro ao salvar performance"
+        }), 500
+    
+@app.route('/api/performance-data')
+def performance_data():
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return jsonify({
+            "tem_dados": False
+        }), 401
+
+    dados = (
+        db_session.query(Measurement_ia)
+        .filter(
+            Measurement_ia.user_id == user_id
+        )
+        .order_by(
+            Measurement_ia.date_time.desc()
+        )
+        .first()
+    )
+
+    if not dados:
+        return jsonify({
+            "tem_dados": False,
+            "average_bpm": 0,
+            "bpm": 0,
+            "rmssd": 0,
+            "resultado_ia": None,
+            "probabilidade_ia": None
+        })
+
+    return jsonify({
+        "tem_dados": True,
+        "bpm": dados.bpm,
+        "average_bpm": float(dados.bpm_medio)
+            if dados.bpm_medio is not None else 0,
+        "rmssd": float(dados.rmssd)
+            if dados.rmssd is not None else 0,
+        "resultado_ia": dados.resultado_ia,
+        "probabilidade_ia": float(dados.probabilidade_ia)
+            if dados.probabilidade_ia is not None else 0,
+        "date_time": dados.date_time.isoformat()
+            if dados.date_time else None
+    })
+
+@app.route('/api/ia-data', methods=['POST'])
+def receber_dados_ia():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "erro": "Nenhum dado recebido"
+        }), 400
+
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({
+            "erro": "user_id não informado"
+        }), 400
+
+    user = (
+        db_session.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if not user:
+        return jsonify({
+            "erro": "Usuário não encontrado"
+        }), 404
+
+    try:
+
+        # --------------------------------
+        # HORÁRIO
+        # --------------------------------
 
         horario = data.get("horario")
 
         if horario:
             horario = datetime.fromisoformat(horario)
+        else:
+            horario = datetime.now(timezone.utc)
+
+        # --------------------------------
+        # SALVA MEDIÇÃO DA IA
+        # --------------------------------
 
         medicao = Measurement_ia(
             user_id=user_id,
@@ -78,17 +749,91 @@ def receber_dados_ia():
         db_session.commit()
         db_session.refresh(medicao)
 
+        # --------------------------------
+        # CHECKUP DO DIA
+        # --------------------------------
+
+        hoje = horario.date()
+
+        checkup = (
+            db_session.query(Checkup)
+            .filter(
+                Checkup.user_id == user_id,
+                Checkup.date == hoje
+            )
+            .first()
+        )
+
+        if not checkup:
+
+            checkup = Checkup(
+                user_id=user_id,
+                type="Monitoramento cardíaco",
+                created_at=horario,
+                date=hoje,
+                current_bpm=data.get("bpm"),
+                observation="Checkup gerado a partir do monitoramento da IA."
+            )
+
+            db_session.add(checkup)
+
+        else:
+
+            if data.get("bpm") is not None:
+                checkup.current_bpm = data.get("bpm")
+
+        db_session.commit()
+
+        # --------------------------------
+        # SE NÃO EXISTIR, CRIA
+        # --------------------------------
+
+        if not checkup:
+
+            checkup = Checkup(
+                user_id=user_id,
+                type="Monitoramento cardíaco",
+                created_at=horario,
+                date=hoje,
+                average_bpm=data.get("bpm_medio"),
+                observation="Checkup gerado a partir do monitoramento da IA."
+            )
+
+            db_session.add(checkup)
+
+        else:
+
+            # Atualiza a média com a nova medição
+            if data.get("bpm_medio") is not None:
+                checkup.average_bpm = data.get("bpm_medio")
+
+
+        db_session.commit()
+
+        print(
+            "MEDIÇÃO IA SALVA:",
+            medicao.id,
+            "| CHECKUP:",
+            checkup.id
+        )
+
+
         return jsonify({
             "status": "ok",
             "mensagem": "Dados da IA recebidos com sucesso",
-            "id": medicao.id
+            "id": medicao.id,
+            "checkup_id": checkup.id
         }), 201
+
 
     except Exception as e:
 
         db_session.rollback()
 
-        print("ERRO AO SALVAR DADOS DA IA:", e)
+        print(
+            "ERRO AO SALVAR DADOS DA IA:",
+            e
+        )
 
         return jsonify({
             "erro": "Erro ao salvar dados da IA"
@@ -369,727 +1114,6 @@ def register():
 
     return render_template('register.html')
 
-def criar_dados_iniciais(user_id):
-    print(f"CRIANDO DADOS INICIAIS PARA USUÁRIO {user_id}")
-
-    # ==========================================
-    # 1. ATIVIDADE
-    # ==========================================
-    
-    activity = Activity(
-        user_id=user_id,
-        date=date.today() - timedelta(days=random.randint(0, 7)),
-        average_rate=random.randint(70, 100),
-        maximum_rate=random.randint(120, 160),
-        active_time=random.randint(30, 240),
-        intensity=random.choice([
-            "Zona 2",
-            "Zona 3",
-            "Zona 4"
-        ]),
-        time_recovery=random.randint(15, 60),
-        quant_sessions=random.randint(1, 5)
-    )
-
-    db_session.add(activity)
-    db_session.flush()
-
-    # ==========================================
-    # 2. MEDIÇÕES DE BPM
-    # ==========================================
-
-    for i in range(5):
-
-        measurement = Measurement_bpm(
-            user_id=user_id,
-            activity_id=activity.id,
-            bpm=random.randint(60, 140),
-            date_time=datetime.now(timezone.utc) - timedelta(
-                hours=random.randint(1, 48)
-            )
-        )
-
-        db_session.add(measurement)
-
-    # ==========================================
-    # 3. CHECKUPS RECENTES
-    # ==========================================
-
-    for i in range(2):
-
-        checkup = Checkup(
-            user_id=user_id,
-            type=random.choice([
-                "Checkup geral",
-                "Avaliação física",
-                "Acompanhamento"
-            ]),
-            date=date.today() - timedelta(days=i + 1),
-            average_bpm=random.randint(70, 100),
-            observation="Checkup realizado com sucesso."
-        )
-
-        db_session.add(checkup)
-
-    # ==========================================
-    # 4. SALVA TUDO
-    # ==========================================
-
-    db_session.commit()
-    print(f"DADOS INICIAIS DO USUÁRIO {user_id} CRIADOS!")
-
-def criar_dados_performance(user_id):
-
-    print(f"CRIANDO PERFORMANCE PARA USUÁRIO {user_id}")
-
-    hoje = date.today()
-
-    # ==========================================
-    # ATIVIDADE DA SEMANA
-    # ==========================================
-
-    data_atividade = hoje - timedelta(days=1)
-
-    media_bpm = random.randint(70, 90)
-    max_bpm = random.randint(130, 170)
-
-    atividade = Activity(
-        user_id=user_id,
-        date=data_atividade,
-        average_rate=media_bpm,
-        maximum_rate=max_bpm,
-        active_time=random.randint(180, 240),
-        intensity=random.choice([
-            "Zona 3",
-            "Zona 4"
-        ]),
-        time_recovery=random.randint(25, 45),
-        quant_sessions=random.randint(3, 5)
-    )
-
-    db_session.add(atividade)
-    db_session.flush()
-
-    # ==========================================
-    # ZONAS CARDÍACAS
-    # ==========================================
-
-    zonas = [
-        ("Zona 1", "Muito leve", random.randint(8, 20)),
-        ("Zona 2", "Leve/moderada", random.randint(15, 35)),
-        ("Zona 3", "Moderada", random.randint(15, 30)),
-        ("Zona 4", "Intensa", random.randint(5, 15)),
-        ("Zona 5", "Muito intensa", random.randint(1, 5))
-    ]
-
-    for zona, intensidade, minutos in zonas:
-
-        db_session.add(
-            Cardiac_zone(
-                user_id=user_id,
-                date=data_atividade,
-                zone=zona,
-                intensity=intensidade,
-                minutes=minutos
-            )
-        )
-
-    # ==========================================
-    # RECUPERAÇÃO
-    # ==========================================
-
-    final_bpm = random.randint(150, 175)
-    bpm_1 = random.randint(120, 145)
-    bpm_2 = random.randint(105, 125)
-
-    queda_2 = final_bpm - bpm_2
-
-    db_session.add(
-        Recovery(
-            user_id=user_id,
-            date=data_atividade,
-            final_bpm=final_bpm,
-            bpm_1_min=bpm_1,
-            bpm_2_min=bpm_2,
-            queda_2_min=queda_2
-        )
-    )
-
-    # ==========================================
-    # EVOLUÇÃO / AVALIAÇÃO FÍSICA
-    # ==========================================
-
-    inicio_semana = hoje - timedelta(days=6)
-
-    db_session.add(
-        Physical_assessment(
-            user_id=user_id,
-            beggining_date=inicio_semana,
-            end_date=hoje,
-            average_fc=media_bpm,
-            active_time=atividade.active_time,
-            quant_sessions=atividade.quant_sessions
-        )
-    )
-
-    # ==========================================
-    # METAS DA SEMANA
-    # ==========================================
-
-    meta_atividade = 150
-    atividade_realizada = random.randint(100, 150)
-
-    meta_intensidade = 90
-    intensidade_realizada = random.randint(45, 90)
-
-    meta_sessoes = 4
-    sessoes_realizadas = random.randint(2, 4)
-
-    db_session.add(
-        Goal_weekly(
-            user_id=user_id,
-            beginning_week=inicio_semana,
-            end_week=hoje,
-
-            goal_activity=meta_atividade,
-            activity_completed=atividade_realizada,
-
-            goal_intensity=meta_intensidade,
-            intensity_completed=intensidade_realizada,
-
-            goal_sessions=meta_sessoes,
-            sessions_completed=sessoes_realizadas
-        )
-    )
-
-    # ==========================================
-    # MEDIÇÕES DE BPM
-    # ==========================================
-
-    for i in range(8):
-
-        db_session.add(
-            Measurement_bpm(
-                user_id=user_id,
-                activity_id=atividade.id,
-                bpm=random.randint(65, max_bpm),
-                date_time=datetime.now(timezone.utc)
-                - timedelta(hours=random.randint(1, 72))
-            )
-        )
-
-    db_session.commit()
-
-    print(f"PERFORMANCE DO USUÁRIO {user_id} CRIADA!")
-
-def criar_dados_ansiedade(user_id):
-
-    print("Criando dados de ansiedade para usuário:", user_id)
-
-    # =========================================================
-    # 1. ACOMPANHAMENTO
-    # =========================================================
-
-    acompanhamento = db_session.query(Accompaniment).filter_by(
-        user_id=user_id
-    ).first()
-
-    if not acompanhamento:
-
-        acompanhamento = Accompaniment(
-            user_id=user_id,
-            psychotherapy=False,
-            consultation=False,
-            medication=False
-        )
-
-        db_session.add(acompanhamento)
-
-        print("Acompanhamento criado.")
-
-    # =========================================================
-    # 2. GATILHOS
-    # =========================================================
-
-    trigger_names = [
-        "Estudos",
-        "Sono",
-        "Social"
-    ]
-
-    triggers = {}
-
-    for name in trigger_names:
-
-        trigger = db_session.query(Trigger).filter_by(
-            name=name
-        ).first()
-
-        if not trigger:
-
-            trigger = Trigger(
-                name=name
-            )
-
-            db_session.add(trigger)
-            db_session.flush()
-
-            print("Gatilho criado:", name)
-
-        triggers[name] = trigger
-
-
-    # =========================================================
-    # 3. TÉCNICAS
-    # =========================================================
-
-    tecnic_names = [
-        ("Respiração", "Exercício de respiração para controle da ansiedade", "respiracao-icon.png"),
-        ("Relaxamento", "Técnica de relaxamento", "relaxamento-icon.png"),
-        ("Aterramento", "Técnica de aterramento", "aterramento-icon.png"),
-        ("Registrar sentimentos", "Registro dos sentimentos percebidos", "registrar-icon.png")
-    ]
-
-    tecnicas = {}
-
-    for name, description, icon in tecnic_names:
-
-        tecnic = db_session.query(Tecnic).filter_by(
-            name=name
-        ).first()
-
-        if not tecnic:
-
-            tecnic = Tecnic(
-                name=name,
-                description=description,
-                icon=icon
-            )
-
-            db_session.add(tecnic)
-            db_session.flush()
-
-            print("Técnica criada:", name)
-
-        else:
-
-            tecnic.description = description
-            tecnic.icon = icon
-
-            print("Técnica atualizada:", name)
-
-        tecnicas[name] = tecnic
-
-    # =========================================================
-    # 4. VERIFICA SE O USUÁRIO JÁ POSSUI EPISÓDIOS
-    # =========================================================
-
-    episode_exists = db_session.query(Episode_anxious).filter_by(
-        user_id=user_id
-    ).first()
-
-    if episode_exists:
-
-        print("Dados de ansiedade já existem para este usuário.")
-
-        db_session.commit()
-
-        return
-
-    # =========================================================
-    # 5. EPISÓDIOS DE ANSIEDADE
-    # =========================================================
-
-    hoje = datetime.now()
-
-    data_inicio = (
-        hoje - timedelta(days=hoje.weekday())
-    ).replace(
-        hour=9,
-        minute=0,
-        second=0,
-        microsecond=0
-    )
-
-    episodios = [
-
-        {
-            "dia": 0,
-            "hora": 14,
-            "nivel": 6,
-            "bpm": 91,
-            "minutos": 15,
-            "observacao": "Ansiedade durante os estudos.",
-            "gatilho": "Estudos",
-            "tecnica": "Respiração"
-        },
-
-        {
-            "dia": 0,
-            "hora": 17,
-            "nivel": 7,
-            "bpm": 104,
-            "minutos": 18,
-            "observacao": "Sensação de ansiedade durante período de estudos.",
-            "gatilho": "Estudos",
-            "tecnica": "Relaxamento"
-        },
-
-        {
-            "dia": 1,
-            "hora": 10,
-            "nivel": 5,
-            "bpm": 88,
-            "minutos": 12,
-            "observacao": "Episódio leve durante a manhã.",
-            "gatilho": "Sono",
-            "tecnica": "Respiração"
-        },
-
-        {
-            "dia": 2,
-            "hora": 15,
-            "nivel": 8,
-            "bpm": 112,
-            "minutos": 25,
-            "observacao": "Ansiedade elevada durante estudos.",
-            "gatilho": "Estudos",
-            "tecnica": "Aterramento"
-        },
-
-        {
-            "dia": 5,
-            "hora": 16,
-            "nivel": 6,
-            "bpm": 96,
-            "minutos": 17,
-            "observacao": "Ansiedade associada a situação social.",
-            "gatilho": "Social",
-            "tecnica": "Relaxamento"
-        },
-
-        {
-            "dia": 6,
-            "hora": 9,
-            "nivel": 5,
-            "bpm": 87,
-            "minutos": 14,
-            "observacao": "Episódio leve pela manhã.",
-            "gatilho": "Sono",
-            "tecnica": "Respiração"
-        },
-
-        {
-            "dia": 6,
-            "hora": 18,
-            "nivel": 7,
-            "bpm": 101,
-            "minutos": 25,
-            "observacao": "Ansiedade durante interação social.",
-            "gatilho": "Social",
-            "tecnica": "Registrar sentimentos"
-        }
-    ]
-
-    for dados in episodios:
-
-        data_episodio = data_inicio + timedelta(days=dados["dia"])
-
-        data_episodio = data_episodio.replace(
-            hour=dados["hora"],
-            minute=random.choice([0, 15, 30, 45])
-        )
-
-        episodio = Episode_anxious(
-            user_id=user_id,
-            date_time=data_episodio,
-            level_anxious=dados["nivel"],
-            cardiac_rate=dados["bpm"],
-            minutes=dados["minutos"],
-            observation=dados["observacao"]
-        )
-
-        db_session.add(episodio)
-        db_session.flush()
-
-
-        # =====================================================
-        # GATILHO DO EPISÓDIO
-        # =====================================================
-
-        episode_trigger = Episode_trigger(
-            episode_id=episodio.id,
-            trigger_id=triggers[dados["gatilho"]].id
-        )
-
-        db_session.add(episode_trigger)
-
-
-        # =====================================================
-        # TÉCNICA UTILIZADA
-        # =====================================================
-
-        episode_tecnic = Episode_tecniques(
-            episode_id=episodio.id,
-            tecnic_id=tecnicas[dados["tecnica"]].id
-        )
-
-        db_session.add(episode_tecnic)
-
-
-    # =========================================================
-    # 6. SALVA TUDO
-    # =========================================================
-
-    db_session.commit()
-
-    print("Dados de ansiedade criados com sucesso!")
-
-# =========================================================
-# CRIAR DADOS DE PRESSÃO ARTERIAL
-# =========================================================
-
-def criar_dados_pressao(user_id):
-
-    print("Criando dados de pressão para usuário:", user_id)
-
-    # Verifica se o usuário já possui dados
-    pressure_exists = db_session.query(
-        Measurement_pressure
-    ).filter_by(
-        user_id=user_id
-    ).first()
-
-    if pressure_exists:
-        print("Dados de pressão já existem para este usuário.")
-        return
-
-    # ---------------------------------------------------------
-    # 1. MEDIÇÕES DE PRESSÃO
-    # ---------------------------------------------------------
-
-    data_inicio = datetime(2026, 9, 21, 8, 0)
-
-    measurements = [
-        {
-            "dia": 0,
-            "hora": 8,
-            "sistolica": 118,
-            "diastolica": 76,
-            "bpm": 72,
-            "origin": "Manual",
-            "observation": "Medição realizada pela manhã."
-        },
-        {
-            "dia": 1,
-            "hora": 9,
-            "sistolica": 122,
-            "diastolica": 79,
-            "bpm": 75,
-            "origin": "PPG",
-            "observation": "Medição realizada após o café da manhã."
-        },
-        {
-            "dia": 2,
-            "hora": 14,
-            "sistolica": 128,
-            "diastolica": 82,
-            "bpm": 81,
-            "origin": "Manual",
-            "observation": "Medição realizada durante a tarde."
-        },
-        {
-            "dia": 3,
-            "hora": 10,
-            "sistolica": 135,
-            "diastolica": 86,
-            "bpm": 84,
-            "origin": "PPG",
-            "observation": "Pressão acima das medições anteriores."
-        },
-        {
-            "dia": 4,
-            "hora": 16,
-            "sistolica": 125,
-            "diastolica": 80,
-            "bpm": 78,
-            "origin": "Manual",
-            "observation": "Medição realizada durante a tarde."
-        },
-        {
-            "dia": 5,
-            "hora": 9,
-            "sistolica": 119,
-            "diastolica": 77,
-            "bpm": 70,
-            "origin": "PPG",
-            "observation": "Medição realizada pela manhã."
-        },
-        {
-            "dia": 6,
-            "hora": 18,
-            "sistolica": 130,
-            "diastolica": 84,
-            "bpm": 82,
-            "origin": "Manual",
-            "observation": "Medição realizada no final do dia."
-        }
-    ]
-
-    created_measurements = []
-
-    for dados in measurements:
-
-        date_measurement = data_inicio + timedelta(
-            days=dados["dia"]
-        )
-
-        date_measurement = date_measurement.replace(
-            hour=dados["hora"],
-            minute=random.choice([0, 15, 30, 45])
-        )
-
-        measurement = Measurement_pressure(
-            user_id=user_id,
-            date_time=date_measurement,
-            sistolica=dados["sistolica"],
-            diastolica=dados["diastolica"],
-            cardiac_rate=dados["bpm"],
-            origin=dados["origin"],
-            observation=dados["observation"]
-        )
-
-        db_session.add(measurement)
-        db_session.flush()
-
-        created_measurements.append(measurement)
-
-        print(
-            "Medição criada:",
-            measurement.sistolica,
-            "/",
-            measurement.diastolica
-        )
-
-    # ---------------------------------------------------------
-    # 2. DADOS PPG
-    # ---------------------------------------------------------
-
-    for measurement in created_measurements:
-
-        # Criamos PPG somente para medições originadas pelo PPG
-        if measurement.origin != "PPG":
-            continue
-
-        ppg = Measurement_ppg(
-            user_id=user_id,
-            measurement_pressure_id=measurement.id,
-            cardiac_rate=measurement.cardiac_rate,
-            hrv=random.choice([42.5, 45.2, 48.7, 51.3, 55.1]),
-            quality_sign=random.choice([91.5, 93.2, 95.7, 97.1, 98.4]),
-            date_time=measurement.date_time
-        )
-
-        db_session.add(ppg)
-
-        print(
-            "PPG criado para medição:",
-            measurement.id
-        )
-
-    # ---------------------------------------------------------
-    # 3. AVISOS
-    # ---------------------------------------------------------
-
-    warnings = [
-        {
-            "dia": 3,
-            "title": "Pressão acima do habitual",
-            "message": "Foi registrada uma medição de pressão acima das medições anteriores.",
-            "level": "atenção"
-        },
-        {
-            "dia": 6,
-            "title": "Acompanhe sua pressão",
-            "message": "Uma nova medição foi registrada. Continue acompanhando seus dados.",
-            "level": "informativo"
-        }
-    ]
-
-    for warning_data in warnings:
-
-        warning = Warning_pressure(
-            user_id=user_id,
-            data=(
-                data_inicio +
-                timedelta(days=warning_data["dia"])
-            ).date(),
-            title=warning_data["title"],
-            message=warning_data["message"],
-            level=warning_data["level"],
-            viewed=False
-        )
-
-        db_session.add(warning)
-
-        print(
-            "Aviso criado:",
-            warning_data["title"]
-        )
-
-    db_session.commit()
-
-    print("Dados de pressão criados com sucesso!")
-
-# =========================================================
-# CRIAR DADOS DO RELATÓRIO SEMANAL
-# =========================================================
-
-def criar_dados_relatorio(user_id):
-
-    print("Criando relatório semanal para usuário:", user_id)
-
-    # Semana de teste: 21/09/2026 até 27/09/2026
-    beginning_date = date(2026, 9, 21)
-    end_date = date(2026, 9, 27)
-
-    # Verifica se já existe relatório para esse período
-    report_exists = (
-        db_session.query(Report_weekly)
-        .filter(
-            Report_weekly.user_id == user_id,
-            Report_weekly.beginning_date == beginning_date,
-            Report_weekly.end_date == end_date
-        )
-        .first()
-    )
-
-    if report_exists:
-
-        print("Relatório semanal já existe para este usuário.")
-
-        return report_exists
-
-    # Cria o relatório
-    report = Report_weekly(
-        user_id=user_id,
-        beginning_date=beginning_date,
-        end_date=end_date
-    )
-
-    db_session.add(report)
-
-    db_session.flush()
-
-    print(
-        "Relatório criado:",
-        beginning_date,
-        "até",
-        end_date
-    )
-
-    return report
-
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot():
     if request.method == 'POST':
@@ -1233,9 +1257,11 @@ def anxiety():
     if not user_id:
         return redirect(url_for('login'))
 
-    user = db_session.query(User).filter_by(
-        id=user_id
-    ).first()
+    user = (
+        db_session.query(User)
+        .filter_by(id=user_id)
+        .first()
+    )
 
     if not user:
         return redirect(url_for('login'))
@@ -1244,9 +1270,42 @@ def anxiety():
     # ACOMPANHAMENTO
     # =====================================================
 
-    accompaniment = db_session.query(Accompaniment).filter_by(
-        user_id=user_id
-    ).first()
+    accompaniment = (
+        db_session.query(Accompaniment)
+        .filter_by(user_id=user_id)
+        .first()
+    )
+
+    # =====================================================
+    # TODOS OS EPISÓDIOS
+    # =====================================================
+
+    episodes = (
+        db_session.query(Episode_anxious)
+        .filter(
+            Episode_anxious.user_id == user_id
+        )
+        .order_by(
+            Episode_anxious.date_time.desc()
+        )
+        .all()
+    )
+
+    # =====================================================
+    # ÚLTIMOS 5 EPISÓDIOS
+    # =====================================================
+
+    latest_episodes = (
+        db_session.query(Episode_anxious)
+        .filter(
+            Episode_anxious.user_id == user_id
+        )
+        .order_by(
+            Episode_anxious.date_time.desc()
+        )
+        .limit(5)
+        .all()
+    )
 
     # =====================================================
     # TÉCNICAS USADAS
@@ -1270,74 +1329,12 @@ def anxiety():
     )
 
     # =====================================================
-    # GATILHOS REGISTRADOS
-    # =====================================================
-
-    trigger_counts = (
-        db_session.query(
-            Trigger.name,
-            func.count(Episode_trigger.id)
-        )
-        .join(
-            Episode_trigger,
-            Episode_trigger.trigger_id == Trigger.id
-        )
-        .join(
-            Episode_anxious,
-            Episode_anxious.id == Episode_trigger.episode_id
-        )
-        .filter(
-            Episode_anxious.user_id == user_id
-        )
-        .group_by(
-            Trigger.name
-        )
-        .order_by(
-            func.count(Episode_trigger.id).desc()
-        )
-        .all()
-    )
-
-    # =====================================================
-    # TODOS OS EPISÓDIOS DO USUÁRIO
-    # =====================================================
-
-    episodes = (
-        db_session.query(Episode_anxious)
-        .filter(Episode_anxious.user_id == user_id)
-        .order_by(Episode_anxious.date_time.desc())
-        .all()
-    )
-
-    # =====================================================
-    # ÚLTIMOS EPISÓDIOS
-    # =====================================================
-
-    latest_episodes = (
-        db_session.query(Episode_anxious)
-        .filter(
-            Episode_anxious.user_id == user_id
-        )
-        .order_by(
-            Episode_anxious.date_time.desc()
-        )
-        .limit(5)
-        .all()
-    )
-
-    print("USUÁRIO ANSIEDADE:", user.id, user.email)
-    print("EPISÓDIOS:", len(episodes))
-
-    # =====================================================
     # SEMANA ATUAL
-    # 21/09 até 27/09
     # =====================================================
 
     hoje = datetime.now()
 
-    inicio_semana = (
-        hoje - timedelta(days=hoje.weekday())
-    ).replace(
+    inicio_semana = (hoje - timedelta(days=hoje.weekday())).replace(
         hour=0,
         minute=0,
         second=0,
@@ -1349,29 +1346,28 @@ def anxiety():
     episodes_this_week = [
         episode
         for episode in episodes
-        if inicio_semana <= episode.date_time < fim_semana
+        if episode.date_time
+        and inicio_semana <= episode.date_time < fim_semana
     ]
-
-    print("EPISÓDIOS ESTA SEMANA:", len(episodes_this_week))
 
     # =====================================================
     # SEMANA ANTERIOR
-    # 14/09 até 20/09
     # =====================================================
 
-    inicio_semana_anterior = inicio_semana - timedelta(days=7)
+    inicio_semana_anterior = (
+        inicio_semana - timedelta(days=7)
+    )
+
     fim_semana_anterior = inicio_semana
 
     episodes_previous_week = [
         episode
         for episode in episodes
-        if inicio_semana_anterior <= episode.date_time < fim_semana_anterior
+        if episode.date_time
+        and inicio_semana_anterior
+        <= episode.date_time
+        < fim_semana_anterior
     ]
-
-    print(
-        "EPISÓDIOS SEMANA ANTERIOR:",
-        len(episodes_previous_week)
-    )
 
     # =====================================================
     # MÉDIA DE ANSIEDADE
@@ -1383,10 +1379,11 @@ def anxiety():
         if episode.level_anxious is not None
     ]
 
-    if anxiety_values:
-        average_anxiety = sum(anxiety_values) / len(anxiety_values)
-    else:
-        average_anxiety = 0
+    average_anxiety = (
+        sum(anxiety_values) / len(anxiety_values)
+        if anxiety_values
+        else 0
+    )
 
     # =====================================================
     # MÉDIA DE ANSIEDADE DA SEMANA ANTERIOR
@@ -1398,13 +1395,12 @@ def anxiety():
         if episode.level_anxious is not None
     ]
 
-    if previous_anxiety_values:
-        previous_average_anxiety = (
-            sum(previous_anxiety_values) /
-            len(previous_anxiety_values)
-        )
-    else:
-        previous_average_anxiety = 0
+    previous_average_anxiety = (
+        sum(previous_anxiety_values)
+        / len(previous_anxiety_values)
+        if previous_anxiety_values
+        else 0
+    )
 
     # =====================================================
     # BPM
@@ -1416,12 +1412,17 @@ def anxiety():
         if episode.cardiac_rate is not None
     ]
 
-    if bpm_values:
-        average_bpm = sum(bpm_values) / len(bpm_values)
-        max_bpm = max(bpm_values)
-    else:
-        average_bpm = 0
-        max_bpm = 0
+    average_bpm = (
+        sum(bpm_values) / len(bpm_values)
+        if bpm_values
+        else 0
+    )
+
+    max_bpm = (
+        max(bpm_values)
+        if bpm_values
+        else 0
+    )
 
     # =====================================================
     # DURAÇÃO MÉDIA
@@ -1433,10 +1434,11 @@ def anxiety():
         if episode.minutes is not None
     ]
 
-    if duration_values:
-        average_duration = sum(duration_values) / len(duration_values)
-    else:
-        average_duration = 0
+    average_duration = (
+        sum(duration_values) / len(duration_values)
+        if duration_values
+        else 0
+    )
 
     # =====================================================
     # EPISÓDIOS POR DIA
@@ -1461,7 +1463,8 @@ def anxiety():
         count = sum(
             1
             for episode in episodes_this_week
-            if episode.date_time.date() == data.date()
+            if episode.date_time
+            and episode.date_time.date() == data.date()
         )
 
         episodes_by_day.append({
@@ -1478,40 +1481,83 @@ def anxiety():
         hours = [
             episode.date_time.hour
             for episode in episodes_this_week
+            if episode.date_time
         ]
 
-        most_common_hour = max(
-            set(hours),
-            key=hours.count
-        )
+        if hours:
+            most_common_hour = max(
+                set(hours),
+                key=hours.count
+            )
 
-        most_frequent_time = f"{most_common_hour}h"
+            most_frequent_time = (
+                f"{most_common_hour:02d}h"
+            )
+        else:
+            most_frequent_time = "Sem registros"
 
     else:
-
         most_frequent_time = "Sem registros"
 
-    print("MÉDIA ANSIEDADE:", average_anxiety)
-    print("MÉDIA BPM:", average_bpm)
-    print("BPM MÁXIMO:", max_bpm)
-    tecnics = db_session.query(Tecnic).all()
+    # =====================================================
+    # DEBUG
+    # =====================================================
+    print("\n========== DEBUG TÉCNICAS ==========")
+
+    print("USUÁRIO:", user_id)
+
+    print(
+        "TODAS AS TÉCNICAS:",
+        [
+            (t.id, t.name, t.icon)
+            for t in db_session.query(Tecnic).all()
+        ]
+    )
+
+    print(
+        "TODAS AS RELAÇÕES:",
+        [
+            (r.id, r.episode_id, r.tecnic_id)
+            for r in db_session.query(Episode_tecniques).all()
+        ]
+    )
+
+    print(
+        "TÉCNICAS DESTE USUÁRIO:",
+        [
+            (t.id, t.name, t.icon)
+            for t in tecnics
+        ]
+    )
+
+    print("====================================\n")
+
     return render_template(
         'anxiety.html',
+
         user=user,
+
         accompaniment=accompaniment,
+
         episodes=episodes,
+        latest_episodes=latest_episodes,
+
         episodes_this_week=episodes_this_week,
         episodes_previous_week=episodes_previous_week,
+
         episodes_by_day=episodes_by_day,
+
         average_anxiety=average_anxiety,
+        previous_average_anxiety=previous_average_anxiety,
+
         average_bpm=average_bpm,
         max_bpm=max_bpm,
+
         average_duration=average_duration,
+
         most_frequent_time=most_frequent_time,
-        previous_average_anxiety=previous_average_anxiety,
-        tecnics=tecnics,
-        latest_episodes=latest_episodes,
-        trigger_counts=trigger_counts
+
+        tecnics=tecnics
     )
 
 @app.route('/performance')
@@ -1527,6 +1573,30 @@ def performance():
 
     if not user:
         return redirect(url_for('login'))
+
+    agora = datetime.now(timezone.utc)
+    inicio_semana = agora - timedelta(days=7)
+
+    bpm_ia_semana = (
+        db_session.query(Measurement_ia)
+        .filter(
+            Measurement_ia.user_id == user_id,
+            Measurement_ia.date_time >= inicio_semana
+        )
+        .all()
+    )
+
+    bpm_valores = [
+        float(item.bpm)
+        for item in bpm_ia_semana
+        if item.bpm is not None
+    ]
+
+    bpm_semana = (
+        sum(bpm_valores) / len(bpm_valores)
+        if bpm_valores
+        else None
+    )
 
     # ==========================
     # ATIVIDADE
@@ -1591,6 +1661,7 @@ def performance():
         recovery=recovery,
         physical_assessment=physical_assessment,
         weekly_goal=weekly_goal,
+        bpm_semana=bpm_semana
     )
 
 @app.route('/pressure')
@@ -1607,6 +1678,65 @@ def pressure():
 
     if not user:
         return redirect(url_for('login'))
+
+    # ==========================
+    # DADOS DA IA
+    # ==========================
+
+    ia_measurements = (
+        db_session.query(Measurement_ia)
+        .filter(Measurement_ia.user_id == user_id)
+        .order_by(Measurement_ia.date_time.desc())
+        .all()
+    )
+
+    # ==========================
+    # DADOS DA SEMANA
+    # ==========================
+
+    hoje = datetime.now(timezone.utc).date()
+
+    inicio_semana = hoje - timedelta(days=hoje.weekday())
+
+    ia_semana = [
+        measurement
+        for measurement in ia_measurements
+        if measurement.date_time
+        and measurement.date_time.date() >= inicio_semana
+        and measurement.date_time.date() <= hoje
+    ]
+
+    bpm_semana = [
+        measurement.bpm
+        for measurement in ia_semana
+        if measurement.bpm is not None
+    ]
+
+    if bpm_semana:
+        average_bpm_semana = sum(bpm_semana) / len(bpm_semana)
+    else:
+        average_bpm_semana = 0
+
+    # ==========================
+    # FREQUÊNCIA MÉDIA
+    # ==========================
+
+    bpm_values = [
+        measurement.bpm
+        for measurement in ia_measurements
+        if measurement.bpm is not None
+    ]
+
+    if bpm_values:
+        average_bpm = sum(bpm_values) / len(bpm_values)
+        current_bpm = bpm_values[0]
+        min_bpm = min(bpm_values)
+        max_bpm = max(bpm_values)
+    else:
+        average_bpm = 0
+        current_bpm = 0
+        min_bpm = 0
+        max_bpm = 0
 
     # =========================================================
     # MEDIÇÕES DE PRESSÃO
@@ -1873,10 +2003,15 @@ def pressure():
         average_sistolica=average_sistolica,
         average_diastolica=average_diastolica,
 
-        average_bpm=average_bpm,
-
         max_sistolica=max_sistolica,
-        max_diastolica=max_diastolica
+        max_diastolica=max_diastolica,
+
+        average_bpm=average_bpm,
+        current_bpm=current_bpm,
+        min_bpm=min_bpm,
+        max_bpm=max_bpm,
+
+        bpm_semana=average_bpm_semana
     )
 
 # =========================================================
@@ -2251,9 +2386,9 @@ def home():
     )
 
     bpm_values = [
-        checkup.average_bpm
+        checkup.current_bpm
         for checkup in all_checkups
-        if checkup.average_bpm is not None
+        if checkup.current_bpm is not None
     ]
 
     current_bpm = bpm_values[0] if bpm_values else 0
@@ -3147,12 +3282,6 @@ def get_weekly_report():
             "total_measurements": total_pressure_measurements
         }
     })
-
-print("===================================")
-print("ESTE É O APP PRINCIPAL DO VITAPULSE")
-print("ROTAS REGISTRADAS:")
-print(app.url_map)
-print("===================================")
 
 if __name__ == "__main__":
     init_db()

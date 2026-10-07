@@ -111,6 +111,7 @@
                             <!-- Arco dinâmico -->
 
                             <circle
+                                id="gaugeProgress"
                                 class="gauge-progress"
                                 cx="110"
                                 cy="110"
@@ -139,6 +140,7 @@
                             <!-- Valor atual -->
 
                             <text
+                                id="bpmValue"
                                 class="gauge-value"
                                 x="110"
                                 y="126"
@@ -199,8 +201,6 @@
                     {% endif %}
 
                 </section>
-
-
 
                 <!-- =========================
                      CRISES POR SEMANA
@@ -301,7 +301,7 @@
                             <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
                             Horário mais frequente:
                             <b>
-                                {{ (average_duration or 0)|round|int }} min
+                               {{ most_frequent_time }}
                             </b>    
                         </li>
 
@@ -420,8 +420,8 @@
 
                         {% endif %}
 
-                    </div>
-                
+                        </div>
+                    
                     </section>
 
                     <!-- Acompanhamento -->
@@ -487,58 +487,6 @@
                 </div>
 
                 <!-- =========================
-                     GATILHOS REGISTRADOS
-                ========================== -->
-
-                <!-- <h2 class="section-title">
-                    Gatilhos registrados
-                </h2>
-
-                <section class="card triggers-card">
-
-                    <table class="summary-table">
-
-                        {% for trigger in trigger_counts %}
-
-                            <tr>
-
-                                <td>
-
-                                    <img
-                                        class="coracaoVazio-icon"
-                                        src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}"
-                                        alt=""
-                                    >
-                                    {{ trigger[0] }}
-
-                                </td>
-
-                                <td>
-                                    {{ trigger[1] }} registros
-                                </td>
-
-                            </tr>
-
-                        {% endfor %}
-
-
-                        {% if not trigger_counts %}
-
-                            <tr>
-
-                                <td colspan="2">
-                                    Nenhum gatilho registrado.
-                                </td>
-
-                            </tr>
-
-                        {% endif %}
-
-                    </table>
-
-                </section> -->
-
-                <!-- =========================
                      ÚLTIMOS EPISÓDIOS
                 ========================== -->
 
@@ -589,8 +537,6 @@
 
             </main>
 
-
-
             <!-- =========================
                  MENU LATERAL
             ========================== -->
@@ -611,12 +557,99 @@
                 </nav>
             </div>
 
-
         </div>
 
     </div>
 
+    <script>
+        async function atualizarAnsiedade() {
 
+            try {
+
+                const resposta = await fetch(
+                    "/api/anxiety-data"
+                );
+
+                if (!resposta.ok) {
+                    console.error(
+                        "Erro ao buscar ansiedade:",
+                        resposta.status
+                    );
+                    return;
+                }
+
+                const dados = await resposta.json();
+
+                console.log(
+                    "DADOS DA ANSIEDADE:",
+                    dados
+                );
+
+                if (!dados.tem_dados) {
+                    return;
+                }
+
+                // =========================================
+                // BPM
+                // =========================================
+
+                const bpm =
+                    Number(dados.average_bpm || 0);
+
+                const elementoBpm =
+                    document.getElementById("bpmValue");
+
+                if (elementoBpm) {
+
+                    elementoBpm.textContent =
+                        Math.round(bpm);
+
+                }
+
+                // =========================================
+                // ARCO DO GAUGE
+                // =========================================
+
+                const arco =
+                    document.getElementById("gaugeProgress");
+
+                if (arco) {
+
+                    const bpmMin = 60;
+                    const bpmMax = 160;
+
+                    let porcentagem =
+                        ((bpm - bpmMin) /
+                        (bpmMax - bpmMin)) * 100;
+
+                    porcentagem = Math.max(
+                        0,
+                        Math.min(100, porcentagem)
+                    );
+
+                    arco.style.strokeDasharray =
+                        `${porcentagem} 100`;
+                }
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro ao atualizar ansiedade:",
+                    erro
+                );
+
+            }
+        }
+
+        // Atualiza quando abre
+        atualizarAnsiedade();
+
+        // Atualiza a cada 3 segundos
+        setInterval(
+            atualizarAnsiedade,
+            3000
+        );
+    </script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
 </body>

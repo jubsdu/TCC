@@ -1,528 +1,514 @@
 document.addEventListener("DOMContentLoaded", function () {
-        const performanceGauge =
-        document.querySelector(
-            '[data-heart-rate-gauge]'
+    const performanceGauge =
+    document.querySelector(
+        '[data-heart-rate-gauge]'
+    );
+
+if (performanceGauge) {
+
+    const progress =
+        performanceGauge.querySelector(
+            ".gauge-progress"
         );
 
-    if (performanceGauge) {
+    const valueElement =
+        performanceGauge.querySelector(
+            ".gauge-value"
+        );
 
-        const progress =
-            performanceGauge.querySelector(
-                ".gauge-progress"
+    if (progress && valueElement) {
+
+        const currentBpm =
+            Number(
+                valueElement.textContent.trim()
             );
-
-        const valueElement =
-            performanceGauge.querySelector(
-                ".gauge-value"
-            );
-
-        if (progress && valueElement) {
-
-            const currentBpm =
-                Number(
-                    valueElement.textContent.trim()
-                );
-
-            const minBpm = 60;
-            const maxBpm = 140;
-
-            let percentage =
-                ((currentBpm - minBpm) /
-                (maxBpm - minBpm)) * 100;
-
-            percentage =
-                Math.max(
-                    0,
-                    Math.min(100, percentage)
-                );
-
-            progress.setAttribute(
-                "stroke-dasharray",
-                `${percentage} ${100 - percentage}`
-            );
-        }
-    }
-    
-    const heartGauge = document.querySelector("[data-heart-rate-gauge]");
-
-    if (heartGauge) {
-        const progress = heartGauge.querySelector(".gauge-progress");
-        const valueElement = heartGauge.querySelector(".gauge-value");
-
-        const currentBpm = Number(valueElement.textContent.trim());
 
         const minBpm = 60;
         const maxBpm = 140;
 
-        // Calcula a porcentagem do BPM dentro da escala
         let percentage =
-            ((currentBpm - minBpm) / (maxBpm - minBpm)) * 100;
+            ((currentBpm - minBpm) /
+            (maxBpm - minBpm)) * 100;
 
-        // Impede que o arco passe dos limites
-        percentage = Math.max(0, Math.min(100, percentage));
+        percentage =
+            Math.max(
+                0,
+                Math.min(100, percentage)
+            );
 
-        // Atualiza o arco
         progress.setAttribute(
             "stroke-dasharray",
             `${percentage} ${100 - percentage}`
         );
     }
-    
-    // =========================
-    // EXIBIR / OCULTAR SENHA
-    // =========================
+}
 
-    const eyeButtons = document.querySelectorAll(".eye");
+const heartGauge = document.querySelector("[data-heart-rate-gauge]");
 
-    eyeButtons.forEach(function (button) {
+if (heartGauge) {
+    const progress = heartGauge.querySelector(".gauge-progress");
+    const valueElement = heartGauge.querySelector(".gauge-value");
 
-        button.addEventListener("click", function () {
+    const currentBpm = Number(valueElement.textContent.trim());
 
-            // Encontra o input de senha dentro do mesmo field
-            const field = button.closest(".field");
-            const passwordInput = field.querySelector("input");
+    const minBpm = 60;
+    const maxBpm = 140;
 
-            if (!passwordInput) {
-                return;
-            }
+    // Calcula a porcentagem do BPM dentro da escala
+    let percentage =
+        ((currentBpm - minBpm) / (maxBpm - minBpm)) * 100;
 
-            // Alterna entre senha e texto
-            if (passwordInput.type === "password") {
+    // Impede que o arco passe dos limites
+    percentage = Math.max(0, Math.min(100, percentage));
 
-                passwordInput.type = "text";
+    // Atualiza o arco
+    progress.setAttribute(
+        "stroke-dasharray",
+        `${percentage} ${100 - percentage}`
+    );
+}
 
-                // Troca o ícone
-                const icon = button.querySelector("i");
+// =========================
+// EXIBIR / OCULTAR SENHA
+// =========================
 
-                if (icon) {
-                    icon.classList.remove("ri-eye-fill");
-                    icon.classList.add("ri-eye-off-fill");
-                }
+const eyeButtons = document.querySelectorAll(".eye");
 
-            } else {
+eyeButtons.forEach(function (button) {
 
-                passwordInput.type = "password";
+    button.addEventListener("click", function () {
 
-                // Volta o ícone
-                const icon = button.querySelector("i");
+        // Encontra o input de senha dentro do mesmo field
+        const field = button.closest(".field");
+        const passwordInput = field.querySelector("input");
 
-                if (icon) {
-                    icon.classList.remove("ri-eye-off-fill");
-                    icon.classList.add("ri-eye-fill");
-                }
-
-            }
-
-        });
-
-    });
-    
-    // =========================
-    // NAVEGAÇÃO DATA-NEXT
-    // =========================
-
-    const nextButtons = document.querySelectorAll("[data-next]");
-
-    nextButtons.forEach(function (button) {
-
-        // Não interfere no botão de motivo
-        if (button.id === "reasonNextButton") {
+        if (!passwordInput) {
             return;
         }
 
-        button.addEventListener("click", function () {
+        // Alterna entre senha e texto
+        if (passwordInput.type === "password") {
 
-            const nextPage = button.dataset.next;
+            passwordInput.type = "text";
 
-            if (nextPage) {
-                window.location.href = nextPage;
+            // Troca o ícone
+            const icon = button.querySelector("i");
+
+            if (icon) {
+                icon.classList.remove("ri-eye-fill");
+                icon.classList.add("ri-eye-off-fill");
             }
 
-        });
+        } else {
 
-    });
-    
-    // =========================
-    // ONBOARDING - MOTIVO
-    // =========================
+            passwordInput.type = "password";
 
-    const reasonButtons = document.querySelectorAll(
-        '.choice-btn[data-choice]:not(#treatmentForm .choice-btn[data-choice])'
-    );
+            // Volta o ícone
+            const icon = button.querySelector("i");
 
-    const reasonNextButton =
-        document.getElementById("reasonNextButton");
-
-    const reasonMessage =
-
-        document.getElementById("choiceMessage");
-
-    reasonButtons.forEach(function (button) {
-
-        button.addEventListener("click", function () {
-
-            // Remove seleção anterior
-            reasonButtons.forEach(function (otherButton) {
-                otherButton.classList.remove("selected");
-            });
-
-            // Seleciona o botão clicado
-            button.classList.add("selected");
-
-            // Esconde mensagem
-            if (reasonMessage) {
-                reasonMessage.classList.remove("show");
+            if (icon) {
+                icon.classList.remove("ri-eye-off-fill");
+                icon.classList.add("ri-eye-fill");
             }
 
-        });
+        }
 
     });
 
-    if (reasonNextButton) {
+});
 
-        reasonNextButton.addEventListener("click", function () {
+// =========================
+// NAVEGAÇÃO DATA-NEXT
+// =========================
 
-            const selectedButton =
-                document.querySelector(
-                    '.choice-btn[data-choice].selected'
-                );
+const nextButtons = document.querySelectorAll("[data-next]");
 
-            // Não selecionou nada
-            if (!selectedButton) {
+nextButtons.forEach(function (button) {
 
-                if (reasonMessage) {
-                    reasonMessage.classList.add("show");
-                }
-
-                return;
-            }
-
-            // Vai para a próxima página
-            const nextPage =
-                reasonNextButton.dataset.next;
-
-            if (nextPage) {
-                window.location.href = nextPage;
-            }
-
-        });
-
+    // Não interfere no botão de motivo
+    if (button.id === "reasonNextButton") {
+        return;
     }
-    
-    // =========================
-    // ACOMPANHAMENTO
-    // =========================
 
-    const treatmentForm =
-        document.getElementById("treatmentForm");
+    button.addEventListener("click", function () {
 
-    if (treatmentForm) {
+        const nextPage = button.dataset.next;
 
-        const treatmentButtons =
-            treatmentForm.querySelectorAll(
-                ".choice-btn[data-choice]"
+        if (nextPage) {
+            window.location.href = nextPage;
+        }
+
+    });
+
+});
+
+// =========================
+// ONBOARDING - MOTIVO
+// =========================
+
+const reasonButtons = document.querySelectorAll(
+    '.choice-btn[data-choice]:not(#treatmentForm .choice-btn[data-choice])'
+);
+
+const reasonNextButton =
+    document.getElementById("reasonNextButton");
+
+const reasonMessage =
+
+    document.getElementById("choiceMessage");
+
+reasonButtons.forEach(function (button) {
+
+    button.addEventListener("click", function () {
+
+        // Remove seleção anterior
+        reasonButtons.forEach(function (otherButton) {
+            otherButton.classList.remove("selected");
+        });
+
+        // Seleciona o botão clicado
+        button.classList.add("selected");
+
+        // Esconde mensagem
+        if (reasonMessage) {
+            reasonMessage.classList.remove("show");
+        }
+
+    });
+
+});
+
+if (reasonNextButton) {
+
+    reasonNextButton.addEventListener("click", function () {
+
+        const selectedButton =
+            document.querySelector(
+                '.choice-btn[data-choice].selected'
             );
 
-        const treatmentInput =
-            document.getElementById("treatmentInput");
+        // Não selecionou nada
+        if (!selectedButton) {
 
-        const message =
-            document.getElementById("choiceMessage");
+            if (reasonMessage) {
+                reasonMessage.classList.add("show");
+            }
+
+            return;
+        }
+
+        // Vai para a próxima página
+        const nextPage =
+            reasonNextButton.dataset.next;
+
+        if (nextPage) {
+            window.location.href = nextPage;
+        }
+
+    });
+
+}
+
+// =========================
+// ACOMPANHAMENTO
+// =========================
+
+const treatmentForm =
+    document.getElementById("treatmentForm");
+
+if (treatmentForm) {
+
+    const treatmentButtons =
+        treatmentForm.querySelectorAll(
+            ".choice-btn[data-choice]"
+        );
+
+    const treatmentInput =
+        document.getElementById("treatmentInput");
+
+    const message =
+        document.getElementById("choiceMessage");
 
 
-        // =========================
-        // CLICAR NAS OPÇÕES
-        // =========================
+    // =========================
+    // CLICAR NAS OPÇÕES
+    // =========================
 
-        treatmentButtons.forEach(function (button) {
+    treatmentButtons.forEach(function (button) {
 
-            button.addEventListener("click", function (event) {
+        button.addEventListener("click", function (event) {
+
+            event.preventDefault();
+
+            const choice =
+                button.dataset.choice;
+
+
+            // -------------------------
+            // NENHUM
+            // -------------------------
+
+            if (choice === "nenhum") {
+
+                // Remove seleção de todas
+                treatmentButtons.forEach(function (otherButton) {
+
+                    otherButton.classList.remove("selected");
+
+                });
+
+                // Seleciona "Nenhum"
+                button.classList.add("selected");
+
+            }
+
+
+            // -------------------------
+            // OUTRAS OPÇÕES
+            // -------------------------
+
+            else {
+
+                // Se clicar em qualquer acompanhamento,
+                // "Nenhum" é desmarcado.
+
+                const nenhumButton =
+                    treatmentForm.querySelector(
+                        '[data-choice="nenhum"]'
+                    );
+
+                if (nenhumButton) {
+
+                    nenhumButton.classList.remove(
+                        "selected"
+                    );
+
+                }
+
+
+                // IMPORTANTE:
+                // NÃO remove as outras opções.
+
+                // Isso permite:
+
+                // ☑ Psicoterapia
+                // ☑ Consulta médica
+                // ☑ Medicação
+
+                button.classList.toggle("selected");
+
+            }
+
+
+            // Esconde mensagem de erro
+
+            if (message) {
+
+                message.classList.remove("show");
+
+            }
+
+        });
+
+    });
+
+
+    // =========================
+    // CLICAR EM "PRÓXIMO"
+    // =========================
+
+    treatmentForm.addEventListener(
+        "submit",
+        function (event) {
+
+            const selectedButtons =
+                treatmentForm.querySelectorAll(
+                    ".choice-btn.selected"
+                );
+
+
+            // -------------------------
+            // NENHUMA SELEÇÃO
+            // -------------------------
+
+            if (selectedButtons.length === 0) {
 
                 event.preventDefault();
 
-                const choice =
-                    button.dataset.choice;
-
-
-                // -------------------------
-                // NENHUM
-                // -------------------------
-
-                if (choice === "nenhum") {
-
-                    // Remove seleção de todas
-                    treatmentButtons.forEach(function (otherButton) {
-
-                        otherButton.classList.remove("selected");
-
-                    });
-
-                    // Seleciona "Nenhum"
-                    button.classList.add("selected");
-
-                }
-
-
-                // -------------------------
-                // OUTRAS OPÇÕES
-                // -------------------------
-
-                else {
-
-                    // Se clicar em qualquer acompanhamento,
-                    // "Nenhum" é desmarcado.
-
-                    const nenhumButton =
-                        treatmentForm.querySelector(
-                            '[data-choice="nenhum"]'
-                        );
-
-                    if (nenhumButton) {
-
-                        nenhumButton.classList.remove(
-                            "selected"
-                        );
-
-                    }
-
-
-                    // IMPORTANTE:
-                    // NÃO remove as outras opções.
-
-                    // Isso permite:
-
-                    // ☑ Psicoterapia
-                    // ☑ Consulta médica
-                    // ☑ Medicação
-
-                    button.classList.toggle("selected");
-
-                }
-
-
-                // Esconde mensagem de erro
-
                 if (message) {
 
-                    message.classList.remove("show");
+                    message.classList.add("show");
 
                 }
 
-            });
+                return;
 
-        });
-
-
-        // =========================
-        // CLICAR EM "PRÓXIMO"
-        // =========================
-
-        treatmentForm.addEventListener(
-            "submit",
-            function (event) {
-
-                const selectedButtons =
-                    treatmentForm.querySelectorAll(
-                        ".choice-btn.selected"
-                    );
+            }
 
 
-                // -------------------------
-                // NENHUMA SELEÇÃO
-                // -------------------------
+            // -------------------------
+            // REMOVE INPUTS ANTIGOS
+            // -------------------------
 
-                if (selectedButtons.length === 0) {
+            treatmentForm
+                .querySelectorAll(
+                    'input[name="treatment"]'
+                )
+                .forEach(function (input) {
 
-                    event.preventDefault();
+                    input.remove();
 
-                    if (message) {
+                });
 
-                        message.classList.add("show");
 
-                    }
+            // -------------------------
+            // CRIA UM INPUT PARA
+            // CADA OPÇÃO SELECIONADA
+            // -------------------------
 
-                    return;
+            selectedButtons.forEach(
+                function (button) {
+
+                    const input =
+                        document.createElement("input");
+
+                    input.type = "hidden";
+
+                    input.name = "treatment";
+
+                    input.value =
+                        button.dataset.choice;
+
+                    treatmentForm.appendChild(input);
 
                 }
+            );
 
 
-                // -------------------------
-                // REMOVE INPUTS ANTIGOS
-                // -------------------------
+            // O formulário continua normalmente.
+            // O navegador envia todos os inputs.
+        }
+    );
 
-                treatmentForm
-                    .querySelectorAll(
-                        'input[name="treatment"]'
-                    )
-                    .forEach(function (input) {
+}
 
-                        input.remove();
+// =========================
+// MENU LATERAL
+// =========================
 
-                    });
+const menuButtons = document.querySelectorAll("[data-menu]");
+const navDrawer = document.querySelector(".nav-drawer");
 
+menuButtons.forEach(function (button) {
 
-                // -------------------------
-                // CRIA UM INPUT PARA
-                // CADA OPÇÃO SELECIONADA
-                // -------------------------
+    button.addEventListener("click", function () {
 
-                selectedButtons.forEach(
-                    function (button) {
-
-                        const input =
-                            document.createElement("input");
-
-                        input.type = "hidden";
-
-                        input.name = "treatment";
-
-                        input.value =
-                            button.dataset.choice;
-
-                        treatmentForm.appendChild(input);
-
-                    }
-                );
-
-
-                // O formulário continua normalmente.
-                // O navegador envia todos os inputs.
-            }
-        );
-
-    }
-
-    // =========================
-    // MENU LATERAL
-    // =========================
-
-    const menuButtons = document.querySelectorAll("[data-menu]");
-    const navDrawer = document.querySelector(".nav-drawer");
-
-    menuButtons.forEach(function (button) {
-
-        button.addEventListener("click", function () {
-
-            if (navDrawer) {
-                navDrawer.classList.toggle("open");
-            }
-
-        });
+        if (navDrawer) {
+            navDrawer.classList.toggle("open");
+        }
 
     });
 
-    // =========================
-    // BOTÕES DO MENU
-    // =========================
+});
 
-    const drawerButtons = document.querySelectorAll("[data-drawer-go]");
+// =========================
+// BOTÕES DO MENU
+// =========================
 
-    drawerButtons.forEach(function (button) {
+const drawerButtons = document.querySelectorAll("[data-drawer-go]");
 
-        button.addEventListener("click", function () {
+drawerButtons.forEach(function (button) {
 
-            const page = button.getAttribute("data-drawer-go");
+    button.addEventListener("click", function () {
 
-            if (page) {
-                window.location.href = page;
-            }
+        const page = button.getAttribute("data-drawer-go");
 
-        });
+        if (page) {
+            window.location.href = page;
+        }
 
     });
 
-    // =========================
-    // FECHAR MENU AO CLICAR FORA
-    // =========================
+});
 
-    if (navDrawer) {
+// =========================
+// FECHAR MENU AO CLICAR FORA
+// =========================
 
-        navDrawer.addEventListener("click", function (event) {
+if (navDrawer) {
 
-            if (event.target === navDrawer) {
-                navDrawer.classList.remove("open");
-            }
+    navDrawer.addEventListener("click", function (event) {
 
-        });
+        if (event.target === navDrawer) {
+            navDrawer.classList.remove("open");
+        }
 
-    }
+    });
 
-    // =========================
-    // GRÁFICO DE ANSIEDADE
-    // =========================
+}
 
-    const anxietyChart = document.querySelector("[data-anxiety-chart]");
+// =========================
+// GRÁFICO DE ANSIEDADE
+// =========================
 
-    if (anxietyChart) {
+const anxietyChart = document.querySelector("[data-anxiety-chart]");
 
-        const anxietyData = [
-            { day: "S", value: 7 },
-            { day: "T", value: 3 },
-            { day: "Q", value: 3 },
-            { day: "Q", value: 0 },
-            { day: "S", value: 0 },
-            { day: "S", value: 3 },
-            { day: "D", value: 7 }
-        ];
+if (anxietyChart) {
 
-        anxietyChart.innerHTML = `
+    const anxietyData = [
+        { day: "S", value: 7 },
+        { day: "T", value: 3 },
+        { day: "Q", value: 3 },
+        { day: "Q", value: 0 },
+        { day: "S", value: 0 },
+        { day: "S", value: 3 },
+        { day: "D", value: 7 }
+    ];
 
-            <div class="anxiety-chart-wrapper">
+    anxietyChart.innerHTML = `
 
-                <div class="anxiety-chart-scale">
-                    <span>10</span>
-                    <span>8</span>
-                    <span>6</span>
-                    <span>4</span>
-                    <span>2</span>
-                    <span>0</span>
-                </div>
+        <div class="anxiety-chart-wrapper">
 
-                <div class="anxiety-chart-content">
+            <div class="anxiety-chart-scale">
+                <span>10</span>
+                <span>8</span>
+                <span>6</span>
+                <span>4</span>
+                <span>2</span>
+                <span>0</span>
+            </div>
 
-                    <div class="anxiety-chart-plot">
+            <div class="anxiety-chart-content">
 
-                        <div class="anxiety-chart-grid-lines">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
+                <div class="anxiety-chart-plot">
 
-                        <div class="anxiety-chart-bars">
-
-                            ${anxietyData.map(function (item) {
-
-                                const barHeight = item.value === 0
-                                    ? "0%"
-                                    : `${item.value * 10}%`;
-
-                                return `
-                                    <div class="anxiety-chart-column">
-
-                                        <div
-                                            class="anxiety-chart-bar"
-                                            style="height: ${barHeight};"
-                                            title="${item.value} de 10"
-                                        ></div>
-
-                                    </div>
-                                `;
-
-                            }).join("")}
-
-                        </div>
-
+                    <div class="anxiety-chart-grid-lines">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
                     </div>
 
-                    <div class="anxiety-chart-days">
+                    <div class="anxiety-chart-bars">
 
                         ${anxietyData.map(function (item) {
 
+                            const barHeight = item.value === 0
+                                ? "0%"
+                                : `${item.value * 10}%`;
+
                             return `
-                                <span>${item.day}</span>
+                                <div class="anxiety-chart-column">
+
+                                    <div
+                                        class="anxiety-chart-bar"
+                                        style="height: ${barHeight};"
+                                        title="${item.value} de 10"
+                                    ></div>
+
+                                </div>
                             `;
 
                         }).join("")}
@@ -531,406 +517,420 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 </div>
 
+                <div class="anxiety-chart-days">
+
+                    ${anxietyData.map(function (item) {
+
+                        return `
+                            <span>${item.day}</span>
+                        `;
+
+                    }).join("")}
+
+                </div>
+
             </div>
 
-        `;
+        </div>
+
+    `;
+
+}
+
+// =========================
+// MEDIDOR DE FREQUÊNCIA CARDÍACA
+// =========================
+
+const heartRateGauges =
+    document.querySelectorAll("[data-heart-rate-gauge]");
+
+if (heartRateGauges.length > 0) {
+
+    const STORAGE_KEY = "vitapulse-heart-rate";
+
+    let currentBpm = 82;
+    let minBpm = 62;
+    let maxBpm = 124;
+
+    // Recuperar dados salvos
+
+    try {
+
+        const savedData =
+            JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (savedData) {
+
+            currentBpm = Number(savedData.currentBpm) || 82;
+            minBpm = Number(savedData.minBpm) || 62;
+            maxBpm = Number(savedData.maxBpm) || 124;
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Não foi possível recuperar os dados do medidor."
+        );
 
     }
 
-    // =========================
-    // MEDIDOR DE FREQUÊNCIA CARDÍACA
-    // =========================
+    // Limitar valores
 
-    const heartRateGauges =
-        document.querySelectorAll("[data-heart-rate-gauge]");
+    function clamp(value, min, max) {
 
-    if (heartRateGauges.length > 0) {
+        return Math.max(
+            min,
+            Math.min(max, value)
+        );
 
-        const STORAGE_KEY = "vitapulse-heart-rate";
+    }
 
-        let currentBpm = 82;
-        let minBpm = 62;
-        let maxBpm = 124;
+    // Atualizar medidor
 
-        // Recuperar dados salvos
+    function updateHeartRate(bpm) {
+
+        currentBpm = Math.round(
+            clamp(bpm, 40, 180)
+        );
+
+        minBpm = Math.min(
+            minBpm,
+            currentBpm
+        );
+
+        maxBpm = Math.max(
+            maxBpm,
+            currentBpm
+        );
+
+        const percentage = clamp(
+            (currentBpm - 40) / 140,
+            0,
+            1
+        );
+
+        const arcPercentage = 75;
+
+        const filledArc = Math.max(
+            0.1,
+            arcPercentage * percentage
+        );
+
+        heartRateGauges.forEach(function (container) {
+
+            const gaugeProgress =
+                container.querySelector(".gauge-progress");
+
+            const gaugeValue =
+                container.querySelector(".gauge-value");
+
+            const gaugeMinMax =
+                container.querySelectorAll(".gauge-minmax");
+
+            const gaugeWave =
+                container.querySelector(".gauge-wave");
+
+            if (
+                !gaugeProgress ||
+                !gaugeValue ||
+                gaugeMinMax.length < 2 ||
+                !gaugeWave
+            ) {
+
+                console.warn(
+                    "Elementos do medidor não encontrados.",
+                    container
+                );
+
+                return;
+
+            }
+
+            // Valor principal
+
+            gaugeValue.textContent = currentBpm;
+
+            // Valores mínimo e máximo
+
+            gaugeMinMax[0].textContent = minBpm;
+            gaugeMinMax[1].textContent = maxBpm;
+
+            // Arco do medidor
+
+            gaugeProgress.setAttribute(
+                "stroke-dasharray",
+                `${filledArc} ${100 - filledArc}`
+            );
+
+            // Onda do coração
+
+            const amplitude = 8 + percentage * 10;
+
+            const wavePath = `
+                M35 112
+                H65
+                L87 ${112 - amplitude}
+                L112 ${112 + amplitude}
+                L134 ${112 - amplitude / 2}
+                L154 112
+                H185
+            `;
+
+            gaugeWave.setAttribute(
+                "d",
+                wavePath
+            );
+
+        });
+
+        // Salvar dados
 
         try {
 
-            const savedData =
-                JSON.parse(localStorage.getItem(STORAGE_KEY));
-
-            if (savedData) {
-
-                currentBpm = Number(savedData.currentBpm) || 82;
-                minBpm = Number(savedData.minBpm) || 62;
-                maxBpm = Number(savedData.maxBpm) || 124;
-
-            }
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({
+                    currentBpm: currentBpm,
+                    minBpm: minBpm,
+                    maxBpm: maxBpm
+                })
+            );
 
         } catch (error) {
 
             console.log(
-                "Não foi possível recuperar os dados do medidor."
+                "Não foi possível salvar os dados do medidor."
             );
 
         }
-
-        // Limitar valores
-
-        function clamp(value, min, max) {
-
-            return Math.max(
-                min,
-                Math.min(max, value)
-            );
-
-        }
-
-        // Atualizar medidor
-
-        function updateHeartRate(bpm) {
-
-            currentBpm = Math.round(
-                clamp(bpm, 40, 180)
-            );
-
-            minBpm = Math.min(
-                minBpm,
-                currentBpm
-            );
-
-            maxBpm = Math.max(
-                maxBpm,
-                currentBpm
-            );
-
-            const percentage = clamp(
-                (currentBpm - 40) / 140,
-                0,
-                1
-            );
-
-            const arcPercentage = 75;
-
-            const filledArc = Math.max(
-                0.1,
-                arcPercentage * percentage
-            );
-
-            heartRateGauges.forEach(function (container) {
-
-                const gaugeProgress =
-                    container.querySelector(".gauge-progress");
-
-                const gaugeValue =
-                    container.querySelector(".gauge-value");
-
-                const gaugeMinMax =
-                    container.querySelectorAll(".gauge-minmax");
-
-                const gaugeWave =
-                    container.querySelector(".gauge-wave");
-
-                if (
-                    !gaugeProgress ||
-                    !gaugeValue ||
-                    gaugeMinMax.length < 2 ||
-                    !gaugeWave
-                ) {
-
-                    console.warn(
-                        "Elementos do medidor não encontrados.",
-                        container
-                    );
-
-                    return;
-
-                }
-
-                // Valor principal
-
-                gaugeValue.textContent = currentBpm;
-
-                // Valores mínimo e máximo
-
-                gaugeMinMax[0].textContent = minBpm;
-                gaugeMinMax[1].textContent = maxBpm;
-
-                // Arco do medidor
-
-                gaugeProgress.setAttribute(
-                    "stroke-dasharray",
-                    `${filledArc} ${100 - filledArc}`
-                );
-
-                // Onda do coração
-
-                const amplitude = 8 + percentage * 10;
-
-                const wavePath = `
-                    M35 112
-                    H65
-                    L87 ${112 - amplitude}
-                    L112 ${112 + amplitude}
-                    L134 ${112 - amplitude / 2}
-                    L154 112
-                    H185
-                `;
-
-                gaugeWave.setAttribute(
-                    "d",
-                    wavePath
-                );
-
-            });
-
-            // Salvar dados
-
-            try {
-
-                localStorage.setItem(
-                    STORAGE_KEY,
-                    JSON.stringify({
-                        currentBpm: currentBpm,
-                        minBpm: minBpm,
-                        maxBpm: maxBpm
-                    })
-                );
-
-            } catch (error) {
-
-                console.log(
-                    "Não foi possível salvar os dados do medidor."
-                );
-
-            }
-
-        }
-
-        // Disponibilizar função globalmente
-
-        window.updateHeartRate = updateHeartRate;
-
-        // Iniciar medidor
-
-        updateHeartRate(currentBpm);
-
-        // Simulação automática
-
-        setInterval(function () {
-
-            const variation =
-                Math.floor(Math.random() * 11) - 5;
-
-            const nextBpm = clamp(
-                currentBpm + variation,
-                60,
-                140
-            );
-
-            updateHeartRate(nextBpm);
-
-        }, 2500);
 
     }
 
-    // =========================
-    // GRÁFICO DE PRESSÃO ARTERIAL
-    // =========================
+    // Disponibilizar função globalmente
 
-    const pressureChart =
-        document.querySelector("[data-pressure-chart]");
+    window.updateHeartRate = updateHeartRate;
 
-    const pressureLabels =
-        document.querySelector("[data-chart-labels]");
+    // Iniciar medidor
 
-    const pressureButtons =
-        document.querySelectorAll(
-            ".pressure-history .history-btn"
+    updateHeartRate(currentBpm);
+
+    // Simulação automática
+
+    setInterval(function () {
+
+        const variation =
+            Math.floor(Math.random() * 11) - 5;
+
+        const nextBpm = clamp(
+            currentBpm + variation,
+            60,
+            140
         );
 
+        updateHeartRate(nextBpm);
 
-    if (
-        pressureChart &&
-        pressureLabels &&
-        pressureButtons.length > 0
-    ) {
+    }, 2500);
 
-        const pressureHistoryData = {
+}
 
-            "24h": {
-                values: [35, 65, 48, 82, 58, 38],
-                labels: [
-                    "00h",
-                    "04h",
-                    "08h",
-                    "12h",
-                    "16h",
-                    "20h"
-                ]
-            },
+// =========================
+// GRÁFICO DE PRESSÃO ARTERIAL
+// =========================
 
-            "7d": {
-                values: [55, 72, 45, 88, 62, 76, 52],
-                labels: [
-                    "Seg",
-                    "Ter",
-                    "Qua",
-                    "Qui",
-                    "Sex",
-                    "Sáb",
-                    "Dom"
-                ]
-            },
+const pressureChart =
+    document.querySelector("[data-pressure-chart]");
 
-            "30d": {
-                values: [42, 68, 55, 78, 48, 85, 62],
-                labels: [
-                    "01",
-                    "05",
-                    "10",
-                    "15",
-                    "20",
-                    "25",
-                    "30"
-                ]
-            },
+const pressureLabels =
+    document.querySelector("[data-chart-labels]");
 
-            "3m": {
-                values: [60, 45, 75, 52, 88, 65],
-                labels: [
-                    "Jul",
-                    "Ago",
-                    "Set",
-                    "Out",
-                    "Nov",
-                    "Dez"
-                ]
-            }
-
-        };
-
-        // Atualizar gráfico de pressão
-
-        function updatePressureChart(period) {
-
-            const selectedData = pressureHistoryData[period];
-
-            if (!selectedData) {
-                return;
-            }
-
-            pressureChart.innerHTML = "";
-            pressureLabels.innerHTML = "";
-
-            const columnCount = selectedData.labels.length;
-
-            pressureChart.style.gridTemplateColumns =
-                `repeat(${columnCount}, 1fr)`;
-
-            pressureLabels.style.gridTemplateColumns =
-                `repeat(${columnCount}, 1fr)`;
-
-            // Criar colunas do gráfico
-
-            selectedData.values.forEach(function (value) {
-
-                const column =
-                    document.createElement("div");
-
-                column.className = "pressure-bar";
-
-                column.style.height = value + "%";
-
-                pressureChart.appendChild(column);
-
-            });
+const pressureButtons =
+    document.querySelectorAll(
+        ".pressure-history .history-btn"
+    );
 
 
-            // Criar rótulos inferiores
+if (
+    pressureChart &&
+    pressureLabels &&
+    pressureButtons.length > 0
+) {
 
-            selectedData.labels.forEach(function (label) {
+    const pressureHistoryData = {
 
-                const text =
-                    document.createElement("span");
+        "24h": {
+            values: [35, 65, 48, 82, 58, 38],
+            labels: [
+                "00h",
+                "04h",
+                "08h",
+                "12h",
+                "16h",
+                "20h"
+            ]
+        },
 
-                text.textContent = label;
+        "7d": {
+            values: [55, 72, 45, 88, 62, 76, 52],
+            labels: [
+                "Seg",
+                "Ter",
+                "Qua",
+                "Qui",
+                "Sex",
+                "Sáb",
+                "Dom"
+            ]
+        },
 
-                pressureLabels.appendChild(text);
+        "30d": {
+            values: [42, 68, 55, 78, 48, 85, 62],
+            labels: [
+                "01",
+                "05",
+                "10",
+                "15",
+                "20",
+                "25",
+                "30"
+            ]
+        },
 
-            });
-
-            // Atualizar botão ativo
-
-            pressureButtons.forEach(function (button) {
-
-                const isActive =
-                    button.dataset.period === period;
-
-                button.classList.toggle(
-                    "active",
-                    isActive
-                );
-
-            });
-
+        "3m": {
+            values: [60, 45, 75, 52, 88, 65],
+            labels: [
+                "Jul",
+                "Ago",
+                "Set",
+                "Out",
+                "Nov",
+                "Dez"
+            ]
         }
 
-        // Eventos dos botões de pressão
+    };
+
+    // Atualizar gráfico de pressão
+
+    function updatePressureChart(period) {
+
+        const selectedData = pressureHistoryData[period];
+
+        if (!selectedData) {
+            return;
+        }
+
+        pressureChart.innerHTML = "";
+        pressureLabels.innerHTML = "";
+
+        const columnCount = selectedData.labels.length;
+
+        pressureChart.style.gridTemplateColumns =
+            `repeat(${columnCount}, 1fr)`;
+
+        pressureLabels.style.gridTemplateColumns =
+            `repeat(${columnCount}, 1fr)`;
+
+        // Criar colunas do gráfico
+
+        selectedData.values.forEach(function (value) {
+
+            const column =
+                document.createElement("div");
+
+            column.className = "pressure-bar";
+
+            column.style.height = value + "%";
+
+            pressureChart.appendChild(column);
+
+        });
+
+
+        // Criar rótulos inferiores
+
+        selectedData.labels.forEach(function (label) {
+
+            const text =
+                document.createElement("span");
+
+            text.textContent = label;
+
+            pressureLabels.appendChild(text);
+
+        });
+
+        // Atualizar botão ativo
 
         pressureButtons.forEach(function (button) {
 
-            button.addEventListener("click", function () {
+            const isActive =
+                button.dataset.period === period;
 
-                const selectedPeriod =
-                    button.dataset.period;
-
-                updatePressureChart(selectedPeriod);
-
-            });
+            button.classList.toggle(
+                "active",
+                isActive
+            );
 
         });
-
-        // Iniciar gráfico em 24 horas
-
-        updatePressureChart("24h");
 
     }
 
-    const weekButton = document.getElementById("weekButton");
-    const weekMenu = document.getElementById("weekMenu");
-    const weekArrow = document.getElementById("weekArrow");
+    // Eventos dos botões de pressão
 
-    if (weekButton && weekMenu) {
-        weekButton.addEventListener("click", function () {
-            weekMenu.classList.toggle("active");
+    pressureButtons.forEach(function (button) {
 
-            if (weekMenu.classList.contains("active")) {
-                weekArrow.textContent = "▲";
-            } else {
-                weekArrow.textContent = "▼";
-            }
+        button.addEventListener("click", function () {
+
+            const selectedPeriod =
+                button.dataset.period;
+
+            updatePressureChart(selectedPeriod);
+
         });
 
-        const weekOptions = weekMenu.querySelectorAll("button");
+    });
 
-        weekOptions.forEach(function (option) {
-            option.addEventListener("click", function () {
-                const selectedWeek = option.getAttribute("data-week");
+    // Iniciar gráfico em 24 horas
 
-                document.querySelector(".week-date").textContent = selectedWeek;
+    updatePressureChart("24h");
 
-                weekMenu.classList.remove("active");
-                weekArrow.textContent = "▼";
-            });
+}
+
+const weekButton = document.getElementById("weekButton");
+const weekMenu = document.getElementById("weekMenu");
+const weekArrow = document.getElementById("weekArrow");
+
+if (weekButton && weekMenu) {
+    weekButton.addEventListener("click", function () {
+        weekMenu.classList.toggle("active");
+
+        if (weekMenu.classList.contains("active")) {
+            weekArrow.textContent = "▲";
+        } else {
+            weekArrow.textContent = "▼";
+        }
+    });
+
+    const weekOptions = weekMenu.querySelectorAll("button");
+
+    weekOptions.forEach(function (option) {
+        option.addEventListener("click", function () {
+            const selectedWeek = option.getAttribute("data-week");
+
+            document.querySelector(".week-date").textContent = selectedWeek;
+
+            weekMenu.classList.remove("active");
+            weekArrow.textContent = "▼";
         });
+    });
 
-        document.addEventListener("click", function (event) {
-            if (!event.target.closest(".week-selector")) {
-                weekMenu.classList.remove("active");
-                weekArrow.textContent = "▼";
-            }
-        });
-    }
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest(".week-selector")) {
+            weekMenu.classList.remove("active");
+            weekArrow.textContent = "▼";
+        }
+    });
+}
 
 });

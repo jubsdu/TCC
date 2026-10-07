@@ -17,7 +17,7 @@ import time
 # CONFIGURAÇÕES
 # ============================================================
 
-URL_BACKEND_PRINCIPAL = "http://127.0.0.1:5000/api/ia-data"
+URL_BACKEND_PRINCIPAL = "http://127.0.0.1:5000"
 
 MAX_PONTOS = 100
 LIMITE_BPM = 100
@@ -26,6 +26,7 @@ app = Flask(__name__)
 
 usuarios_ativos = set()
 monitores = {}
+atividades = {}
 
 # ============================================================
 # CARREGAR MODELO
@@ -141,6 +142,17 @@ def processar_bpm(user_id, bpm):
     monitor["probabilidade_ia"] = probabilidade_ia
 
     # -----------------------------------------
+    # ANSIEDADE
+    # -----------------------------------------
+
+    processar_ansiedade(
+        user_id,
+        bpm,
+        resultado_ia,
+        probabilidade_ia
+    )
+
+    # -----------------------------------------
     # ENVIAR PARA O BACKEND PRINCIPAL
     # -----------------------------------------
 
@@ -154,32 +166,137 @@ def processar_bpm(user_id, bpm):
         if resultado_ia is not None else None,
         "probabilidade_ia": float(probabilidade_ia)
         if probabilidade_ia is not None else None,
-        "horario": horario_recebimento
+        "horario": horario_recebimento.isoformat()
+    }
+    dados_performance = {
+        "user_id": int(user_id),
+        "bpm": float(bpm),
+        "horario": horario_recebimento.isoformat()
     }
 
     try:
 
-        resposta = requests.post(
-            URL_BACKEND_PRINCIPAL,
+        resposta_ia = requests.post(
+            f"{URL_BACKEND_PRINCIPAL}/api/ia-data",
             json=dados_para_backend,
             timeout=3
         )
 
         print(
-            "DADO ENVIADO:",
+            "IA:",
             user_id,
-            resposta.status_code
+            resposta_ia.status_code
         )
 
     except Exception as e:
 
         print(
-            "ERRO AO ENVIAR PARA BACKEND:",
+            "ERRO AO ENVIAR IA:",
             e
         )
 
-    return dados_para_backend
+    try:
 
+        resposta_performance = requests.post(
+            f"{URL_BACKEND_PRINCIPAL}/api/ia-performance",
+            json=dados_performance,
+            timeout=3
+        )
+
+        print(
+            "PERFORMANCE:",
+            user_id,
+            resposta_performance.status_code
+        )
+
+    except Exception as e:
+
+        print(
+            "ERRO AO ENVIAR PERFORMANCE:",
+            e
+        )
+
+# ============================================================
+# PROCESSAR ANSIEDADE
+# ============================================================
+
+def processar_ansiedade(
+    user_id,
+    bpm,
+    resultado_ia,
+    probabilidade_ia
+):
+
+    if probabilidade_ia is None:
+        return
+
+    # --------------------------------------------------------
+    # PROBABILIDADE → NÍVEL DE ANSIEDADE
+    #
+    # Escala simulada para o TCC:
+    # 0%   - 20%  = nível 1
+    # 20%  - 40%  = nível 2
+    # 40%  - 60%  = nível 3
+    # 60%  - 80%  = nível 4
+    # 80% - 100%  = nível 5
+    # --------------------------------------------------------
+
+    probabilidade = float(probabilidade_ia)
+
+    if probabilidade < 0.20:
+        nivel_ansiedade = 1
+
+    elif probabilidade < 0.40:
+        nivel_ansiedade = 2
+
+    elif probabilidade < 0.60:
+        nivel_ansiedade = 3
+
+    elif probabilidade < 0.80:
+        nivel_ansiedade = 4
+
+    else:
+        nivel_ansiedade = 5
+
+    dados_ansiedade = {
+        "user_id": int(user_id),
+        "level_anxious": nivel_ansiedade,
+        "cardiac_rate": float(bpm),
+
+        # Cada registro representa uma medição
+        # simulada de ansiedade.
+        "minutes": 1,
+
+        "resultado_ia": int(resultado_ia)
+        if resultado_ia is not None else None,
+
+        "probabilidade_ia": probabilidade,
+
+        "horario": datetime.now().isoformat()
+    }
+
+    try:
+
+        resposta = requests.post(
+            f"{URL_BACKEND_PRINCIPAL}/api/ia-anxiety",
+            json=dados_ansiedade,
+            timeout=3
+        )
+
+        print(
+            "ANSIEDADE:",
+            user_id,
+            resposta.status_code,
+            "NÍVEL:",
+            nivel_ansiedade
+        )
+
+    except Exception as e:
+
+        print(
+            "ERRO AO ENVIAR ANSIEDADE:",
+            e
+        )
 
 # ============================================================
 # ATIVAR MONITOR
@@ -238,7 +355,7 @@ def gerar_dados_automaticamente():
                 bpm
             )
 
-        time.sleep(10)
+        time.sleep(3)
 
 
 # ============================================================

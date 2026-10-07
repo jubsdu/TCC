@@ -65,7 +65,7 @@ class Checkup(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     date = Column(Date)
-    average_bpm = Column(Float)
+    current_bpm = Column(Float)
     observation = Column(Text)
 
 # class Medicao_bpm(Base):
@@ -167,7 +167,7 @@ class Episode_trigger(Base):
     trigger_id = Column(Integer, ForeignKey("triggers.id"), nullable=False)
 
 class Tecnic(Base):
-    __tablename__ = "tecniques"
+    __tablename__ = "tecnics"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100))
     description = Column(Text)
@@ -176,7 +176,7 @@ class Episode_tecniques(Base):
     __tablename__ = "episodes_tecniques"
     id = Column(Integer, primary_key=True, index=True)
     episode_id = Column(Integer, ForeignKey("episodes_anxious.id"), nullable=False)
-    tecnic_id = Column(Integer, ForeignKey("tecniques.id"), nullable=False)
+    tecnic_id = Column(Integer, ForeignKey("tecnics.id"), nullable=False)
 
 class Accompaniment(Base):
     __tablename__ = "accompaniments"
