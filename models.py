@@ -2,6 +2,33 @@ from database import Base
 from sqlalchemy import Column, Integer, String, Float, Text, DateTime, Time, Date, ForeignKey, Boolean, Numeric
 from datetime import datetime, timezone
 
+class Measurement_ia(Base):
+    __tablename__ = "measurements_ia"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
+    bpm = Column(Integer)
+    rr = Column(Numeric(8, 2))
+    rmssd = Column(Numeric(8, 2))
+    bpm_medio = Column(Numeric(8, 2))
+
+    resultado_ia = Column(Integer)
+
+    probabilidade_ia = Column(
+        Numeric(5, 4)
+    )
+
+    date_time = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
+    )
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)

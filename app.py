@@ -2,7 +2,8 @@ import os
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from flask_cors import CORS
 from database import SessionLocal, init_db
-from models import User, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly, Assessment_anxious
+from models import Measurement_ia, User, Category, Checkup, Activity, Cardiac_zone, Recovery, Physical_assessment, Goal_weekly, Measurement_bpm, Episode_anxious, Trigger, Episode_trigger, Tecnic, Episode_tecniques, Accompaniment, Measurement_pressure, Measurement_ppg, Warning_pressure, Report_weekly, Assessment_anxious
+import requests
 
 app = Flask(__name__)
 app.secret_key = "sua-chave-secreta"
@@ -33,6 +34,100 @@ from datetime import date, datetime, timezone, timedelta
 
 #     return render_template('home.html', user=user)
 
+@app.route('/api/ia-data', methods=['POST'])
+def receber_dados_ia():
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"erro": "Nenhum dado recebido"}), 400
+
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"erro": "user_id não informado"}), 400
+
+    user = (
+        db_session.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if not user:
+        return jsonify({"erro": "Usuário não encontrado"}), 404
+
+    try:
+
+        horario = data.get("horario")
+
+        if horario:
+            horario = datetime.fromisoformat(horario)
+
+        medicao = Measurement_ia(
+            user_id=user_id,
+            bpm=data.get("bpm"),
+            rr=data.get("rr"),
+            rmssd=data.get("rmssd"),
+            bpm_medio=data.get("bpm_medio"),
+            resultado_ia=data.get("resultado_ia"),
+            probabilidade_ia=data.get("probabilidade_ia"),
+            date_time=horario
+        )
+
+        db_session.add(medicao)
+        db_session.commit()
+        db_session.refresh(medicao)
+
+        return jsonify({
+            "status": "ok",
+            "mensagem": "Dados da IA recebidos com sucesso",
+            "id": medicao.id
+        }), 201
+
+    except Exception as e:
+
+        db_session.rollback()
+
+        print("ERRO AO SALVAR DADOS DA IA:", e)
+
+        return jsonify({
+            "erro": "Erro ao salvar dados da IA"
+        }), 500
+
+@app.route('/api/ia-data', methods=['GET'])
+def obter_dados_ia():
+
+    user_id = request.args.get("user_id", type=int)
+
+    query = db_session.query(Measurement_ia)
+
+    if user_id:
+        query = query.filter(
+            Measurement_ia.user_id == user_id
+        )
+
+    dados = query.order_by(
+        Measurement_ia.date_time.desc()
+    ).all()
+
+    return jsonify([
+        {
+            "id": item.id,
+            "user_id": item.user_id,
+            "bpm": item.bpm,
+            "rr": float(item.rr) if item.rr is not None else None,
+            "rmssd": float(item.rmssd) if item.rmssd is not None else None,
+            "bpm_medio": float(item.bpm_medio)
+                if item.bpm_medio is not None else None,
+            "resultado_ia": item.resultado_ia,
+            "probabilidade_ia": float(item.probabilidade_ia)
+                if item.probabilidade_ia is not None else None,
+            "date_time": item.date_time.isoformat()
+                if item.date_time else None
+        }
+        for item in dados
+    ])
+
 # Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -56,6 +151,29 @@ def login():
 
         # Guarda o ID do usuário existente
         session['user_id'] = user.id
+        try:
+
+            resposta_ia = requests.post(
+                "http://127.0.0.1:5001/ativar-monitor",
+                json={
+                    "user_id": user.id
+                },
+                timeout=3
+            )
+
+            print(
+                "ATIVAÇÃO DA IA:",
+                resposta_ia.status_code
+            )
+
+        except Exception as e:
+
+            print(
+                "ERRO AO ATIVAR MONITOR DA IA:",
+                e
+            )
+
+        return redirect(url_for('home'))
 
     # ==========================================
     # SALVA ACOMPANHAMENTO ESCOLHIDO
@@ -2096,14 +2214,17 @@ def report():
 
 @app.route('/home')
 def home():
+
     user_id = session.get('user_id')
 
     if not user_id:
         return redirect(url_for('login'))
 
-    user = db_session.query(User).filter(
-        User.id == user_id
-    ).first()
+    user = (
+        db_session.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
 
     if not user:
         return redirect(url_for('login'))
@@ -2125,6 +2246,7 @@ def home():
     all_checkups = (
         db_session.query(Checkup)
         .filter(Checkup.user_id == user_id)
+        .order_by(Checkup.date.desc())
         .all()
     )
 
@@ -2134,12 +2256,34 @@ def home():
         if checkup.average_bpm is not None
     ]
 
-    current_bpm = bpm_values[-1] if bpm_values else 0
+    current_bpm = bpm_values[0] if bpm_values else 0
+
     min_bpm = min(bpm_values) if bpm_values else 0
+
     max_bpm = max(bpm_values) if bpm_values else 0
 
-    print("USUÁRIO LOGADO:", user.id, user.email)
-    print("CHECKUPS:", recent_checkups)
+    ia_data = (
+        db_session.query(Measurement_ia)
+        .filter(
+            Measurement_ia.user_id == user_id
+        )
+        .order_by(
+            Measurement_ia.date_time.desc()
+        )
+        .first()
+    )
+
+    print(
+        "USUÁRIO LOGADO:",
+        user.id,
+        user.email
+    )
+
+    print(
+        "DADO MAIS RECENTE DA IA:",
+        ia_data
+    )
+
     return render_template(
         'home.html',
         user=user,
@@ -2147,20 +2291,9 @@ def home():
         categories=categories,
         current_bpm=current_bpm,
         min_bpm=min_bpm,
-        max_bpm=max_bpm
+        max_bpm=max_bpm,
+        ia_data=ia_data
     )
-    # user = db_session.query(User).filter_by(
-    #     id=user_id
-    # ).first()
-
-    # if not user:
-    #     session.pop('user_id', None)
-    #     return redirect(url_for('login'))
-
-    # return render_template(
-    #     'home.html',
-    #     user=user
-    # )
 
 @app.route('/api/users', methods=["GET", "POST"])
 def users():
@@ -3015,8 +3148,18 @@ def get_weekly_report():
         }
     })
 
+print("===================================")
+print("ESTE É O APP PRINCIPAL DO VITAPULSE")
+print("ROTAS REGISTRADAS:")
+print(app.url_map)
+print("===================================")
+
 if __name__ == "__main__":
     init_db()
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=True
+    )
     print("Sucesso!")
