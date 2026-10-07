@@ -106,7 +106,7 @@
                                     stroke-width="24"
                                     stroke-linecap="round"
                                     pathLength="100"
-                                    stroke-dasharray="22 78"
+                                    stroke-dasharray="0 100"
                                     transform="rotate(135 110 110)"
                                 />
 
@@ -124,13 +124,13 @@
 
                                 <!-- Valor atual -->
 
-                                 <text
+                                <text
                                     class="gauge-value"
                                     x="110"
                                     y="126"
                                     text-anchor="middle"
                                 >
-                                    {{ activity.average_rate if activity else 0 }}
+                                    {{ (average_bpm or 0)|round|int }}
                                 </text>
 
 
@@ -141,7 +141,9 @@
                                     x="110"
                                     y="160"
                                     text-anchor="middle"
-                                >BPM</text>
+                                >
+                                    BPM
+                                </text>
 
 
                                 <!-- Valor mínimo -->
@@ -151,18 +153,20 @@
                                     x="78"
                                     y="177"
                                     text-anchor="middle"
-                                >62</text>
+                                >
+                                    0
+                                </text>
 
 
                                 <!-- Valor máximo -->
 
                                 <text
-                                    class="gauge-minmax gauge-max"
+                                    class="gauge-max"
                                     x="142"
                                     y="177"
                                     text-anchor="middle"
                                 >
-                                    {{ activity.maximum_rate if activity else 140 }}
+                                    {{ (max_bpm or 0)|round|int }}
                                 </text>
 
                             </svg>
@@ -202,7 +206,7 @@
                             <tr>
                                 <td>Intensidade</td>
                                 <td>
-                                    {{ activity.intensity if activity else '-' }}
+                                    {{ activity.intensity if activity else 0 }}
                                 </td>
                             </tr>
 

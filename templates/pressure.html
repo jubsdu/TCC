@@ -95,6 +95,7 @@
                                 >
 
                                     <circle
+                                        class="gauge-background"
                                         cx="110"
                                         cy="110"
                                         r="78"
@@ -103,10 +104,12 @@
                                         stroke-width="24"
                                         stroke-linecap="round"
                                         pathLength="100"
-                                        stroke-dasharray="73 27"
+                                        stroke-dasharray="75 25"
                                         transform="rotate(135 110 110)"
                                     />
 
+
+                                    <!-- Arco dinâmico -->
 
                                     <circle
                                         class="gauge-progress"
@@ -118,16 +121,12 @@
                                         stroke-width="24"
                                         stroke-linecap="round"
                                         pathLength="100"
-
-                                        {% if average_bpm %}
-                                            stroke-dasharray="{{ (average_bpm / 180 * 73)|round|int }} 100"
-                                        {% else %}
-                                            stroke-dasharray="0 100"
-                                        {% endif %}
-
+                                        stroke-dasharray="0 100"
                                         transform="rotate(135 110 110)"
                                     />
 
+
+                                    <!-- Cobrinha dinâmica -->
 
                                     <path
                                         class="gauge-wave"
@@ -138,59 +137,51 @@
                                     />
 
 
+                                    <!-- Valor atual -->
+
                                     <text
+                                        class="gauge-value"
                                         x="110"
                                         y="126"
                                         text-anchor="middle"
-                                        class="gauge-value"
                                     >
-                                        {{ average_bpm|round|int }}
+                                        {{ (average_bpm or 0)|round|int }}
                                     </text>
 
 
+                                    <!-- Unidade -->
+
                                     <text
+                                        class="gauge-label"
                                         x="110"
                                         y="160"
                                         text-anchor="middle"
-                                        class="gauge-label"
                                     >
                                         BPM
                                     </text>
 
 
+                                    <!-- Valor mínimo -->
+
                                     <text
+                                        class="gauge-minmax gauge-min"
                                         x="78"
                                         y="177"
                                         text-anchor="middle"
-                                        class="gauge-minmax"
                                     >
-                                        {% if measurements_this_week %}
-                                            {{ measurements_this_week
-                                                |map(attribute='cardiac_rate')
-                                                |select
-                                                |min
-                                            }}
-                                        {% else %}
-                                            0
-                                        {% endif %}
+                                        0
                                     </text>
 
 
+                                    <!-- Valor máximo -->
+
                                     <text
+                                        class="gauge-max"
                                         x="142"
                                         y="177"
                                         text-anchor="middle"
-                                        class="gauge-minmax"
                                     >
-                                        {% if measurements_this_week %}
-                                            {{ measurements_this_week
-                                                |map(attribute='cardiac_rate')
-                                                |select
-                                                |max
-                                            }}
-                                        {% else %}
-                                            0
-                                        {% endif %}
+                                        {{ (max_bpm or 0)|round|int }}
                                     </text>
 
                                 </svg>
@@ -280,35 +271,113 @@
                     <h2 class="section-title">Histórico</h2>
 
                     <section class="card pressure-history">
-                        <div class="pressure-chart">
-                            <div class="chart-y-labels">
-                                <span>Altíssima</span>
-                                <span>Alta</span>
-                                <span>Normal</span>
-                                <span>Baixa</span>
-                                <span>Baixíssima</span>
-                            </div>
+                        {% if measurements_this_week %}
 
-                            <div class="chart-area">
-                                <div class="chart-grid">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
+                            <div class="pressure-chart">
+                                <div class="chart-y-labels">
+                                    <span>Altíssima</span>
+                                    <span>Alta</span>
+                                    <span>Normal</span>
+                                    <span>Baixa</span>
+                                    <span>Baixíssima</span>
                                 </div>
 
-                                <div
-                                    class="chart-bars"
-                                    data-pressure-chart
-                                ></div>
+                                <div class="chart-area">
+                                    <div class="chart-grid">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
 
-                                <div
-                                    class="chart-x-labels"
-                                    data-chart-labels
-                                ></div>
+                                    <div
+                                        class="chart-bars"
+                                        data-pressure-chart
+                                    ></div>
+
+                                    <div
+                                        class="chart-x-labels"
+                                        data-chart-labels
+                                    ></div>
+                                </div>
                             </div>
-                        </div>
+
+                        {% else %}
+
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="ri-bar-chart-box-line"></i>
+                                </div>
+
+                                <div class="empty-state-content">
+                                    <strong>Nenhum histórico disponível</strong>
+                                    <span>
+                                        Você ainda não possui medições de pressão registradas.
+                                    </span>
+                                </div>
+                            </div>
+
+                        {% endif %}
+
+                        <style>
+                            .pressure-history-card {
+                                padding: 12px 15px;
+                                border-radius: 14px;
+                                background: #fff;
+                                overflow: hidden;
+                                }
+
+                                .pressure-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                table-layout: fixed;
+                                font-size: 14px;
+                                color: var(--ink);
+                                }
+
+                                .pressure-table th {
+                                padding: 8px 4px 10px;
+                                color: var(--wine);
+                                font-size: 13px;
+                                font-weight: 900;
+                                text-align: center;
+                                border-bottom: 1px solid var(--wine);
+                                }
+
+                                .pressure-table td {
+                                height: 30px;
+                                padding: 7px 4px;
+                                text-align: center;
+                                font-size: 13px;
+                                color: #333;
+                                border-bottom: 1px solid var(--wine);
+                                }
+
+                                .pressure-table th:first-child,
+                                .pressure-table td:first-child {
+                                width: 29%;
+                                text-align: left;
+                                color: var(--wine);
+                                font-weight: 800;
+                                }
+
+                                .pressure-table th:nth-child(2),
+                                .pressure-table td:nth-child(2) {
+                                width: 31%;
+                                border-left: 1px solid var(--wine);
+                                border-right: 1px solid var(--wine);
+                                }
+
+                                .pressure-table th:nth-child(3),
+                                .pressure-table td:nth-child(3) {
+                                width: 40%;
+                                }
+
+                                .pressure-table tbody tr:last-child td {
+                                border-bottom: none;
+                                }
+                        </style>
 
                         <div class="history-controls">
                             <button
@@ -445,8 +514,11 @@
                                 Média:
 
                                 <b>
-                                    {{ average_sistolica|round|int }}/{{ average_diastolica|round|int }}
-                                    mmHg
+                                    {% if measurements_this_week %}
+                                        {{ average_sistolica|round|int }}/{{ average_diastolica|round|int }} mmHg
+                                    {% else %}
+                                        Sem dados
+                                    {% endif %}
                                 </b>
 
                             </li>

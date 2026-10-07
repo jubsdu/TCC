@@ -96,7 +96,9 @@
                                 transform="rotate(135 110 110)"
                             />
 
+
                             <!-- Arco dinâmico -->
+
                             <circle
                                 class="gauge-progress"
                                 cx="110"
@@ -107,11 +109,13 @@
                                 stroke-width="24"
                                 stroke-linecap="round"
                                 pathLength="100"
-                                stroke-dasharray="22 78"
+                                stroke-dasharray="0 100"
                                 transform="rotate(135 110 110)"
                             />
 
-                            <!-- Onda cardíaca -->
+
+                            <!-- Cobrinha dinâmica -->
+
                             <path
                                 class="gauge-wave"
                                 d="M35 112 H65 L87 76 L112 139 L134 100 L154 112 H185"
@@ -120,17 +124,21 @@
                                 stroke-width="3"
                             />
 
+
                             <!-- Valor atual -->
+
                             <text
                                 class="gauge-value"
                                 x="110"
                                 y="126"
                                 text-anchor="middle"
                             >
-                                {{ current_bpm }}
+                                {{ (average_bpm or 0)|round|int }}
                             </text>
 
+
                             <!-- Unidade -->
+
                             <text
                                 class="gauge-label"
                                 x="110"
@@ -140,22 +148,28 @@
                                 BPM
                             </text>
 
+
+                            <!-- Valor mínimo -->
+
                             <text
                                 class="gauge-minmax gauge-min"
                                 x="78"
                                 y="177"
                                 text-anchor="middle"
                             >
-                                {{ min_bpm }}
+                                0
                             </text>
 
+
+                            <!-- Valor máximo -->
+
                             <text
-                                class="gauge-minmax gauge-max"
+                                class="gauge-max"
                                 x="142"
                                 y="177"
                                 text-anchor="middle"
                             >
-                                {{ max_bpm }}
+                                {{ (max_bpm or 0)|round|int }}
                             </text>
 
                         </svg>
@@ -260,54 +274,75 @@
                     </small>
                 </h2>
 
-                {% for checkup in recent_checkups %}
+                {% if recent_checkups %}
 
-                <div class="card recent">
+                    {% for checkup in recent_checkups %}
 
-                    <button
-                        class="pulse-btn"
-                        onclick="toast('Dados cardíacos atualizados')"
-                    >
-                        <img
-                            src="{{ url_for('static', filename='assets/pulse-icon.png') }}"
-                            alt="Batimentos"
-                        >
-                    </button>
+                        <div class="card recent">
 
-                    <div class="mini">
-                        {{ checkup.date.strftime('%d/%m/%Y') }}<br>
+                            <button
+                                class="pulse-btn"
+                                onclick="toast('Dados cardíacos atualizados')"
+                            >
+                                <img
+                                    src="{{ url_for('static', filename='assets/pulse-icon.png') }}"
+                                    alt="Batimentos"
+                                >
+                            </button>
 
-                        {% set dias = {
-                            'Monday': 'Segunda-feira',
-                            'Tuesday': 'Terça-feira',
-                            'Wednesday': 'Quarta-feira',
-                            'Thursday': 'Quinta-feira',
-                            'Friday': 'Sexta-feira',
-                            'Saturday': 'Sábado',
-                            'Sunday': 'Domingo'
-                        } %}
+                            <div class="mini">
+                                {{ checkup.date.strftime('%d/%m/%Y') }}<br>
 
-                        {{ dias[checkup.date.strftime('%A')] }}
+                                {% set dias = {
+                                    'Monday': 'Segunda-feira',
+                                    'Tuesday': 'Terça-feira',
+                                    'Wednesday': 'Quarta-feira',
+                                    'Thursday': 'Quinta-feira',
+                                    'Friday': 'Sexta-feira',
+                                    'Saturday': 'Sábado',
+                                    'Sunday': 'Domingo'
+                                } %}
+
+                                {{ dias[checkup.date.strftime('%A')] }}
+                            </div>
+
+                            <div>
+                                {{ checkup.type }}
+                            </div>
+
+                            <div class="mean">
+                                ♡ Média: {{ checkup.average_bpm|int }} BPM
+                            </div>
+
+                            <button
+                                class="info-link"
+                                onclick="toast('Detalhes do checkup')"
+                            >
+                                Mais informações ↗
+                            </button>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="card recent empty-state">
+
+                        <div class="empty-state-icon">
+                            <i class="ri-file-list-3-line"></i>
+                        </div>
+
+                        <div class="empty-state-content">
+                            <strong>Nenhum registro</strong><br>
+                            <span>
+                                Você ainda não possui registros recentes.
+                            </span>
+                        </div>
+
                     </div>
 
-                    <div>
-                        {{ checkup.type }}
-                    </div>
-
-                    <div class="mean">
-                        ♡ Média: {{ checkup.average_bpm|int }} BPM
-                    </div>
-
-                    <button
-                        class="info-link"
-                        onclick="toast('Detalhes do checkup')"
-                    >
-                        Mais informações ↗
-                    </button>
-
-                </div>
-
-                {% endfor %}
+                {% endif %}
             </main>
 
 

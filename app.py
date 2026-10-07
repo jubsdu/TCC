@@ -57,65 +57,9 @@ def login():
         # Guarda o ID do usuário existente
         session['user_id'] = user.id
 
-        print("LOGIN CORRETO - ID:", user.id)
-        print("SESSION:", dict(session))
-
-        return redirect(url_for('home'))
-
-    return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-
-    if request.method == 'POST':
-
-        name = request.form.get('name')
-        phone = request.form.get('phone')
-        email = request.form.get('email')
-        password = request.form.get('password')
-
-        # Verifica se o email já existe
-        existing_user = db_session.query(User).filter_by(
-            email=email
-        ).first()
-
-        if existing_user:
-            return "Este email já está cadastrado.", 400
-
-        # Cria o usuário
-        user = User(
-            name=name,
-            phone=phone,
-            email=email,
-            password=password
-        )
-
-        db_session.add(user)
-        db_session.commit()
-
-        print("USUÁRIO CRIADO:", user.id, user.email)
-
-        # ==========================================
-        # CRIA OS DADOS FICTÍCIOS DESSE USUÁRIO
-        # ==========================================
-
-        criar_dados_iniciais(user.id)
-        criar_dados_performance(user.id)
-        criar_dados_ansiedade(user.id)
-        criar_dados_pressao(user.id)
-        criar_dados_relatorio(user.id)
-
-        # ==========================================
-        # LOGIN AUTOMÁTICO
-        # ==========================================
-
-        session['user_id'] = user.id
-
-        print("USUÁRIO CRIADO - ID:", user.id)
-
-        # ==========================================
-        # SALVA O ACOMPANHAMENTO ESCOLHIDO
-        # ==========================================
+    # ==========================================
+    # SALVA ACOMPANHAMENTO ESCOLHIDO
+    # ==========================================
 
         treatments = session.get('treatments', [])
 
@@ -128,6 +72,7 @@ def register():
             )
 
             if not accompaniment:
+
                 accompaniment = Accompaniment(
                     user_id=user.id,
                     psychotherapy=False,
@@ -159,32 +104,151 @@ def register():
 
             db_session.commit()
 
-            print(
-                "ACOMPANHAMENTO SALVO - ID:",
-                accompaniment.id
-            )
-
-            print(
-                "Psicoterapia:",
-                accompaniment.psychotherapy
-            )
-
-            print(
-                "Consulta:",
-                accompaniment.consultation
-            )
-
-            print(
-                "Medicação:",
-                accompaniment.medication
-            )
+            print("ACOMPANHAMENTO SALVO:", treatments)
 
             session.pop('treatments', None)
 
-        # Vai para a página inicial depois do cadastro
+        print("LOGIN CORRETO - ID:", user.id)
+        print("SESSION:", dict(session))
+
         return redirect(url_for('home'))
 
-    # Se acessar /register pelo navegador (GET)
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+
+    if request.method == 'POST':
+
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # ==========================================
+        # VERIFICA SE O EMAIL JÁ EXISTE
+        # ==========================================
+
+        existing_user = (
+            db_session.query(User)
+            .filter_by(email=email)
+            .first()
+        )
+
+        if existing_user:
+            return "Este email já está cadastrado.", 400
+
+        # ==========================================
+        # CRIA O USUÁRIO
+        # ==========================================
+
+        user = User(
+            name=name,
+            phone=phone,
+            email=email,
+            password=password
+        )
+
+        db_session.add(user)
+        db_session.commit()
+
+        print("USUÁRIO CRIADO:", user.id, user.email)
+
+        # ==========================================
+        # LOGIN AUTOMÁTICO
+        # ==========================================
+
+        session['user_id'] = user.id
+
+        print("USUÁRIO CRIADO - ID:", user.id)
+
+        # ==========================================
+        # RECUPERA ACOMPANHAMENTOS ESCOLHIDOS
+        # ==========================================
+
+        treatments = session.get('treatments', [])
+
+        print("ACOMPANHAMENTOS RECEBIDOS:", treatments)
+
+        # ==========================================
+        # CRIA O ACOMPANHAMENTO
+        # ==========================================
+
+        accompaniment = (
+            db_session.query(Accompaniment)
+            .filter_by(user_id=user.id)
+            .first()
+        )
+
+        if not accompaniment:
+
+            accompaniment = Accompaniment(
+                user_id=user.id,
+                psychotherapy=False,
+                consultation=False,
+                medication=False
+            )
+
+            db_session.add(accompaniment)
+
+        # ==========================================
+        # SALVA AS OPÇÕES
+        # ==========================================
+
+        if "nenhum" in treatments:
+
+            accompaniment.psychotherapy = False
+            accompaniment.consultation = False
+            accompaniment.medication = False
+
+        else:
+
+            accompaniment.psychotherapy = (
+                "psychotherapy" in treatments
+            )
+
+            accompaniment.consultation = (
+                "consultation" in treatments
+            )
+
+            accompaniment.medication = (
+                "medication" in treatments
+            )
+
+        db_session.commit()
+
+        print(
+            "ACOMPANHAMENTO SALVO - ID:",
+            accompaniment.id
+        )
+
+        print(
+            "Psicoterapia:",
+            accompaniment.psychotherapy
+        )
+
+        print(
+            "Consulta:",
+            accompaniment.consultation
+        )
+
+        print(
+            "Medicação:",
+            accompaniment.medication
+        )
+
+        # ==========================================
+        # LIMPA A SESSÃO
+        # ==========================================
+
+        session.pop('treatments', None)
+
+        # ==========================================
+        # VAI PARA A PRÓXIMA ETAPA
+        # ==========================================
+
+        return redirect(url_for('onboarding_reason'))
+
     return render_template('register.html')
 
 def criar_dados_iniciais(user_id):
@@ -498,7 +562,6 @@ def criar_dados_ansiedade(user_id):
 
         tecnicas[name] = tecnic
 
-
     # =========================================================
     # 4. VERIFICA SE O USUÁRIO JÁ POSSUI EPISÓDIOS
     # =========================================================
@@ -514,7 +577,6 @@ def criar_dados_ansiedade(user_id):
         db_session.commit()
 
         return
-
 
     # =========================================================
     # 5. EPISÓDIOS DE ANSIEDADE
@@ -943,21 +1005,20 @@ def onboarding_treatment():
 
     if request.method == 'POST':
 
-        treatments = request.form.getlist("treatment")
+        treatments = request.form.getlist('treatment')
 
         if not treatments:
             return "Nenhum acompanhamento foi selecionado.", 400
 
+        print("ACOMPANHAMENTOS ESCOLHIDOS:", treatments)
+
         session['treatments'] = treatments
 
-        print(
-            "ACOMPANHAMENTOS ESCOLHIDOS:",
-            treatments
-        )
+        return redirect(url_for('login'))
 
-        return redirect(url_for('register'))
-
-    return render_template('onboarding-treatment.html')
+    return render_template(
+        'onboarding-treatment.html'
+    )
 
 # =====================================================
 # ALTERAR / ADICIONAR ACOMPANHAMENTO
@@ -971,11 +1032,13 @@ def onboarding_treatment_edit():
     if not user_id:
         return redirect(url_for('login'))
 
+
     accompaniment = (
         db_session.query(Accompaniment)
         .filter_by(user_id=user_id)
         .first()
     )
+
 
     if not accompaniment:
 
@@ -987,27 +1050,21 @@ def onboarding_treatment_edit():
         )
 
         db_session.add(accompaniment)
-        db_session.commit()
+        db_session.flush()
 
 
     if request.method == 'POST':
 
-        treatments = request.form.getlist("treatment")
+        treatments = request.form.getlist('treatment')
+
 
         if not treatments:
             return "Nenhum acompanhamento foi selecionado.", 400
 
-        print(
-            "ALTERANDO ACOMPANHAMENTO:",
-            treatments,
-            "USUÁRIO:",
-            user_id
-        )
 
-
-        # ==========================================
+        # =========================
         # NENHUM
-        # ==========================================
+        # =========================
 
         if "nenhum" in treatments:
 
@@ -1016,27 +1073,28 @@ def onboarding_treatment_edit():
             accompaniment.medication = False
 
 
-        # ==========================================
-        # ADICIONA / MANTÉM
-        # ==========================================
+        # =========================
+        # ACOMPANHAMENTOS
+        # =========================
 
         else:
 
-            if "psychotherapy" in treatments:
-                accompaniment.psychotherapy = True
+            accompaniment.psychotherapy = (
+                "psychotherapy" in treatments
+            )
 
-            if "consultation" in treatments:
-                accompaniment.consultation = True
+            accompaniment.consultation = (
+                "consultation" in treatments
+            )
 
-            if "medication" in treatments:
-                accompaniment.medication = True
+            accompaniment.medication = (
+                "medication" in treatments
+            )
 
 
         db_session.commit()
 
-        print("ACOMPANHAMENTO ATUALIZADO!")
-
-        return redirect(url_for("home"))
+        return redirect(url_for('home'))
 
 
     return render_template(
@@ -1152,7 +1210,7 @@ def anxiety():
     print("USUÁRIO ANSIEDADE:", user.id, user.email)
     print("EPISÓDIOS:", len(episodes))
 
-        # =====================================================
+    # =====================================================
     # SEMANA ATUAL
     # 21/09 até 27/09
     # =====================================================
@@ -1318,9 +1376,7 @@ def anxiety():
     print("MÉDIA ANSIEDADE:", average_anxiety)
     print("MÉDIA BPM:", average_bpm)
     print("BPM MÁXIMO:", max_bpm)
-
     tecnics = db_session.query(Tecnic).all()
-
     return render_template(
         'anxiety.html',
         user=user,
@@ -1748,7 +1804,7 @@ def report():
     # Se não existir relatório, cria
     if not report:
 
-        report = criar_dados_report(user_id)
+        report = criar_dados_relatorio(user_id)
 
         db_session.commit()
 
@@ -2093,18 +2149,18 @@ def home():
         min_bpm=min_bpm,
         max_bpm=max_bpm
     )
-    user = db_session.query(User).filter_by(
-        id=user_id
-    ).first()
+    # user = db_session.query(User).filter_by(
+    #     id=user_id
+    # ).first()
 
-    if not user:
-        session.pop('user_id', None)
-        return redirect(url_for('login'))
+    # if not user:
+    #     session.pop('user_id', None)
+    #     return redirect(url_for('login'))
 
-    return render_template(
-        'home.html',
-        user=user
-    )
+    # return render_template(
+    #     'home.html',
+    #     user=user
+    # )
 
 @app.route('/api/users', methods=["GET", "POST"])
 def users():
