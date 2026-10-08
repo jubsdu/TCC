@@ -1,28 +1,3 @@
-const heartGauge = document.querySelector("[data-heart-rate-gauge]");
-
-if (heartGauge) {
-    const progress = heartGauge.querySelector(".gauge-progress");
-    const valueElement = heartGauge.querySelector(".gauge-value");
-
-    const currentBpm = Number(valueElement.textContent.trim());
-
-    const minBpm = 60;
-    const maxBpm = 140;
-
-    // Calcula a porcentagem do BPM dentro da escala
-    let percentage =
-        ((currentBpm - minBpm) / (maxBpm - minBpm)) * 100;
-
-    // Impede que o arco passe dos limites
-    percentage = Math.max(0, Math.min(100, percentage));
-
-    // Atualiza o arco
-    progress.setAttribute(
-        "stroke-dasharray",
-        `${percentage} ${100 - percentage}`
-    );
-}
-
 // =========================
 // EXIBIR / OCULTAR SENHA
 // =========================
@@ -286,15 +261,12 @@ if (treatmentForm) {
                 event.preventDefault();
 
                 if (message) {
-
                     message.classList.add("show");
-
                 }
 
                 return;
 
             }
-
 
             // -------------------------
             // REMOVE INPUTS ANTIGOS
@@ -309,7 +281,6 @@ if (treatmentForm) {
                     input.remove();
 
                 });
-
 
             // -------------------------
             // CRIA UM INPUT PARA
@@ -333,7 +304,6 @@ if (treatmentForm) {
 
                 }
             );
-
 
             // O formulário continua normalmente.
             // O navegador envia todos os inputs.
@@ -404,16 +374,6 @@ if (navDrawer) {
 const anxietyChart = document.querySelector("[data-anxiety-chart]");
 
 if (anxietyChart) {
-
-    const anxietyData = [
-        { day: "S", value: 7 },
-        { day: "T", value: 3 },
-        { day: "Q", value: 3 },
-        { day: "Q", value: 0 },
-        { day: "S", value: 0 },
-        { day: "S", value: 3 },
-        { day: "D", value: 7 }
-    ];
 
     anxietyChart.innerHTML = `
 
@@ -488,165 +448,6 @@ if (anxietyChart) {
 }
 
 // =========================
-// MEDIDOR DE FREQUÊNCIA CARDÍACA
-// =========================
-
-const heartRateGauges =
-    document.querySelectorAll("[data-heart-rate-gauge]");
-
-if (heartRateGauges.length > 0) {
-
-    const STORAGE_KEY = "vitapulse-heart-rate";
-
-    let currentBpm = 82;
-    let minBpm = 60;
-    let maxBpm = 140;
-
-    try {
-
-        const savedData =
-            JSON.parse(localStorage.getItem(STORAGE_KEY));
-
-        if (savedData) {
-
-            currentBpm =
-                Number(savedData.currentBpm) || 82;
-
-            minBpm =
-                Number(savedData.minBpm) || 60;
-
-            maxBpm =
-                Number(savedData.maxBpm) || 140;
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Não foi possível recuperar os dados do medidor."
-        );
-    }
-
-    function clamp(value, min, max) {
-
-        return Math.max(
-            min,
-            Math.min(max, value)
-        );
-    }
-
-    function updateHeartRate(bpm) {
-
-        currentBpm = Math.round(
-            clamp(bpm, 60, 140)
-        );
-
-        heartRateGauges.forEach(function (container) {
-
-            const gaugeProgress =
-                container.querySelector(".gauge-progress");
-
-            const gaugeValue =
-                container.querySelector(".gauge-value");
-
-            const gaugeMin =
-                container.querySelector(".gauge-min");
-
-            const gaugeMax =
-                container.querySelector(".gauge-max");
-
-            const gaugeWave =
-                container.querySelector(".gauge-wave");
-
-            if (!gaugeProgress || !gaugeValue) {
-
-                console.warn(
-                    "Elementos do medidor não encontrados.",
-                    container
-                );
-
-                return;
-            }
-
-            // BPM
-            gaugeValue.textContent = currentBpm;
-
-            // Limites
-            if (gaugeMin) {
-                gaugeMin.textContent = 60;
-            }
-
-            if (gaugeMax) {
-                gaugeMax.textContent = 140;
-            }
-
-            // Arco: 60 → 140 BPM
-            const percentage = clamp(
-                (currentBpm - 60) / 80,
-                0,
-                1
-            );
-
-            const arcPercentage = 75;
-
-            const filledArc =
-                Math.max(
-                    0.1,
-                    arcPercentage * percentage
-                );
-
-            gaugeProgress.setAttribute(
-                "stroke-dasharray",
-                `${filledArc} ${100 - filledArc}`
-            );
-
-            // Onda
-            if (gaugeWave) {
-
-                const amplitude =
-                    8 + percentage * 10;
-
-                const wavePath = `
-                    M35 112
-                    H65
-                    L87 ${112 - amplitude}
-                    L112 ${112 + amplitude}
-                    L134 ${112 - amplitude / 2}
-                    L154 112
-                    H185
-                `;
-
-                gaugeWave.setAttribute(
-                    "d",
-                    wavePath
-                );
-            }
-        });
-
-        try {
-
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({
-                    currentBpm: currentBpm,
-                    minBpm: 60,
-                    maxBpm: 140
-                })
-            );
-
-        } catch (error) {
-
-            console.log(
-                "Não foi possível salvar os dados do medidor."
-            );
-        }
-    }
-
-    window.updateHeartRate = updateHeartRate;
-
-    updateHeartRate(currentBpm);
-}
-
-// =========================
 // GRÁFICO DE PRESSÃO ARTERIAL
 // =========================
 
@@ -667,61 +468,7 @@ if (
     pressureLabels &&
     pressureButtons.length > 0
 ) {
-
-    const pressureHistoryData = {
-
-        "24h": {
-            values: [35, 65, 48, 82, 58, 38],
-            labels: [
-                "00h",
-                "04h",
-                "08h",
-                "12h",
-                "16h",
-                "20h"
-            ]
-        },
-
-        "7d": {
-            values: [55, 72, 45, 88, 62, 76, 52],
-            labels: [
-                "Seg",
-                "Ter",
-                "Qua",
-                "Qui",
-                "Sex",
-                "Sáb",
-                "Dom"
-            ]
-        },
-
-        "30d": {
-            values: [42, 68, 55, 78, 48, 85, 62],
-            labels: [
-                "01",
-                "05",
-                "10",
-                "15",
-                "20",
-                "25",
-                "30"
-            ]
-        },
-
-        "3m": {
-            values: [60, 45, 75, 52, 88, 65],
-            labels: [
-                "Jul",
-                "Ago",
-                "Set",
-                "Out",
-                "Nov",
-                "Dez"
-            ]
-        }
-
-    };
-
+    
     // Atualizar gráfico de pressão
 
     function updatePressureChart(period) {
@@ -844,5 +591,3 @@ if (weekButton && weekMenu) {
         }
     });
 }
-
-});

@@ -35,843 +35,6 @@ from datetime import date, datetime, timezone, timedelta
 
 #     return render_template('home.html', user=user)
 
-@app.route('/api/anxiety-data')
-def anxiety_data():
-
-    user_id = session.get('user_id')
-
-    if not user_id:
-        return jsonify({
-            "tem_dados": False
-        }), 401
-
-    episodes = (
-        db_session.query(Episode_anxious)
-        .filter(
-            Episode_anxious.user_id == user_id
-        )
-        .order_by(
-            Episode_anxious.date_time.desc()
-        )
-        .all()
-    )
-
-    if not episodes:
-        return jsonify({
-            "tem_dados": False,
-            "average_anxiety": 0,
-            "average_bpm": 0,
-            "max_bpm": 0
-        })
-
-    # =========================================
-    # ANSIEDADE
-    # =========================================
-
-    anxiety_values = [
-        episode.level_anxious
-        for episode in episodes
-        if episode.level_anxious is not None
-    ]
-
-    average_anxiety = (
-        sum(anxiety_values) /
-        len(anxiety_values)
-        if anxiety_values
-        else 0
-    )
-
-    # =========================================
-    # BPM
-    # =========================================
-
-    bpm_values = [
-        episode.cardiac_rate
-        for episode in episodes
-        if episode.cardiac_rate is not None
-    ]
-
-    average_bpm = (
-        sum(bpm_values) /
-        len(bpm_values)
-        if bpm_values
-        else 0
-    )
-
-    max_bpm = (
-        max(bpm_values)
-        if bpm_values
-        else 0
-    )
-
-    # =========================================
-    # ÚLTIMO EPISÓDIO
-    # =========================================
-
-    ultimo = episodes[0]
-
-    return jsonify({
-        "tem_dados": True,
-
-        "average_anxiety":
-            float(average_anxiety),
-
-        "average_bpm":
-            float(average_bpm),
-
-        "max_bpm":
-            int(max_bpm),
-
-        "last_anxiety":
-            ultimo.level_anxious,
-
-        "last_bpm":
-            ultimo.cardiac_rate,
-
-        "last_date_time":
-            ultimo.date_time.isoformat()
-            if ultimo.date_time else None
-    })
-
-@app.route('/api/ia-anxiety', methods=['POST'])
-def receber_ansiedade_ia():
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({
-            "erro": "Nenhum dado recebido"
-        }), 400
-
-    user_id = data.get("user_id")
-    level_anxious = data.get("level_anxious")
-    cardiac_rate = data.get("cardiac_rate")
-    minutes = data.get("minutes")
-    tecnic_id = data.get("tecnic_id")
-
-    if not user_id:
-        return jsonify({
-            "erro": "user_id não informado"
-        }), 400
-
-    if level_anxious is None:
-        return jsonify({
-            "erro": "level_anxious não informado"
-        }), 400
-
-    if cardiac_rate is None:
-        return jsonify({
-            "erro": "cardiac_rate não informado"
-        }), 400
-
-    user = (
-        db_session.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
-
-    if not user:
-        return jsonify({
-            "erro": "Usuário não encontrado"
-        }), 404
-
-    try:
-
-        episodio = Episode_anxious(
-            user_id=user_id,
-            level_anxious=int(level_anxious),
-            cardiac_rate=int(float(cardiac_rate)),
-            minutes=int(minutes or 1),
-            date_time=datetime.now(timezone.utc)
-        )
-
-        db_session.add(episodio)
-
-        # Garante que o ID do episódio esteja disponível
-        db_session.flush()
-
-        # =========================================
-        # TÉCNICA UTILIZADA
-        # =========================================
-
-        if tecnic_id:
-
-            tecnica = (
-                db_session.query(Tecnic)
-                .filter(Tecnic.id == tecnic_id)
-                .first()
-            )
-
-            if tecnica:
-
-                relacao = Episode_tecniques(
-                    episode_id=episodio.id,
-                    tecnic_id=tecnica.id
-                )
-
-                db_session.add(relacao)
-
-        db_session.commit()
-
-        return jsonify({
-            "status": "ok",
-            "mensagem": "Dados de ansiedade salvos",
-            "episode_id": episodio.id,
-            "level_anxious": episodio.level_anxious,
-            "cardiac_rate": episodio.cardiac_rate,
-            "minutes": episodio.minutes,
-            "tecnic_id": tecnic_id
-        }), 201
-
-    except Exception as e:
-
-        db_session.rollback()
-
-        print(
-            "ERRO AO SALVAR ANSIEDADE DA IA:",
-            e
-        )
-
-        return jsonify({
-            "erro": "Erro ao salvar dados de ansiedade"
-        }), 500
-
-@app.route('/api/ia-assessment', methods=['POST'])
-def atualizar_avaliacao_ia():
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({
-            "erro": "Nenhum dado recebido"
-        }), 400
-
-    user_id = data.get("user_id")
-
-    if not user_id:
-        return jsonify({
-            "erro": "user_id não informado"
-        }), 400
-
-    hoje = datetime.now(timezone.utc).date()
-
-    inicio = hoje - timedelta(days=6)
-
-    atividades = (
-        db_session.query(Activity)
-        .filter(
-            Activity.user_id == user_id,
-            Activity.date >= inicio,
-            Activity.date <= hoje
-        )
-        .all()
-    )
-
-    if not atividades:
-        return jsonify({
-            "mensagem": "Ainda não existem atividades"
-        }), 200
-
-    fc = [
-        atividade.average_rate
-        for atividade in atividades
-        if atividade.average_rate is not None
-    ]
-
-    tempo = sum(
-        atividade.active_time or 0
-        for atividade in atividades
-    )
-
-    sessoes = sum(
-        atividade.quant_sessions or 0
-        for atividade in atividades
-    )
-
-    media_fc = (
-        int(sum(fc) / len(fc))
-        if fc
-        else 0
-    )
-
-    assessment = (
-        db_session.query(Physical_assessment)
-        .filter(
-            Physical_assessment.user_id == user_id
-        )
-        .order_by(
-            Physical_assessment.end_date.desc()
-        )
-        .first()
-    )
-
-    if not assessment:
-
-        assessment = Physical_assessment(
-            user_id=user_id,
-            beggining_date=inicio,
-            end_date=hoje,
-            average_fc=media_fc,
-            active_time=tempo,
-            quant_sessions=sessoes
-        )
-
-        db_session.add(assessment)
-
-    else:
-
-        assessment.beggining_date = inicio
-        assessment.end_date = hoje
-        assessment.average_fc = media_fc
-        assessment.active_time = tempo
-        assessment.quant_sessions = sessoes
-
-    db_session.commit()
-
-    return jsonify({
-        "status": "ok",
-        "average_fc": media_fc,
-        "active_time": tempo,
-        "quant_sessions": sessoes
-    }), 201
-
-@app.route('/api/ia-recovery', methods=['POST'])
-def gerar_recuperacao_ia():
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({
-            "erro": "Nenhum dado recebido"
-        }), 400
-
-    user_id = data.get("user_id")
-    final_bpm = data.get("final_bpm")
-
-    if not user_id or final_bpm is None:
-        return jsonify({
-            "erro": "Dados incompletos"
-        }), 400
-
-    hoje = datetime.now(timezone.utc).date()
-
-    bpm_1_min = max(
-        50,
-        int(final_bpm - random.randint(10, 20))
-    )
-
-    bpm_2_min = max(
-        45,
-        int(bpm_1_min - random.randint(8, 18))
-    )
-
-    queda_2_min = int(
-        final_bpm - bpm_2_min
-    )
-
-    recovery = Recovery(
-        user_id=user_id,
-        date=hoje,
-        final_bpm=int(final_bpm),
-        bpm_1_min=bpm_1_min,
-        bpm_2_min=bpm_2_min,
-        queda_2_min=queda_2_min
-    )
-
-    db_session.add(recovery)
-    db_session.commit()
-
-    return jsonify({
-        "status": "ok",
-        "final_bpm": final_bpm,
-        "bpm_1_min": bpm_1_min,
-        "bpm_2_min": bpm_2_min,
-        "queda_2_min": queda_2_min
-    }), 201
-
-@app.route('/api/ia-performance', methods=['POST'])
-def receber_performance_ia():
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({
-            "erro": "Nenhum dado recebido"
-        }), 400
-
-    user_id = data.get("user_id")
-    bpm = data.get("bpm")
-
-    if not user_id:
-        return jsonify({
-            "erro": "user_id não informado"
-        }), 400
-
-    if bpm is None:
-        return jsonify({
-            "erro": "bpm não informado"
-        }), 400
-
-    user = (
-        db_session.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
-
-    if not user:
-        return jsonify({
-            "erro": "Usuário não encontrado"
-        }), 404
-
-    try:
-
-        # ==========================================
-        # ATIVIDADE DO USUÁRIO
-        # ==========================================
-
-        atividade = (
-            db_session.query(Activity)
-            .filter(Activity.user_id == user_id)
-            .order_by(Activity.date.desc())
-            .first()
-        )
-
-        hoje = datetime.now(timezone.utc).date()
-
-        if not atividade or atividade.date != hoje:
-
-            atividade = Activity(
-                user_id=user_id,
-                date=hoje,
-                average_rate=int(bpm),
-                maximum_rate=int(bpm),
-                active_time=0,
-                intensity="Leve",
-                time_recovery=0,
-                quant_sessions=1
-            )
-
-            db_session.add(atividade)
-            db_session.flush()
-
-        else:
-
-            # ==========================================
-            # ATUALIZAR MÉDIA
-            # ==========================================
-
-            media_anterior = atividade.average_rate or 0
-
-            atividade.average_rate = int(
-                (media_anterior + float(bpm)) / 2
-            )
-
-            # ==========================================
-            # MAIOR BPM
-            # ==========================================
-
-            if not atividade.maximum_rate:
-                atividade.maximum_rate = int(bpm)
-
-            else:
-                atividade.maximum_rate = max(
-                    atividade.maximum_rate,
-                    int(bpm)
-                )
-
-            # Cada chamada representa aproximadamente
-            # 3 segundos de atividade
-            atividade.active_time = (
-                atividade.active_time or 0
-            ) + 3
-
-        # ==========================================
-        # INTENSIDADE
-        # ==========================================
-
-        if bpm < 100:
-            atividade.intensity = "Leve"
-
-        elif bpm < 120:
-            atividade.intensity = "Moderada"
-
-        elif bpm < 140:
-            atividade.intensity = "Intensa"
-
-        else:
-            atividade.intensity = "Muito intensa"
-
-        # ==========================================
-        # MEDIÇÃO INDIVIDUAL
-        # ==========================================
-
-        medicao = Measurement_bpm(
-            user_id=user_id,
-            activity_id=atividade.id,
-            bpm=int(bpm)
-        )
-
-        db_session.add(medicao)
-
-        # ==========================================
-        # ZONA CARDÍACA
-        # ==========================================
-
-        if bpm < 100:
-            zona = "Zona 1"
-            intensidade = "Leve"
-
-        elif bpm < 120:
-            zona = "Zona 2"
-            intensidade = "Moderada"
-
-        elif bpm < 140:
-            zona = "Zona 3"
-            intensidade = "Intensa"
-
-        elif bpm < 160:
-            zona = "Zona 4"
-            intensidade = "Muito intensa"
-
-        else:
-            zona = "Zona 5"
-            intensidade = "Máxima"
-
-        zona_existente = (
-            db_session.query(Cardiac_zone)
-            .filter(
-                Cardiac_zone.user_id == user_id,
-                Cardiac_zone.date == hoje,
-                Cardiac_zone.zone == zona
-            )
-            .first()
-        )
-
-        if zona_existente:
-
-            zona_existente.minutes = (
-                zona_existente.minutes or 0
-            ) + 1
-
-        else:
-
-            zona_existente = Cardiac_zone(
-                user_id=user_id,
-                date=hoje,
-                zone=zona,
-                intensity=intensidade,
-                minutes=1
-            )
-
-            db_session.add(zona_existente)
-
-        # ==========================================
-        # META SEMANAL
-        # ==========================================
-
-        inicio_semana = hoje - timedelta(
-            days=hoje.weekday()
-        )
-
-        fim_semana = inicio_semana + timedelta(days=6)
-
-        meta = (
-            db_session.query(Goal_weekly)
-            .filter(
-                Goal_weekly.user_id == user_id,
-                Goal_weekly.beginning_week == inicio_semana
-            )
-            .first()
-        )
-
-        if not meta:
-
-            meta = Goal_weekly(
-                user_id=user_id,
-                beginning_week=inicio_semana,
-                end_week=fim_semana,
-                goal_activity=150,
-                activity_completed=0,
-                goal_intensity=75,
-                intensity_completed=0,
-                goal_sessions=5,
-                sessions_completed=1
-            )
-
-            db_session.add(meta)
-
-        else:
-
-            meta.activity_completed = (
-                meta.activity_completed or 0
-            ) + 3
-
-            if intensidade in [
-                "Moderada",
-                "Intensa",
-                "Muito intensa",
-                "Máxima"
-            ]:
-
-                meta.intensity_completed = (
-                    meta.intensity_completed or 0
-                ) + 1
-
-        # ==========================================
-        # SALVAR
-        # ==========================================
-
-        db_session.commit()
-
-        return jsonify({
-            "status": "ok",
-            "mensagem": "Performance atualizada",
-            "activity_id": atividade.id,
-            "bpm": bpm,
-            "zona": zona
-        }), 201
-
-    except Exception as e:
-
-        db_session.rollback()
-
-        print(
-            "ERRO AO SALVAR PERFORMANCE DA IA:",
-            e
-        )
-
-        return jsonify({
-            "erro": "Erro ao salvar performance"
-        }), 500
-    
-@app.route('/api/performance-data')
-def performance_data():
-
-    user_id = session.get('user_id')
-
-    if not user_id:
-        return jsonify({
-            "tem_dados": False
-        }), 401
-
-    dados = (
-        db_session.query(Measurement_ia)
-        .filter(
-            Measurement_ia.user_id == user_id
-        )
-        .order_by(
-            Measurement_ia.date_time.desc()
-        )
-        .first()
-    )
-
-    if not dados:
-        return jsonify({
-            "tem_dados": False,
-            "average_bpm": 0,
-            "bpm": 0,
-            "rmssd": 0,
-            "resultado_ia": None,
-            "probabilidade_ia": None
-        })
-
-    return jsonify({
-        "tem_dados": True,
-        "bpm": dados.bpm,
-        "average_bpm": float(dados.bpm_medio)
-            if dados.bpm_medio is not None else 0,
-        "rmssd": float(dados.rmssd)
-            if dados.rmssd is not None else 0,
-        "resultado_ia": dados.resultado_ia,
-        "probabilidade_ia": float(dados.probabilidade_ia)
-            if dados.probabilidade_ia is not None else 0,
-        "date_time": dados.date_time.isoformat()
-            if dados.date_time else None
-    })
-
-@app.route('/api/ia-data', methods=['POST'])
-def receber_dados_ia():
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({
-            "erro": "Nenhum dado recebido"
-        }), 400
-
-    user_id = data.get("user_id")
-
-    if not user_id:
-        return jsonify({
-            "erro": "user_id não informado"
-        }), 400
-
-    user = (
-        db_session.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
-
-    if not user:
-        return jsonify({
-            "erro": "Usuário não encontrado"
-        }), 404
-
-    try:
-
-        # --------------------------------
-        # HORÁRIO
-        # --------------------------------
-
-        horario = data.get("horario")
-
-        if horario:
-            horario = datetime.fromisoformat(horario)
-        else:
-            horario = datetime.now(timezone.utc)
-
-        # --------------------------------
-        # SALVA MEDIÇÃO DA IA
-        # --------------------------------
-
-        medicao = Measurement_ia(
-            user_id=user_id,
-            bpm=data.get("bpm"),
-            rr=data.get("rr"),
-            rmssd=data.get("rmssd"),
-            bpm_medio=data.get("bpm_medio"),
-            resultado_ia=data.get("resultado_ia"),
-            probabilidade_ia=data.get("probabilidade_ia"),
-            date_time=horario
-        )
-
-        db_session.add(medicao)
-        db_session.commit()
-        db_session.refresh(medicao)
-
-        # --------------------------------
-        # CHECKUP DO DIA
-        # --------------------------------
-
-        hoje = horario.date()
-
-        checkup = (
-            db_session.query(Checkup)
-            .filter(
-                Checkup.user_id == user_id,
-                Checkup.date == hoje
-            )
-            .first()
-        )
-
-        if not checkup:
-
-            checkup = Checkup(
-                user_id=user_id,
-                type="Monitoramento cardíaco",
-                created_at=horario,
-                date=hoje,
-                current_bpm=data.get("bpm"),
-                observation="Checkup gerado a partir do monitoramento da IA."
-            )
-
-            db_session.add(checkup)
-
-        else:
-
-            if data.get("bpm") is not None:
-                checkup.current_bpm = data.get("bpm")
-
-        db_session.commit()
-
-        # --------------------------------
-        # SE NÃO EXISTIR, CRIA
-        # --------------------------------
-
-        if not checkup:
-
-            checkup = Checkup(
-                user_id=user_id,
-                type="Monitoramento cardíaco",
-                created_at=horario,
-                date=hoje,
-                average_bpm=data.get("bpm_medio"),
-                observation="Checkup gerado a partir do monitoramento da IA."
-            )
-
-            db_session.add(checkup)
-
-        else:
-
-            # Atualiza a média com a nova medição
-            if data.get("bpm_medio") is not None:
-                checkup.average_bpm = data.get("bpm_medio")
-
-
-        db_session.commit()
-
-        print(
-            "MEDIÇÃO IA SALVA:",
-            medicao.id,
-            "| CHECKUP:",
-            checkup.id
-        )
-
-        return jsonify({
-            "status": "ok",
-            "mensagem": "Dados da IA recebidos com sucesso",
-            "id": medicao.id,
-            "checkup_id": checkup.id
-        }), 201
-
-    except Exception as e:
-
-        db_session.rollback()
-
-        print(
-            "ERRO AO SALVAR DADOS DA IA:",
-            e
-        )
-
-        return jsonify({
-            "erro": "Erro ao salvar dados da IA"
-        }), 500
-
-@app.route('/api/ia-data', methods=['GET'])
-def obter_dados_ia():
-
-    user_id = request.args.get("user_id", type=int)
-
-    query = db_session.query(Measurement_ia)
-
-    if user_id:
-        query = query.filter(
-            Measurement_ia.user_id == user_id
-        )
-
-    dados = query.order_by(
-        Measurement_ia.date_time.desc()
-    ).all()
-
-    return jsonify([
-        {
-            "id": item.id,
-            "user_id": item.user_id,
-            "bpm": item.bpm,
-            "rr": float(item.rr) if item.rr is not None else None,
-            "rmssd": float(item.rmssd) if item.rmssd is not None else None,
-            "bpm_medio": float(item.bpm_medio)
-                if item.bpm_medio is not None else None,
-            "resultado_ia": item.resultado_ia,
-            "probabilidade_ia": float(item.probabilidade_ia)
-                if item.probabilidade_ia is not None else None,
-            "date_time": item.date_time.isoformat()
-                if item.date_time else None
-        }
-        for item in dados
-    ])
-
-# Autenticação e Conta
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
@@ -880,97 +43,23 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        print("LOGIN RECEBIDO:", email)
-
-        user = db_session.query(User).filter_by(
-            email=email
-        ).first()
+        user = (
+            db_session.query(User)
+            .filter_by(email=email)
+            .first()
+        )
 
         if not user:
-            return "Usuário não encontrado.", 401
+            return "Email ou senha incorretos.", 401
 
         if user.password != password:
-            return "Senha incorreta.", 401
+            return "Email ou senha incorretos.", 401
 
-        # Guarda o ID do usuário existente
         session['user_id'] = user.id
-        try:
 
-            resposta_ia = requests.post(
-                "http://127.0.0.1:5001/ativar-monitor",
-                json={
-                    "user_id": user.id
-                },
-                timeout=3
-            )
-
-            print(
-                "ATIVAÇÃO DA IA:",
-                resposta_ia.status_code
-            )
-
-        except Exception as e:
-
-            print(
-                "ERRO AO ATIVAR MONITOR DA IA:",
-                e
-            )
-
-        return redirect(url_for('home'))
-
-    # ==========================================
-    # SALVA ACOMPANHAMENTO ESCOLHIDO
-    # ==========================================
-
-        treatments = session.get('treatments', [])
-
-        if treatments:
-
-            accompaniment = (
-                db_session.query(Accompaniment)
-                .filter_by(user_id=user.id)
-                .first()
-            )
-
-            if not accompaniment:
-
-                accompaniment = Accompaniment(
-                    user_id=user.id,
-                    psychotherapy=False,
-                    consultation=False,
-                    medication=False
-                )
-
-                db_session.add(accompaniment)
-
-            if "nenhum" in treatments:
-
-                accompaniment.psychotherapy = False
-                accompaniment.consultation = False
-                accompaniment.medication = False
-
-            else:
-
-                accompaniment.psychotherapy = (
-                    "psychotherapy" in treatments
-                )
-
-                accompaniment.consultation = (
-                    "consultation" in treatments
-                )
-
-                accompaniment.medication = (
-                    "medication" in treatments
-                )
-
-            db_session.commit()
-
-            print("ACOMPANHAMENTO SALVO:", treatments)
-
-            session.pop('treatments', None)
-
-        print("LOGIN CORRETO - ID:", user.id)
-        print("SESSION:", dict(session))
+        print("LOGIN REALIZADO:")
+        print("USUÁRIO:", user.id)
+        print("EMAIL:", user.email)
 
         return redirect(url_for('home'))
 
@@ -2041,19 +1130,42 @@ def report():
         .first()
     )
 
-    # Se não existir relatório, cria
+    # =========================================================
+    # SEM RELATÓRIO
+    # =========================================================
+
     if not report:
 
-        report = criar_dados_relatorio(user_id)
+        return render_template(
+            'report.html',
+            user=user,
+            report=None,
 
-        db_session.commit()
+            beginning_date=None,
+            end_date=None,
+
+            anxiety_episodes=[],
+            average_anxiety=0,
+
+            pressure_measurements=[],
+            average_sistolica=0,
+            average_diastolica=0,
+
+            average_bpm=0,
+            max_bpm=0,
+
+            weekly_activities=[],
+            total_activities=0,
+            total_activity_time=0,
+
+            insights=[]
+        )
 
     # =========================================================
     # PERÍODO DO RELATÓRIO
     # =========================================================
 
     beginning_date = report.beginning_date
-
     end_date = report.end_date + timedelta(days=1)
 
     # =========================================================
@@ -2365,26 +1477,11 @@ def home():
         .all()
     )
 
-    all_checkups = (
-        db_session.query(Checkup)
-        .filter(Checkup.user_id == user_id)
-        .order_by(Checkup.date.desc())
-        .all()
-    )
+   # =====================================================
+    # DADOS DA IA
+    # =====================================================
 
-    bpm_values = [
-        checkup.current_bpm
-        for checkup in all_checkups
-        if checkup.current_bpm is not None
-    ]
-
-    current_bpm = bpm_values[0] if bpm_values else 0
-
-    min_bpm = min(bpm_values) if bpm_values else 0
-
-    max_bpm = max(bpm_values) if bpm_values else 0
-
-    ia_data = (
+    ia_measurements = (
         db_session.query(Measurement_ia)
         .filter(
             Measurement_ia.user_id == user_id
@@ -2392,7 +1489,23 @@ def home():
         .order_by(
             Measurement_ia.date_time.desc()
         )
-        .first()
+        .all()
+    )
+
+    bpm_values = [
+        float(measurement.bpm)
+        for measurement in ia_measurements
+        if measurement.bpm is not None
+    ]
+
+    current_bpm = bpm_values[0] if bpm_values else 0
+    min_bpm = min(bpm_values) if bpm_values else 0
+    max_bpm = max(bpm_values) if bpm_values else 0
+
+    ia_data = (
+        ia_measurements[0]
+        if ia_measurements
+        else None
     )
 
     print(
