@@ -161,7 +161,7 @@
                             <!-- Valor máximo -->
 
                             <text
-                                class="gauge-max"
+                                class="gauge-minmax gauge-max"
                                 x="142"
                                 y="177"
                                 text-anchor="middle"
@@ -342,7 +342,6 @@
                             </div>
 
                         </div>
-
 
                         <!-- DATA DA MEDIÇÃO -->
 
@@ -600,101 +599,89 @@
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
     <script>
         async function atualizarBPM() {
-        
             try {
-        
-                const resposta = await fetch(
-                    "/api/ia-data?user_id={{ user.id }}"
-                );
-        
-                if (!resposta.ok) {
-                    return;
-                }
-        
+                console.log("Buscando dados...");
+
+                const resposta = await fetch("/api/performance-data");
+
+                console.log("Status:", resposta.status);
+
                 const dados = await resposta.json();
-        
-                if (!dados.length) {
-                    return;
-                }
-        
-                const ultimo = dados[0];
-        
-                if (
-                    ultimo.bpm === null ||
-                    ultimo.bpm === undefined
-                ) {
-                    return;
-                }
-        
-                const bpm = Number(ultimo.bpm);
-        
-                // =========================
-                // ATUALIZA O NÚMERO
-                // =========================
-        
+
+                console.log("Resposta da API:", dados);
+
+                const bpm = Number(dados.bpm);
+
+                console.log("BPM recebido:", bpm);
+
                 const elementoBpm =
                     document.getElementById("bpmValue");
-        
-                if (elementoBpm) {
-                    elementoBpm.textContent =
-                        Math.round(bpm);
-                }
-        
-                // =========================
-                // ATUALIZA O ARCO
-                // =========================
-        
+
                 const arco =
                     document.getElementById("gaugeProgress");
-        
-                if (arco) {
-        
-                    /*
-                     * Define a faixa visual do gauge.
-                     *
-                     * 60 BPM = 0%
-                     * 160 BPM = 100%
-                     */
-        
-                    const bpmMin = 60;
-                    const bpmMax = 160;
-        
-                    let porcentagem =
-                        ((bpm - bpmMin) /
-                        (bpmMax - bpmMin)) * 100;
-        
-                    // Impede passar de 0%
-                    // ou de 100%
-                    porcentagem = Math.max(
-                        0,
-                        Math.min(100, porcentagem)
-                    );
-        
-                    arco.style.strokeDasharray =
-                        `${porcentagem} 100`;
+
+                console.log("Elemento BPM:", elementoBpm);
+                console.log("Elemento arco:", arco);
+
+                if (!elementoBpm) {
+                    console.error("❌ #bpmValue NÃO encontrado");
                 }
-        
+
+                if (!arco) {
+                    console.error("❌ #gaugeProgress NÃO encontrado");
+                }
+
+                if (!isNaN(bpm)) {
+
+                    // Número
+                    if (elementoBpm) {
+                        elementoBpm.textContent =
+                            Math.round(bpm);
+                    }
+
+                    // Arco
+                    if (arco) {
+
+                        const min = 60;
+                        const max = 160;
+
+                        let porcentagem =
+                            ((bpm - min) / (max - min)) * 100;
+
+                        porcentagem =
+                            Math.max(
+                                0,
+                                Math.min(100, porcentagem)
+                            );
+
+                        console.log(
+                            "Porcentagem do arco:",
+                            porcentagem
+                        );
+
+                        arco.setAttribute(
+                            "stroke-dasharray",
+                            `${porcentagem} 100`
+                        );
+                    }
+                }
+
             } catch (erro) {
-        
+
                 console.error(
-                    "Erro ao atualizar BPM:",
+                    "❌ ERRO:",
                     erro
                 );
-        
             }
         }
-        
-        
-        // Atualiza assim que a página abre
+
         atualizarBPM();
-        
-        
-        // Verifica novos dados a cada 1 segundo
+
         setInterval(
             atualizarBPM,
             1000
         );
     </script>
-</body>
+    </body>
 
 </html>

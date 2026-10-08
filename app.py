@@ -817,14 +817,12 @@ def receber_dados_ia():
             checkup.id
         )
 
-
         return jsonify({
             "status": "ok",
             "mensagem": "Dados da IA recebidos com sucesso",
             "id": medicao.id,
             "checkup_id": checkup.id
         }), 201
-
 
     except Exception as e:
 
@@ -1251,7 +1249,7 @@ from sqlalchemy import func
 
 @app.route('/anxiety')
 def anxiety():
-
+    print("ROTA INICIADA")
     user_id = session.get('user_id')
 
     if not user_id:
@@ -1313,18 +1311,7 @@ def anxiety():
 
     tecnics = (
         db_session.query(Tecnic)
-        .join(
-            Episode_tecniques,
-            Episode_tecniques.tecnic_id == Tecnic.id
-        )
-        .join(
-            Episode_anxious,
-            Episode_anxious.id == Episode_tecniques.episode_id
-        )
-        .filter(
-            Episode_anxious.user_id == user_id
-        )
-        .distinct()
+        .order_by(Tecnic.name.asc())
         .all()
     )
 

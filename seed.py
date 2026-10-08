@@ -1,3 +1,32 @@
+from models import Tecnic
+from database import db_session
+
+tecnicas = [
+    Tecnic(
+        name="Respiração profunda",
+        description="Técnica de respiração para relaxamento.",
+        icon="respiracao-icon.png"
+    ),
+    Tecnic(
+        name="Relaxamento",
+        description="Técnica para reduzir tensão.",
+        icon="relaxamento-icon.png"
+    ),
+    Tecnic(
+        name="Aterramento",
+        description="Prática de atenção e concentração.",
+        icon="aterramento-icon.png"
+    ),
+    Tecnic(
+        name="Registrar sentimentos",
+        description="Técnica de atenção ao momento presente.",
+        icon="registrar-icon.png"
+    )
+]
+
+db_session.add_all(tecnicas)
+db_session.commit()
+
 # from datetime import date, datetime, timezone
 # from database import db_session
 # from models import User, Checkup, Activity, Measurement_bpm 

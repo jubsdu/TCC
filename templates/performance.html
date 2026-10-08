@@ -128,6 +128,7 @@
                                     x="110"
                                     y="126"
                                     text-anchor="middle"
+                                    id="performanceBpm"
                                 >
                                     {{ ((ia_data.bpm if ia_data else current_bpm) or 0)|round|int }}
                                 </text>
@@ -250,20 +251,6 @@
                             </div>
 
                         </div>
-
-
-                        <div class="ia-result">
-
-                            <span>
-                                Resultado da análise
-                            </span>
-
-                            <strong id="iaResultado">
-                                Aguardando dados...
-                            </strong>
-
-                        </div>
-
 
                         <div class="ia-update">
 
@@ -1003,7 +990,6 @@
                             'Análise sem indicação';
 
                     }
-
                 }
 
                 // ==========================================
@@ -1032,12 +1018,6 @@
 
         // Atualiza quando a página abre
         atualizarPerformance();
-
-        // Atualiza a cada 3 segundos
-        setInterval(
-            atualizarPerformance,
-            3000
-        );
     </script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>

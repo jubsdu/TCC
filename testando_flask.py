@@ -167,6 +167,7 @@ def processar_bpm(user_id, bpm):
         "probabilidade_ia": float(probabilidade_ia)
         if probabilidade_ia is not None else None,
         "horario": horario_recebimento.isoformat()
+
     }
     dados_performance = {
         "user_id": int(user_id),
@@ -175,7 +176,6 @@ def processar_bpm(user_id, bpm):
     }
 
     try:
-
         resposta_ia = requests.post(
             f"{URL_BACKEND_PRINCIPAL}/api/ia-data",
             json=dados_para_backend,
@@ -314,16 +314,15 @@ def ativar_monitor():
 
     user_id = int(data["user_id"])
 
-    # Cria o monitor individual
     obter_monitor(user_id)
 
-    # Marca usuário como ativo
     usuarios_ativos.add(user_id)
 
-    print(
-        "MONITOR ATIVADO PARA USUÁRIO:",
-        user_id
-    )
+    print("================================")
+    print("MONITOR ATIVADO")
+    print("USER ID:", user_id)
+    print("USUÁRIOS ATIVOS:", usuarios_ativos)
+    print("================================")
 
     return jsonify({
         "status": "ok",
@@ -334,29 +333,33 @@ def ativar_monitor():
 # ============================================================
 # GERAR DADOS AUTOMATICAMENTE
 # ============================================================
-
 def gerar_dados_automaticamente():
 
     while True:
 
+        print("=== CICLO DA IA ===")
+        print("USUÁRIOS ATIVOS:", usuarios_ativos)
+
         for user_id in list(usuarios_ativos):
 
             bpm = random.gauss(82, 5)
-
-            bpm = max(
-                65,
-                min(100, bpm)
-            )
-
+            bpm = max(65, min(100, bpm))
             bpm = round(bpm, 1)
 
-            processar_bpm(
-                user_id,
-                bpm
-            )
+            print("BPM GERADO:", bpm)
 
+            try:
+                processar_bpm(user_id, bpm)
+                print("PROCESSAMENTO TERMINOU")
+
+            except Exception as e:
+                print(
+                    "ERRO NO PROCESSAMENTO:",
+                    repr(e)
+                )
+
+        print("AGUARDANDO 3 SEGUNDOS...")
         time.sleep(3)
-
 
 # ============================================================
 # INICIAR GERADOR AUTOMÁTICO

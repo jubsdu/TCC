@@ -1,48 +1,3 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const performanceGauge =
-    document.querySelector(
-        '[data-heart-rate-gauge]'
-    );
-
-if (performanceGauge) {
-
-    const progress =
-        performanceGauge.querySelector(
-            ".gauge-progress"
-        );
-
-    const valueElement =
-        performanceGauge.querySelector(
-            ".gauge-value"
-        );
-
-    if (progress && valueElement) {
-
-        const currentBpm =
-            Number(
-                valueElement.textContent.trim()
-            );
-
-        const minBpm = 60;
-        const maxBpm = 140;
-
-        let percentage =
-            ((currentBpm - minBpm) /
-            (maxBpm - minBpm)) * 100;
-
-        percentage =
-            Math.max(
-                0,
-                Math.min(100, percentage)
-            );
-
-        progress.setAttribute(
-            "stroke-dasharray",
-            `${percentage} ${100 - percentage}`
-        );
-    }
-}
-
 const heartGauge = document.querySelector("[data-heart-rate-gauge]");
 
 if (heartGauge) {
@@ -243,7 +198,6 @@ if (treatmentForm) {
             const choice =
                 button.dataset.choice;
 
-
             // -------------------------
             // NENHUM
             // -------------------------
@@ -261,7 +215,6 @@ if (treatmentForm) {
                 button.classList.add("selected");
 
             }
-
 
             // -------------------------
             // OUTRAS OPÇÕES
@@ -285,7 +238,6 @@ if (treatmentForm) {
 
                 }
 
-
                 // IMPORTANTE:
                 // NÃO remove as outras opções.
 
@@ -299,7 +251,6 @@ if (treatmentForm) {
 
             }
 
-
             // Esconde mensagem de erro
 
             if (message) {
@@ -311,7 +262,6 @@ if (treatmentForm) {
         });
 
     });
-
 
     // =========================
     // CLICAR EM "PRÓXIMO"
@@ -549,10 +499,8 @@ if (heartRateGauges.length > 0) {
     const STORAGE_KEY = "vitapulse-heart-rate";
 
     let currentBpm = 82;
-    let minBpm = 62;
-    let maxBpm = 124;
-
-    // Recuperar dados salvos
+    let minBpm = 60;
+    let maxBpm = 140;
 
     try {
 
@@ -561,10 +509,14 @@ if (heartRateGauges.length > 0) {
 
         if (savedData) {
 
-            currentBpm = Number(savedData.currentBpm) || 82;
-            minBpm = Number(savedData.minBpm) || 62;
-            maxBpm = Number(savedData.maxBpm) || 124;
+            currentBpm =
+                Number(savedData.currentBpm) || 82;
 
+            minBpm =
+                Number(savedData.minBpm) || 60;
+
+            maxBpm =
+                Number(savedData.maxBpm) || 140;
         }
 
     } catch (error) {
@@ -572,10 +524,7 @@ if (heartRateGauges.length > 0) {
         console.log(
             "Não foi possível recuperar os dados do medidor."
         );
-
     }
-
-    // Limitar valores
 
     function clamp(value, min, max) {
 
@@ -583,38 +532,12 @@ if (heartRateGauges.length > 0) {
             min,
             Math.min(max, value)
         );
-
     }
-
-    // Atualizar medidor
 
     function updateHeartRate(bpm) {
 
         currentBpm = Math.round(
-            clamp(bpm, 40, 180)
-        );
-
-        minBpm = Math.min(
-            minBpm,
-            currentBpm
-        );
-
-        maxBpm = Math.max(
-            maxBpm,
-            currentBpm
-        );
-
-        const percentage = clamp(
-            (currentBpm - 40) / 140,
-            0,
-            1
-        );
-
-        const arcPercentage = 75;
-
-        const filledArc = Math.max(
-            0.1,
-            arcPercentage * percentage
+            clamp(bpm, 60, 140)
         );
 
         heartRateGauges.forEach(function (container) {
@@ -625,18 +548,16 @@ if (heartRateGauges.length > 0) {
             const gaugeValue =
                 container.querySelector(".gauge-value");
 
-            const gaugeMinMax =
-                container.querySelectorAll(".gauge-minmax");
+            const gaugeMin =
+                container.querySelector(".gauge-min");
+
+            const gaugeMax =
+                container.querySelector(".gauge-max");
 
             const gaugeWave =
                 container.querySelector(".gauge-wave");
 
-            if (
-                !gaugeProgress ||
-                !gaugeValue ||
-                gaugeMinMax.length < 2 ||
-                !gaugeWave
-            ) {
+            if (!gaugeProgress || !gaugeValue) {
 
                 console.warn(
                     "Elementos do medidor não encontrados.",
@@ -644,47 +565,62 @@ if (heartRateGauges.length > 0) {
                 );
 
                 return;
-
             }
 
-            // Valor principal
-
+            // BPM
             gaugeValue.textContent = currentBpm;
 
-            // Valores mínimo e máximo
+            // Limites
+            if (gaugeMin) {
+                gaugeMin.textContent = 60;
+            }
 
-            gaugeMinMax[0].textContent = minBpm;
-            gaugeMinMax[1].textContent = maxBpm;
+            if (gaugeMax) {
+                gaugeMax.textContent = 140;
+            }
 
-            // Arco do medidor
+            // Arco: 60 → 140 BPM
+            const percentage = clamp(
+                (currentBpm - 60) / 80,
+                0,
+                1
+            );
+
+            const arcPercentage = 75;
+
+            const filledArc =
+                Math.max(
+                    0.1,
+                    arcPercentage * percentage
+                );
 
             gaugeProgress.setAttribute(
                 "stroke-dasharray",
                 `${filledArc} ${100 - filledArc}`
             );
 
-            // Onda do coração
+            // Onda
+            if (gaugeWave) {
 
-            const amplitude = 8 + percentage * 10;
+                const amplitude =
+                    8 + percentage * 10;
 
-            const wavePath = `
-                M35 112
-                H65
-                L87 ${112 - amplitude}
-                L112 ${112 + amplitude}
-                L134 ${112 - amplitude / 2}
-                L154 112
-                H185
-            `;
+                const wavePath = `
+                    M35 112
+                    H65
+                    L87 ${112 - amplitude}
+                    L112 ${112 + amplitude}
+                    L134 ${112 - amplitude / 2}
+                    L154 112
+                    H185
+                `;
 
-            gaugeWave.setAttribute(
-                "d",
-                wavePath
-            );
-
+                gaugeWave.setAttribute(
+                    "d",
+                    wavePath
+                );
+            }
         });
-
-        // Salvar dados
 
         try {
 
@@ -692,8 +628,8 @@ if (heartRateGauges.length > 0) {
                 STORAGE_KEY,
                 JSON.stringify({
                     currentBpm: currentBpm,
-                    minBpm: minBpm,
-                    maxBpm: maxBpm
+                    minBpm: 60,
+                    maxBpm: 140
                 })
             );
 
@@ -702,36 +638,12 @@ if (heartRateGauges.length > 0) {
             console.log(
                 "Não foi possível salvar os dados do medidor."
             );
-
         }
-
     }
-
-    // Disponibilizar função globalmente
 
     window.updateHeartRate = updateHeartRate;
 
-    // Iniciar medidor
-
     updateHeartRate(currentBpm);
-
-    // Simulação automática
-
-    setInterval(function () {
-
-        const variation =
-            Math.floor(Math.random() * 11) - 5;
-
-        const nextBpm = clamp(
-            currentBpm + variation,
-            60,
-            140
-        );
-
-        updateHeartRate(nextBpm);
-
-    }, 2500);
-
 }
 
 // =========================
