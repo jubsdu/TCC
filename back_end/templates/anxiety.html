@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Ansiedade — VitaPulse</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="mobile dashboard">
+
+            <!-- =========================
+                 CABEÇALHO
+            ========================== -->
+
+            <header class="topbar">
+
+                <button class="menu" data-menu>☰</button>
+
+                <h1>Ansiedade</h1>
+
+                <button class="avatar" onclick="openLogoutPopup()" type="button" > 
+                        <i class="ri-user-3-fill" style="color:#000; font-size:1.5em;"></i> 
+                    </button>
+                    
+                    <div id="logoutPopup" class="logout-overlay"> 
+                        <div class="logout-popup"> 
+                            <button class="logout-close" onclick="closeLogoutPopup()" type="button" aria-label="Fechar" > 
+                                <i class="ri-close-line"></i> 
+                            </button> <div class="logout-icon"> 
+                                <i class="ri-logout-box-r-line"></i> 
+                            </div> <h2>Sair da conta?</h2> 
+                            <p> Tem certeza que deseja sair da sua conta? </p> 
+                            <div class="logout-actions"> 
+                                <button class="logout-cancel" onclick="closeLogoutPopup()" type="button" > Cancelar </button> 
+                                <button class="logout-confirm" onclick="logout()" type="button" > Sair </button> 
+                            </div> 
+                        </div> 
+                    </div>
+            </header>
+
+
+            <!-- =========================
+                 CONTEÚDO PRINCIPAL
+            ========================== -->
+
+            <main class="page-body">
+                
+                <!-- =========================
+                     NÍVEL DE ANSIEDADE
+                ========================== -->
+
+                <section
+                    class="card anxiety-summary-card"
+                    style="text-align:center;padding:12px 14px 10px"
+                    data-heart-rate-gauge
+                >
+
+                    <h2 style="color:#ad0037;margin:0;font-size:17px">
+                        Nível médio - Hoje
+                    </h2>
+
+                    <div style="font-size:22px;font-weight:800;margin:5px">
+                        {{ "%.1f"|format(average_anxiety or 0) }}/10
+                    </div>
+
+                    <hr style="border:0;border-top:1px solid #e22a55;margin:8px 0">
+
+                    <h2 style="color:#ad0037;font-size:17px;margin:8px 0 0">
+                        Frequência média associada
+                    </h2>
+
+
+                    <!-- =========================
+                         MEDIDOR CARDÍACO
+                    ========================== -->
+
+                    <div class="gauge-container" style="height:155px">
+
+                        <svg
+                            class="gauge"
+                            viewBox="0 0 220 220"
+                            aria-label="Frequência cardíaca"
+                            style="width:165px;height:165px"
+                        >
+
+                            <!-- Fundo do medidor -->
+
+                            <circle
+                                class="gauge-background"
+                                cx="110"
+                                cy="110"
+                                r="78"
+                                fill="none"
+                                stroke="#ffe1eb"
+                                stroke-width="24"
+                                stroke-linecap="round"
+                                pathLength="100"
+                                stroke-dasharray="75 25"
+                                transform="rotate(135 110 110)"
+                            />
+
+
+                            <!-- Arco dinâmico -->
+
+                            <circle
+                                class="gauge-progress"
+                                cx="110"
+                                cy="110"
+                                r="78"
+                                fill="none"
+                                stroke="#ad0037"
+                                stroke-width="24"
+                                stroke-linecap="round"
+                                pathLength="100"
+                                stroke-dasharray="0 100"
+                                transform="rotate(135 110 110)"
+                            />
+
+
+                            <!-- Cobrinha dinâmica -->
+
+                            <path
+                                class="gauge-wave"
+                                d="M35 112 H65 L87 76 L112 139 L134 100 L154 112 H185"
+                                fill="none"
+                                stroke="#f6bfd0"
+                                stroke-width="3"
+                            />
+
+
+                            <!-- Valor atual -->
+
+                            <text
+                                class="gauge-value"
+                                x="110"
+                                y="126"
+                                text-anchor="middle"
+                            >
+                                {{ (average_bpm or 0)|round|int }}
+                            </text>
+
+
+                            <!-- Unidade -->
+
+                            <text
+                                class="gauge-label"
+                                x="110"
+                                y="160"
+                                text-anchor="middle"
+                            >
+                                BPM
+                            </text>
+
+
+                            <!-- Valor mínimo -->
+
+                            <text
+                                class="gauge-minmax gauge-min"
+                                x="78"
+                                y="177"
+                                text-anchor="middle"
+                            >
+                                0
+                            </text>
+
+
+                            <!-- Valor máximo -->
+
+                            <text
+                                class="gauge-max"
+                                x="142"
+                                y="177"
+                                text-anchor="middle"
+                            >
+                                {{ (max_bpm or 0)|round|int }}
+                            </text>
+
+                        </svg>
+
+                    </div>
+
+
+                    {% if average_anxiety and previous_average_anxiety %}
+                        <small>
+                            Comparação com a semana anterior disponível.
+                        </small>
+                    {% else %}
+                        <small>
+                            Ainda não há dados suficientes para comparação.
+                        </small>
+                    {% endif %}
+
+                </section>
+
+
+
+                <!-- =========================
+                     CRISES POR SEMANA
+                ========================== -->
+
+                <h2 class="section-title">
+                    Crises/Semana
+                </h2>
+
+                <section class="card">
+
+                    <div class="anxiety-week-grid">
+
+                        {% for day in episodes_by_day %}
+
+                            <div class="day">
+                                {{ day.name }}
+                            </div>
+
+                            <div class="anxiety-day-result">
+
+                                {% if day.count > 0 %}
+
+                                    <img
+                                        class="bola-icon"
+                                        src="{{ url_for('static', filename='assets/bola-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% endif %}
+
+                                {{ day.count }}
+
+                                {% if day.count == 1 %}
+                                    episódio registrado
+                                {% else %}
+                                    episódios registrados
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        <div class="day">
+                            Total
+                        </div>
+
+                        <div class="anxiety-day-result">
+
+                            <strong>
+                                {{ episodes_by_day|sum(attribute='count') }}
+                                episódios registrados
+                            </strong>
+
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- =========================
+                     DETALHAMENTO DOS EPISÓDIOS
+                ========================== -->
+
+                <h2 class="section-title">
+                    Detalhamento episódios
+                </h2>
+
+                <section class="card">
+
+                    <ul class="simple-list">
+
+                        <li>
+                            <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
+                            Crises esta semana:
+                            <b>
+                                {{ episodes_this_week|length }}
+                            </b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
+                            Semana anterior:
+                            <b>
+                                {{ episodes_previous_week|length }}
+                            </b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
+                            Duração média:
+                            <b>
+                                {{ average_duration|round|int }} min
+                            </b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
+                            Horário mais frequente:
+                            <b>
+                                {{ (average_duration or 0)|round|int }} min
+                            </b>    
+                        </li>
+
+                    </ul>
+
+                </section>
+
+                <!-- =========================
+                     ANSIEDADE X FREQUÊNCIA
+                ========================== -->
+
+                <h2 class="section-title">
+                    Ansiedade x Frequência cardíaca
+                </h2>
+
+                <section class="card">
+
+                    <ul class="simple-list">
+
+                        <li>
+                            <img class="coracaoBola-icon" src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}" alt="">
+                            FC média:
+                            <b>{{ (average_bpm or 0)|round|int }} BPM</b>
+                        </li>
+
+                        <li>
+                            <img class="coracaoBola-icon" src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}" alt="">
+                            FC máxima:
+                            <b>{{ (max_bpm or 0)|round|int }} BPM</b>
+                        </li>
+
+                        <li>
+                            <img class="recovery-icon" src="{{ url_for('static', filename='assets/recovery-icon.png') }}" alt="">
+                            Ansiedade percebida:
+                            <b>{{ "%.1f"|format(average_anxiety or 0) }}/10</b>
+                        </li>
+
+                    </ul>
+
+                </section>
+
+                <!-- =========================
+                     TENDÊNCIA DE ANSIEDADE
+                ========================== -->
+                
+                <h2 class="section-title">
+                    Tendência de ansiedade
+                </h2>
+
+                <section class="card anxiety-trend-card">
+
+                    <div
+                        class="anxiety-chart"
+                        data-anxiety-chart
+                    ></div>
+
+                    <p class="anxiety-averages">
+
+                        <b>
+                            <span>Média desta semana:</span>
+                            <strong>
+                                {{ "%.1f"|format(average_anxiety or 0) }}/10
+                            </strong>
+                        </b>
+
+                        <br>
+
+                        <b>
+                            <span>Média anterior:</span>
+                            <strong>
+                               {{ "%.1f"|format(previous_average_anxiety or 0) }}/10
+                            </strong>
+                        </b>
+
+                    </p>
+
+                </section>
+
+                <!-- =========================
+                     TÉCNICAS E ACOMPANHAMENTO
+                ========================== -->
+
+                <div class="two-col">
+
+                    <!-- Técnicas usadas -->
+
+                    <section>
+
+                        <h2 class="section-title">
+                            Técnicas usadas
+                        </h2>
+
+                        <div class="card">
+
+                        {% if tecnics %}
+
+                            <ul class="simple-list techniques-list">
+
+                                {% for tecnic in tecnics %}
+
+                                    <li>
+                                        <img
+                                            src="{{ url_for('static', filename='assets/' + tecnic.icon) }}"
+                                            alt=""
+                                        >
+                                        {{ tecnic.name }}
+                                    </li>
+
+                                {% endfor %}
+
+                            </ul>
+
+                        {% else %}
+
+                            <p>Nenhuma técnica utilizada.</p>
+
+                        {% endif %}
+
+                    </div>
+                
+                    </section>
+
+                    <!-- Acompanhamento -->
+                    <section>
+
+                        <h2 class="section-title">
+                            Acompanhamento
+                        </h2>
+
+                        <div class="card">
+
+                            <label>
+                                {% if accompaniment and accompaniment.psychotherapy %}
+                                    ☑
+                                {% else %}
+                                    □
+                                {% endif %}
+                                Psicoterapia
+                            </label>
+
+                            <br>
+
+                            <label>
+                                {% if accompaniment and accompaniment.consultation %}
+                                    ☑
+                                {% else %}
+                                    □
+                                {% endif %}
+                                Consulta médica
+                            </label>
+
+                            <br>
+
+                            <label>
+                                {% if accompaniment and accompaniment.medication %}
+                                    ☑
+                                {% else %}
+                                    □
+                                {% endif %}
+                                Medicação prescrita
+                            </label>
+
+                            {% if not accompaniment
+                                or (
+                                    not accompaniment.psychotherapy
+                                    and not accompaniment.consultation
+                                    and not accompaniment.medication
+                                )
+                            %}
+
+                                <p>Nenhum acompanhamento selecionado.</p>
+
+                            {% endif %}
+
+                        </div>
+                         <a
+                            href="{{ url_for('onboarding_treatment_edit') }}"
+                            class="change-treatment-button"
+                        >
+                            Alterar acompanhamento
+                        </a>
+                    </section>
+                </div>
+
+                <!-- =========================
+                     GATILHOS REGISTRADOS
+                ========================== -->
+
+                <!-- <h2 class="section-title">
+                    Gatilhos registrados
+                </h2>
+
+                <section class="card triggers-card">
+
+                    <table class="summary-table">
+
+                        {% for trigger in trigger_counts %}
+
+                            <tr>
+
+                                <td>
+
+                                    <img
+                                        class="coracaoVazio-icon"
+                                        src="{{ url_for('static', filename='assets/coracaoVazio-icon.png') }}"
+                                        alt=""
+                                    >
+                                    {{ trigger[0] }}
+
+                                </td>
+
+                                <td>
+                                    {{ trigger[1] }} registros
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+
+                        {% if not trigger_counts %}
+
+                            <tr>
+
+                                <td colspan="2">
+                                    Nenhum gatilho registrado.
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    </table>
+
+                </section> -->
+
+                <!-- =========================
+                     ÚLTIMOS EPISÓDIOS
+                ========================== -->
+
+                <h2 class="section-title">
+                    Últimos episódios
+                </h2>
+
+                <section class="card">
+
+                    <ul class="simple-list">
+
+                        {% for episode in latest_episodes %}
+
+                            <li>
+
+                                <img
+                                    class="bola-icon"
+                                    src="{{ url_for('static', filename='assets/bola-icon.png') }}"
+                                    alt=""
+                                >
+
+                                {{ episode.date_time.strftime('%H:%M') }}
+
+                                &nbsp;&nbsp;
+
+                                {{ episode.level_anxious }}/10
+
+                                &nbsp;&nbsp;
+
+                                {{ episode.cardiac_rate }} BPM
+
+                            </li>
+
+                        {% endfor %}
+
+
+                        {% if not latest_episodes %}
+
+                            <li>
+                                Nenhum episódio registrado.
+                            </li>
+
+                        {% endif %}
+
+                    </ul>
+
+                </section>
+
+            </main>
+
+
+
+            <!-- =========================
+                 MENU LATERAL
+            ========================== -->
+
+            <div class="nav-drawer">
+                <nav class="drawer">
+                    <img
+                        class="drawer-logo"
+                        src="{{ url_for('static', filename='assets/vitapulse-logo-full.png') }}"
+                        alt="VitaPulse"
+                    >
+
+                    <button onclick="window.location.href='{{ url_for('home') }}'"><i class="ri-home-2-fill" style="color: #fff;"></i> Página Inicial</button>
+                    <button onclick="window.location.href='{{ url_for('performance') }}'"><i class="ri-service-fill" style="color: #fff;"></i> Performance Física</button>
+                    <button onclick="window.location.href='{{ url_for('anxiety') }}'"><i class="ri-mental-health-fill" style="color: #fff;"></i> Ansiedade</button>
+                    <button onclick="window.location.href='{{ url_for('pressure') }}'"><i class="ri-heart-pulse-fill" style="color: #fff;"></i> Pressão arterial</button>
+                    <button onclick="window.location.href='{{ url_for('report') }}'"><i class="ri-file-chart-fill" style="color: #fff;"></i> Relatório Semanal</button>
+                </nav>
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
+</body>
+
+</html>

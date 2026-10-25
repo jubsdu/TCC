@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Acompanhamento — VitaPulse</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
+    </head>
+    <body>
+        <div class="app">
+            <div class="mobile onboard">
+                <div class="status">
+                    <span>9:41</span>
+                    <span class="status-icons"><i class="ri-wifi-line" style="color:#fff; font-size: 1.5em;"></i></span>
+                </div>
+                <h1 style="margin-top:120px">Você faz algum tratamento/<br>acompanhamento?</h1>
+                <form
+                    id="treatmentForm"
+                    action="{% if edit_mode %}{{ url_for('onboarding_treatment_edit') }}{% else %}{{ url_for('onboarding_treatment') }}{% endif %}"
+                    method="POST"
+                    data-edit-mode="{{ 'true' if edit_mode else 'false' }}"
+                >
+
+                    <input
+                        type="hidden"
+                        name="treatment"
+                        id="treatmentInput"
+                        value=""
+                    >
+
+                    <div
+                        class="choice-group"
+                        style="display: flex; flex-direction: column; gap: 12px; width: 100%;"
+                    >
+
+                        <button
+                            type="button"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment and accompaniment.psychotherapy %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="psychotherapy"
+                        >
+                            Psicoterapia
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment and accompaniment.consultation %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="consultation"
+                        >
+                            Consulta médica
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment and accompaniment.medication %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="medication"
+                        >
+                            Medicação prescrita
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="choice-btn
+                                {% if edit_mode and accompaniment
+                                    and not accompaniment.psychotherapy
+                                    and not accompaniment.consultation
+                                    and not accompaniment.medication
+                                %}
+                                    selected
+                                {% endif %}
+                            "
+                            data-choice="nenhum"
+                        >
+                            Nenhum acompanhamento
+                        </button>
+
+                    </div>
+
+                </form>
+                <div class="onboard-spacer" style="flex: 1;"></div>
+                <div class="dots">
+                    <i class="dot"></i>
+                    <i class="dot"></i>
+                    <i class="dot active"></i>
+                </div>
+                <div class="choice-message" id="choiceMessage">
+                    Selecione uma opção para continuar
+                </div>
+
+                <button 
+                type="submit"
+                class="primary-light"
+                id="nextButton"
+                form="treatmentForm">
+                    Próximo
+                </button>
+            </div>
+        </div>
+        <script src="{{ url_for('static', filename='app.js') }}"></script>
+    </body>
+</html>
