@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.env
+ultrapulse.db
+ultrapulse.db-shm
+ultrapulse.db-wal
+.venv/
+venv/
+instance/

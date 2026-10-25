@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Entrar — VitaPulse</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
+    </head>
+    <body>
+        <div class="app">
+            <div class="mobile auth-bg">
+                <div class="status">
+                    <span>9:41</span>
+                    <span class="status-icons"> WiFi </span>
+                </div>
+                <div class="auth-content">
+                    <h1 class="auth-title">Entrar</h1>
+                    <p class="auth-sub">Bem-vindo(a) de volta!</p>
+                    {% if error %}
+                        <div class="error-message">
+                            {{ error }}
+                        </div>
+                    {% endif %}
+                    {% with messages = get_flashed_messages() %}
+                        {% for message in messages %}<div class="error-message">{{ message }}</div>{% endfor %}
+                    {% endwith %}
+                    <form class="form" data-form="login" action="{{ url_for('login') }}" method="POST">
+                        <label class="field"><i class="ri-mail-fill"></i>
+                            <input name="email" type="email" required placeholder="Email">
+                        </label>
+                        <label class="field"><i class="ri-rotate-lock-fill"></i>
+                            <input name="password" type="password" required placeholder="Senha">
+                            <button type="button" class="eye"><i class="ri-eye-fill"></i></button>
+                        </label>
+                        <div style="text-align:center;margin:20px 0">
+                            <a href="{{ url_for('forgot') }}" style="color:#243951;font-weight:700">Esqueceu sua senha?</a>
+                        </div>
+                        <button type="submit" class="primary">
+                            Entrar
+                        </button>
+                    </form>
+                    <div class="divider">
+                        <span class="ou">OU</span>
+                    </div>
+                    <button class="social" onclick="toast('Login social demonstrativo')">
+                        <img class="social-icon" src="{{ url_for('static', filename='assets/google-icon.png') }}" alt="Google">
+                        Login com Gmail
+                    </button>
+                    <button class="social" onclick="toast('Login social demonstrativo')">
+                        <img class="social-icon" src="{{ url_for('static', filename='assets/samsung-icon.png') }}" alt="Samsung Account">
+                        Login com Samsung Account
+                    </button>
+                    <div class="bottom-link">Não possui uma conta? 
+                        <a href="{{ url_for('register') }}">Cadastrar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="{{ url_for('static', filename='app.js') }}"></script>
+    </body>
+</html>

@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Performance Física — VitaPulse</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="mobile dashboard">
+
+            <!-- =========================
+                 CABEÇALHO
+            ========================== -->
+
+            <header class="topbar">
+
+                <button class="menu" data-menu>☰</button>
+
+                <h1>Performance Física</h1>
+
+                <button class="avatar" onclick="openLogoutPopup()" type="button" > 
+                        <i class="ri-user-3-fill" style="color:#000; font-size:1.5em;"></i> 
+                    </button>
+                    
+                    <div id="logoutPopup" class="logout-overlay"> 
+                        <div class="logout-popup"> 
+                            <button class="logout-close" onclick="closeLogoutPopup()" type="button" aria-label="Fechar" > 
+                                <i class="ri-close-line"></i> 
+                            </button> <div class="logout-icon"> 
+                                <i class="ri-logout-box-r-line"></i> 
+                            </div> <h2>Sair da conta?</h2> 
+                            <p> Tem certeza que deseja sair da sua conta? </p> 
+                            <div class="logout-actions"> 
+                                <button class="logout-cancel" onclick="closeLogoutPopup()" type="button" > Cancelar </button> 
+                                <button class="logout-confirm" onclick="logout()" type="button" > Sair </button> 
+                            </div> 
+                        </div> 
+                    </div>
+
+            </header>
+
+            <!-- =========================
+                 CONTEÚDO PRINCIPAL
+            ========================== -->
+
+            <main class="page-body">
+    
+                <!-- =========================
+                     FREQUÊNCIA E RESUMO
+                ========================== -->
+
+                <div class="two-col">
+
+
+                    <!-- FREQUÊNCIA MÉDIA -->
+
+                    <section
+                        class="card metric-card heart-rate-card"
+                        data-heart-rate-gauge
+                    >
+
+                        <h2>Frequência Média</h2>
+
+                        <div class="gauge-container">
+
+                            <svg
+                                class="gauge"
+                                viewBox="0 0 220 220"
+                                aria-label="Frequência cardíaca"
+                            >
+
+                                <!-- Fundo do medidor -->
+
+                                <circle
+                                    class="gauge-background"
+                                    cx="110"
+                                    cy="110"
+                                    r="78"
+                                    fill="none"
+                                    stroke="#ffe1eb"
+                                    stroke-width="24"
+                                    stroke-linecap="round"
+                                    pathLength="100"
+                                    stroke-dasharray="75 25"
+                                    transform="rotate(135 110 110)"
+                                />
+
+
+                                <!-- Arco dinâmico -->
+
+                                <circle
+                                    class="gauge-progress"
+                                    cx="110"
+                                    cy="110"
+                                    r="78"
+                                    fill="none"
+                                    stroke="#ad0037"
+                                    stroke-width="24"
+                                    stroke-linecap="round"
+                                    pathLength="100"
+                                    stroke-dasharray="0 100"
+                                    transform="rotate(135 110 110)"
+                                />
+
+
+                                <!-- Cobrinha dinâmica -->
+
+                                <path
+                                    class="gauge-wave"
+                                    d="M35 112 H65 L87 76 L112 139 L134 100 L154 112 H185"
+                                    fill="none"
+                                    stroke="#f6bfd0"
+                                    stroke-width="3"
+                                />
+
+
+                                <!-- Valor atual -->
+
+                                <text
+                                    class="gauge-value"
+                                    x="110"
+                                    y="126"
+                                    text-anchor="middle"
+                                >
+                                    {{ (average_bpm or 0)|round|int }}
+                                </text>
+
+
+                                <!-- Unidade -->
+
+                                <text
+                                    class="gauge-label"
+                                    x="110"
+                                    y="160"
+                                    text-anchor="middle"
+                                >
+                                    BPM
+                                </text>
+
+
+                                <!-- Valor mínimo -->
+
+                                <text
+                                    class="gauge-minmax gauge-min"
+                                    x="78"
+                                    y="177"
+                                    text-anchor="middle"
+                                >
+                                    0
+                                </text>
+
+
+                                <!-- Valor máximo -->
+
+                                <text
+                                    class="gauge-max"
+                                    x="142"
+                                    y="177"
+                                    text-anchor="middle"
+                                >
+                                    {{ (max_bpm or 0)|round|int }}
+                                </text>
+
+                            </svg>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- RESUMO SEMANAL -->
+
+                    <section class="card metric-card weekly-summary-card">
+
+                        <h2>Resumo Semanal</h2>
+
+                        <table class="summary-table">
+
+                            <tr>
+                                <td>BC médio</td>
+                                <td>
+                                    {{ activity.average_rate if activity else 0 }} BPM
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Tempo ativo</td>
+                                <td>
+                                    {% if activity %}
+                                        {{ activity.active_time // 60 }}h{{ '%02d'|format(activity.active_time % 60) }}
+                                    {% else %}
+                                        0h00
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Intensidade</td>
+                                <td>
+                                    {{ activity.intensity if activity else 0 }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Recuperação</td>
+                                <td>
+                                    {% if recovery %}
+                                        {{ recovery.queda_2_min }} BPM/min
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Atividade</td>
+                                <td>
+                                    {% if weekly_goal and weekly_goal.goal_activity %}
+                                        +{{ ((weekly_goal.activity_completed / weekly_goal.goal_activity) * 100)|round|int }}%
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </section>
+
+                </div>
+
+
+
+                <!-- =========================
+                     ZONAS CARDÍACAS
+                ========================== -->
+
+                <h2 class="section-title">Zonas Cardíacas</h2>
+
+                <section class="card data-card">
+
+                    {% if cardiac_zones %}
+
+                        <div class="mini">
+
+                            {{ cardiac_zones[0].date.strftime('%d/%m/%Y') }}
+
+                            <br>
+
+                            {{ cardiac_zones[0].date.strftime('%A') }}
+
+                        </div>
+
+                    {% endif %}
+
+                    <table class="summary-table zones">
+
+                        <tr>
+                            <th>Zona</th>
+                            <th>Intensidade</th>
+                            <th>Tempo</th>
+                        </tr>
+
+                        {% for zone in cardiac_zones %}
+
+                        <tr>
+
+                            <td class="z">
+
+                                {% if loop.index == 1 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z1-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% elif loop.index == 2 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z2-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% elif loop.index == 3 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z3-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% elif loop.index == 4 %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z4-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% else %}
+
+                                    <img
+                                        class="zone-icon"
+                                        src="{{ url_for('static', filename='assets/z5-icon.png') }}"
+                                        alt=""
+                                    >
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ zone.intensity }}
+                            </td>
+
+                            <td>
+                                {{ zone.minutes }} min
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+                        {% if not cardiac_zones %}
+
+                        <tr>
+
+                            <td colspan="3">
+                                Nenhum dado registrado.
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+                    </table>
+
+                </section>
+
+
+
+                <!-- =========================
+                     RECUPERAÇÃO
+                ========================== -->
+
+                <h2 class="section-title">Recuperação</h2>
+                <section class="card">
+                    {% if recovery %}
+
+                        <div class="mini">
+
+                            {{ recovery.date.strftime('%d/%m/%Y') }}
+
+                            <br>
+
+                            {{ recovery.date.strftime('%A') }}
+
+                        </div>
+
+
+                        <ul class="simple-list">
+
+                            <li>
+
+                                <img
+                                    class="recovery-icon"
+                                    src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
+                                    alt=""
+                                >
+
+                                Final exercício:
+
+                                <b>
+                                    {{ recovery.final_bpm }} BPM
+                                </b>
+
+                            </li>
+
+
+                            <li>
+
+                                <img
+                                    class="recovery-icon"
+                                    src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
+                                    alt=""
+                                >
+
+                                Após 1min:
+
+                                <b>
+                                    {{ recovery.bpm_1_min }} BPM
+                                </b>
+
+                            </li>
+
+
+                            <li>
+
+                                <img
+                                    class="recovery-icon"
+                                    src="{{ url_for('static', filename='assets/recovery-icon.png') }}"
+                                    alt=""
+                                >
+
+                                Após 2min:
+
+                                <b>
+                                    {{ recovery.bpm_2_min }} BPM
+                                </b>
+
+                            </li>
+
+
+                            <li>
+
+                                ↓ Queda em 2min:
+
+                                <b>
+                                    {{ recovery.queda_2_min }} BPM
+                                </b>
+
+                            </li>
+
+                        </ul>
+
+                    {% else %}
+
+                        <p>Nenhum dado de recuperação registrado.</p>
+
+                    {% endif %}
+                </section>
+
+                <!-- =========================
+                     EVOLUÇÃO
+                ========================== -->
+
+                <h2 class="section-title">Evolução</h2>
+
+                <section class="card">
+
+                    <table class="summary-table evolution-table">
+
+                        <tr>
+
+                            <td>
+                                <img class="coracaoBola-icon"
+                                src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}"
+                                alt="">
+                                FC média
+                            </td>
+
+                            <td>
+                                {{ activity.average_rate if activity else 0 }} BPM
+                            </td>
+
+                            <td>
+                                ↓
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                <img class="coracaoBola-icon"
+                                src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}"
+                                alt="">
+                                Tempo ativo
+                            </td>
+
+                            <td>
+
+                                {% if activity %}
+                                    {{ activity.active_time // 60 }}h{{ '%02d'|format(activity.active_time % 60) }}
+                                {% else %}
+                                    0h00
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                ↑
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+                                <img class="coracaoBola-icon"
+                                src="{{ url_for('static', filename='assets/coracaoBola-icon.png') }}"
+                                alt="">
+                                Treinos
+                            </td>
+
+                            <td>
+                                {{ activity.quant_sessions if activity else 0 }}
+                            </td>
+
+                            <td>
+
+                                {% if weekly_goal and weekly_goal.goal_sessions %}
+
+                                    {% if weekly_goal.sessions_completed >= weekly_goal.goal_sessions %}
+
+                                        ✓ Meta
+
+                                    {% else %}
+
+                                        {{ weekly_goal.sessions_completed }}/{{ weekly_goal.goal_sessions }}
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </section>
+
+
+
+                <!-- =========================
+                     METAS DA SEMANA
+                ========================== -->
+
+                <h2 class="section-title">Metas da Semana</h2>
+
+                <section class="card weekly-goals-card">
+
+                    {% if weekly_goal %}
+
+                    <div class="mini">
+
+                        {{ weekly_goal.beginning_week.strftime('%d/%m/%Y') }}
+
+                        <br>
+
+                        Semana
+
+                    </div>
+
+
+                    <button
+                        class="pulse-btn"
+                        onclick="toast('Dados cardíacos atualizados')"
+                    >
+
+                        <img
+                            src="{{ url_for('static', filename='assets/pulse-icon.png') }}"
+                            alt="Batimentos"
+                        >
+
+                    </button>
+
+
+                    <!-- ATIVIDADE -->
+
+                    <b>
+                        Atividade semanal
+                    </b>
+
+                    <div class="progress-row">
+
+                        <div class="progress">
+
+                            <i
+                                style="
+                                width:
+                                {{ (
+                                    weekly_goal.activity_completed /
+                                    weekly_goal.goal_activity * 100
+                                ) if weekly_goal.goal_activity else 0
+                                }}%;
+                                "
+                            ></i>
+
+                        </div>
+
+                        <span>
+
+                            {{ weekly_goal.activity_completed }}/
+                            {{ weekly_goal.goal_activity }}
+                            minutos
+
+                        </span>
+
+                    </div>
+
+
+                    <b>Intensidade moderada</b>
+
+                    <div class="progress-row">
+
+                        <div class="progress">
+                             <i
+                                style="
+                                width:
+                                {{ (
+                                    weekly_goal.intensity_completed /
+                                    weekly_goal.goal_intensity * 100
+                                ) if weekly_goal.goal_intensity else 0
+                                }}%;
+                                "
+                            ></i>
+                        </div>
+
+                        <span>
+
+                            {{ weekly_goal.intensity_completed }}/
+                            {{ weekly_goal.goal_intensity }}
+                            minutos
+
+                        </span>
+
+                    </div>
+
+
+                    <b>Sessões de exercício</b>
+
+                    <div class="progress-row">
+
+                        <div class="progress">
+                            <i
+                                style="
+                                width:
+                                {{ (
+                                    weekly_goal.sessions_completed /
+                                    weekly_goal.goal_sessions * 100
+                                ) if weekly_goal.goal_sessions else 0
+                                }}%;
+                                "
+                            ></i>
+                        </div>
+
+                        <span>
+
+                            {{ weekly_goal.sessions_completed }}/
+                            {{ weekly_goal.goal_sessions }}
+                            sessões
+
+                        </span>
+
+                    </div>
+                    {% else %}
+
+                        <p>
+                            Nenhuma meta semanal registrada.
+                        </p>
+
+                    {% endif %}
+                </section>
+
+
+            </main>
+
+
+
+            <!-- =========================
+                 MENU LATERAL
+            ========================== -->
+
+            <div class="nav-drawer">
+                <nav class="drawer">
+                    <img
+                        class="drawer-logo"
+                        src="{{ url_for('static', filename='assets/vitapulse-logo-full.png') }}"
+                        alt="VitaPulse"
+                    >
+                    <button onclick="window.location.href='{{ url_for('home') }}'"><i class="ri-home-2-fill" style="color: #fff;"></i> Página Inicial</button>
+                        <button onclick="window.location.href='{{ url_for('performance') }}'"><i class="ri-service-fill" style="color: #fff;"></i> Performance Física</button>
+                        <button onclick="window.location.href='{{ url_for('anxiety') }}'"><i class="ri-mental-health-fill" style="color: #fff;"></i> Ansiedade</button>
+                        <button onclick="window.location.href='{{ url_for('pressure') }}'"><i class="ri-heart-pulse-fill" style="color: #fff;"></i> Pressão arterial</button>
+                        <button onclick="window.location.href='{{ url_for('report') }}'"><i class="ri-file-chart-fill" style="color: #fff;"></i> Relatório Semanal</button>
+                </nav>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='logoutPopup.js') }}"></script>
+</body>
+
+</html>
